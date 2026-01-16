@@ -280,7 +280,7 @@ export function AuPairProfilePage() {
               </motion.button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
               
               {/* Paywall Overlay */}
               {isHostFamily && !isPremium && !isAdmin && (
@@ -338,18 +338,17 @@ export function AuPairProfilePage() {
                   </p>
                 </section>
 
-                  <GlassCard className="p-6 sm:p-10 bg-vibrant-purple/[0.02] border-vibrant-purple/10">
-                    <p className="text-base sm:text-lg text-gray-800 leading-relaxed font-bold mb-6 sm:mb-8 italic">"{profile.experience_description}"</p>
-                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                      {profile.skills?.map((skill, i) => (
-                        <div key={i} className="px-4 py-2 bg-white border border-vibrant-purple/10 text-vibrant-purple text-[8px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg sm:rounded-xl shadow-sm flex items-center gap-2">
-                          <CheckCircle size={12} className="text-vibrant-purple" />
-                          {t(`auPair.onboarding.options.skills.${skill}`) || skill}
-                        </div>
-                      ))}
-                    </div>
-                  </GlassCard>
-                </section>
+                <GlassCard className="p-6 sm:p-10 bg-vibrant-purple/[0.02] border-vibrant-purple/10">
+                  <p className="text-base sm:text-lg text-gray-800 leading-relaxed font-bold mb-6 sm:mb-8 italic">"{profile.experience_description}"</p>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    {profile.skills?.map((skill, i) => (
+                      <div key={i} className="px-4 py-2 bg-white border border-vibrant-purple/10 text-vibrant-purple text-[8px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg sm:rounded-xl shadow-sm flex items-center gap-2">
+                        <CheckCircle size={12} className="text-vibrant-purple" />
+                        {t(`auPair.onboarding.options.skills.${skill}`) || skill}
+                      </div>
+                    ))}
+                  </div>
+                </GlassCard>
 
                 {/* Safety & Expertise */}
                 <section className="px-2 sm:px-4">
@@ -380,7 +379,10 @@ export function AuPairProfilePage() {
                 </section>
 
                 {/* Video Introduction */}
-                {profile.experience_video_url && (
+                {(() => {
+                  const videoUrl = profile.intro_video_url || profile.experience_videos?.[0];
+                  return videoUrl;
+                })() && (
                   <section className="px-2 sm:px-4">
                     <h2 className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-vibrant-purple mb-4 sm:mb-6 flex items-center gap-3">
                       <div className="w-6 h-[1px] bg-vibrant-purple/30" />
@@ -388,11 +390,11 @@ export function AuPairProfilePage() {
                     </h2>
                     <div className="aspect-video rounded-[2rem] overflow-hidden border border-white/60 shadow-2xl bg-black relative group">
                       <video 
-                        src={profile.experience_video_url} 
+                        src={profile.intro_video_url || profile.experience_videos?.[0]} 
                         controls 
                         className="w-full h-full object-contain"
                       />
-                      {!profile.experience_video_url && (
+                      {!profile.intro_video_url && !profile.experience_videos?.[0] && (
                          <div className="absolute inset-0 flex flex-col items-center justify-center text-white/40 gap-4">
                            <Video size={48} />
                            <span className="font-black uppercase tracking-widest text-xs">{t('auPair.profile.noVideo')}</span>
@@ -489,7 +491,7 @@ export function AuPairProfilePage() {
                       {t('auPair.profile.interests') || 'Interests'}
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {profile.interests.map((interest, i) => (
+                      {profile.interests.map((interest: string, i: number) => (
                         <span key={i} className="px-3 py-1 bg-white/40 rounded-lg text-[8px] font-bold text-gray-600 uppercase tracking-widest border border-white/60">
                           {t(`auPair.onboarding.options.hobbies.${interest}`) || interest}
                         </span>

@@ -24,6 +24,7 @@ export interface AuPairProfile {
   child_age_comfort?: string[]; // New
   skills: string[];
   skills_examples?: string; // New
+  interests?: string[];
   
   rules_comfort?: string[]; // New
   
