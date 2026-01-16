@@ -1,0 +1,31 @@
+﻿
+> vite-react-typescript-starter@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.app.json
+
+src/components/aupair/BrowseFilters.tsx(4,1): error TS6133: 'GlassCard' is declared but its value is never read.
+src/components/AuPairOnboarding.tsx(939,28): error TS2304: Cannot find name 'Trash2'.
+src/components/AuPairOnboarding.tsx(1009,50): error TS2304: Cannot find name 'jumpToStep'.
+src/components/AuPairOnboarding.tsx(1023,50): error TS2304: Cannot find name 'jumpToStep'.
+src/components/AuPairOnboarding.tsx(1035,50): error TS2304: Cannot find name 'jumpToStep'.
+src/components/AuPairOnboarding.tsx(1047,50): error TS2304: Cannot find name 'jumpToStep'.
+src/components/EducationInterestForm.tsx(121,10): error TS2552: Cannot find name 'PhoneInput'. Did you mean 'oninput'?
+src/components/EducationInterestForm.tsx(123,22): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/components/HostFamilyOnboarding.tsx(10,1): error TS6133: 'Select' is declared but its value is never read.
+src/components/HostFamilyOnboarding.tsx(987,50): error TS2304: Cannot find name 'jumpToStep'.
+src/components/HostFamilyOnboarding.tsx(1005,50): error TS2304: Cannot find name 'jumpToStep'.
+src/components/HostFamilyOnboarding.tsx(1017,50): error TS2304: Cannot find name 'jumpToStep'.
+src/components/HostFamilyOnboarding.tsx(1028,50): error TS2304: Cannot find name 'jumpToStep'.
+src/components/HostFamilyOnboarding.tsx(1041,50): error TS2304: Cannot find name 'jumpToStep'.
+src/pages/AdminPortalPage.tsx(26,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+src/pages/AuPairEditProfilePage.tsx(97,10): error TS2552: Cannot find name 'motion'. Did you mean 'Option'?
+src/pages/AuPairEditProfilePage.tsx(107,11): error TS2552: Cannot find name 'motion'. Did you mean 'Option'?
+src/pages/AuPairEditProfilePage.tsx(109,10): error TS2552: Cannot find name 'motion'. Did you mean 'Option'?
+src/pages/AuPairEditProfilePage.tsx(123,16): error TS2552: Cannot find name 'motion'. Did you mean 'Option'?
+src/pages/AuPairEditProfilePage.tsx(132,17): error TS2552: Cannot find name 'motion'. Did you mean 'Option'?
+src/pages/AuPairEditProfilePage.tsx(226,11): error TS2552: Cannot find name 'motion'. Did you mean 'Option'?
+src/pages/AuPairPage.tsx(10,1): error TS6133: 'Button' is declared but its value is never read.
+src/pages/AuPairPage.tsx(13,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+src/pages/AuPairPaymentSuccessPage.tsx(5,1): error TS6133: 'Button' is declared but its value is never read.
+src/pages/AuPairProfilePage.tsx(15,3): error TS6133: 'Star' is declared but its value is never read.
+src/pages/AuPairProfilePage.tsx(16,3): error TS6133: 'ShieldCheck' is declared but its value is never read.
+src/pages/AuPairRoleSelectionPage.tsx(7,10): error TS6133: 'GlassCard' is declared but its value is never read.

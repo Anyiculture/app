@@ -1,0 +1,1034 @@
+{
+  "src\\components\\aupair\\ProfileCard.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Premium Only",
+      "line": 81
+    }
+  ],
+  "src\\components\\AuPairOnboarding.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Completion",
+      "line": 589
+    }
+  ],
+  "src\\components\\EmployerOnboarding.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "(Max 5)",
+      "line": 483
+    }
+  ],
+  "src\\components\\events\\EventCard.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Org",
+      "line": 75
+    }
+  ],
+  "src\\components\\Footer.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "AnYiculture",
+      "line": 16
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "info@anyi-culture.cn",
+      "line": 19
+    }
+  ],
+  "src\\components\\Header.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "AnYiculture",
+      "line": 23
+    }
+  ],
+  "src\\components\\HostFamilyOnboarding.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Please review all information before submitting. Click \"Edit\" to make changes.",
+      "line": 770
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g. 2000",
+      "line": 693
+    }
+  ],
+  "src\\components\\JobApplicationModal.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "https://drive.google.com/your-resume",
+      "line": 151
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "https://your-portfolio.com",
+      "line": 167
+    }
+  ],
+  "src\\components\\jobs\\InterviewScheduler.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Schedule Interview",
+      "line": 96
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "https://zoom.us/j/...",
+      "line": 185
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "Add any additional details, topics to discuss, or preparation needed...",
+      "line": 200
+    }
+  ],
+  "src\\components\\jobs\\SayHiButton.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "Write a short message introducing yourself...",
+      "line": 131
+    }
+  ],
+  "src\\components\\JobSeekerOnboarding.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "(Optional)",
+      "line": 489
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "(Optional)",
+      "line": 519
+    }
+  ],
+  "src\\components\\JobsProtectedRoute.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Loading...",
+      "line": 115
+    }
+  ],
+  "src\\components\\Sidebar.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "ANYCULTURE",
+      "line": 120
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Admin Portal",
+      "line": 197
+    },
+    {
+      "type": "ATTR",
+      "attr": "label",
+      "text": "Close menu",
+      "line": 125
+    }
+  ],
+  "src\\components\\stripe\\SubscriptionCard.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "/month",
+      "line": 47
+    }
+  ],
+  "src\\components\\stripe\\SubscriptionStatus.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "No active subscription",
+      "line": 57
+    }
+  ],
+  "src\\components\\SubscriptionCard.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 8
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "/month",
+      "line": 54
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Unlimited access to Au Pair profiles",
+      "line": 64
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "View full profiles, photos, and videos",
+      "line": 68
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Message Au Pairs without limits",
+      "line": 72
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Verified profiles only",
+      "line": 76
+    }
+  ],
+  "src\\components\\TopNavigation.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "AnYiculture Logo",
+      "line": 145
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Profile",
+      "line": 211
+    }
+  ],
+  "src\\contexts\\AuthContext.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 10
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 11
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 12
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 13
+    }
+  ],
+  "src\\contexts\\PersonalizationContext.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 17
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 18
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 19
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 20
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 21
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 22
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 23
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 24
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 25
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "): Promise",
+      "line": 131
+    }
+  ],
+  "src\\pages\\About.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "AnYiculture",
+      "line": 19
+    }
+  ],
+  "src\\pages\\AdminPortalPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Active Users",
+      "line": 308
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Interactions",
+      "line": 312
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "24ms",
+      "line": 355
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Live Feed",
+      "line": 515
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Control and moderate professional job listings",
+      "line": 827
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "j.status === 'active').length}",
+      "line": 859
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "j.featured).length}",
+      "line": 863
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Views",
+      "line": 913
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Apps",
+      "line": 918
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "i.status === 'active').length}",
+      "line": 1068
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "i.status === 'sold').length}",
+      "line": 1072
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "(OBO)",
+      "line": 1111
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "new Date(e.start_date || '')",
+      "line": 1202
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "e.is_featured).length}",
+      "line": 1270
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "!u.is_banned).length}",
+      "line": 1558
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "u.is_banned).length}",
+      "line": 1562
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Profile Status",
+      "line": 2806
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Created At",
+      "line": 2823
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "User ID",
+      "line": 2827
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Raw Metadata",
+      "line": 2832
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Admin",
+      "line": 150
+    },
+    {
+      "type": "ATTR",
+      "attr": "title",
+      "text": "Delete Job",
+      "line": 975
+    },
+    {
+      "type": "ATTR",
+      "attr": "title",
+      "text": "Delete Item",
+      "line": 1168
+    },
+    {
+      "type": "ATTR",
+      "attr": "title",
+      "text": "Delete Event",
+      "line": 1379
+    },
+    {
+      "type": "ATTR",
+      "attr": "title",
+      "text": "Copy Code",
+      "line": 2571
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Profile",
+      "line": 2801
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "••••",
+      "line": 2927
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "••••",
+      "line": 2940
+    }
+  ],
+  "src\\pages\\AuPairPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Administrative Panel",
+      "line": 78
+    }
+  ],
+  "src\\pages\\AuPairPaymentPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "¥0",
+      "line": 107
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "¥100",
+      "line": 150
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Alipay",
+      "line": 220
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "WeChat",
+      "line": 224
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Alipay",
+      "line": 221
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "WeChat",
+      "line": 225
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "TRANSACTION ID",
+      "line": 232
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Stripe",
+      "line": 278
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Visa",
+      "line": 279
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Mastercard",
+      "line": 280
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Alipay",
+      "line": 281
+    }
+  ],
+  "src\\pages\\AuPairPaymentSuccessPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Confirming Payment",
+      "line": 67
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Please wait while we activate your account",
+      "line": 68
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Success!",
+      "line": 80
+    }
+  ],
+  "src\\pages\\AuPairProfilePage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Pro Recommendation",
+      "line": 443
+    },
+    {
+      "type": "ATTR",
+      "attr": "title",
+      "text": "Available",
+      "line": 241
+    }
+  ],
+  "src\\pages\\Blog.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Blog",
+      "line": 26
+    }
+  ],
+  "src\\pages\\BrowseFamiliesPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "3+",
+      "line": 217
+    }
+  ],
+  "src\\pages\\CandidateBrowsePage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "No candidates found",
+      "line": 140
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Try adjusting your filters.",
+      "line": 141
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "Search skill, location...",
+      "line": 114
+    }
+  ],
+  "src\\pages\\CommunityPage.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Profile",
+      "line": 248
+    }
+  ],
+  "src\\pages\\CreateEducationProgramPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "CAD",
+      "line": 415
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "USD",
+      "line": 416
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "CNY",
+      "line": 417
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "EUR",
+      "line": 418
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "GBP",
+      "line": 419
+    }
+  ],
+  "src\\pages\\employer\\ApplicantManagementPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Total Applications",
+      "line": 181
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Interests (Say Hi)",
+      "line": 195
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Views",
+      "line": 209
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Interviews",
+      "line": 223
+    },
+    {
+      "type": "ATTR",
+      "attr": "text",
+      "text": "Loading your jobs...",
+      "line": 82
+    }
+  ],
+  "src\\pages\\EventsPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "= now && eventDate",
+      "line": 91
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "new Date(event.start_date || '')",
+      "line": 119
+    }
+  ],
+  "src\\pages\\InterviewsPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "new Date(i.scheduled_at)",
+      "line": 31
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "My Interviews",
+      "line": 123
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Manage your interview schedule",
+      "line": 124
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Meeting Link:",
+      "line": 205
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Notes:",
+      "line": 219
+    },
+    {
+      "type": "ATTR",
+      "attr": "text",
+      "text": "Loading interviews...",
+      "line": 99
+    }
+  ],
+  "src\\pages\\JobsPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Complete Your Setup",
+      "line": 225
+    }
+  ],
+  "src\\pages\\LandingPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "🇨🇳",
+      "line": 386
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "🌏",
+      "line": 394
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Education",
+      "line": 187
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Professional",
+      "line": 203
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Community",
+      "line": 218
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Travel",
+      "line": 234
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Culture",
+      "line": 250
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Extra 1",
+      "line": 265
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Extra 2",
+      "line": 278
+    }
+  ],
+  "src\\pages\\MarketplaceEditPage.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., iPhone 13 Pro - Like New",
+      "line": 323
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "例如：iPhone 13 Pro - 九成新",
+      "line": 336
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "Describe your item: condition, features, reason for selling, etc.",
+      "line": 347
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "描述您的物品：状况、特点、出售原因等",
+      "line": 360
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., Apple, IKEA, Nike",
+      "line": 489
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., iPhone 13 Pro",
+      "line": 501
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., Sierra Blue, Black",
+      "line": 513
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., M, 42, 128GB",
+      "line": 525
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., 50cm x 30cm x 20cm",
+      "line": 538
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., 2.5kg",
+      "line": 550
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., Cotton, Wood, Metal",
+      "line": 562
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "0.00",
+      "line": 597
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., Chaoyang District",
+      "line": 688
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g., Sanlitun Mall, Subway Station",
+      "line": 700
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "Your WeChat ID",
+      "line": 740
+    }
+  ],
+  "src\\pages\\MarketplacePostPage.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "0.00",
+      "line": 632
+    }
+  ],
+  "src\\pages\\MessagingPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "= 280 && newWidth",
+      "line": 104
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "AnYiculture Support",
+      "line": 287
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Zoom",
+      "line": 700
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "WeChat",
+      "line": 701
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Google Meet",
+      "line": 702
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "In-person",
+      "line": 703
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Phone",
+      "line": 704
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Other",
+      "line": 705
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "Meeting Details",
+      "line": 739
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "attachment",
+      "line": 297
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g. Interview, Follow-up",
+      "line": 663
+    },
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "e.g. https://zoom.us/j/... or 123 Main St",
+      "line": 715
+    }
+  ],
+  "src\\pages\\PostJobPage.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "placeholder",
+      "text": "careers@company.com",
+      "line": 523
+    }
+  ],
+  "src\\pages\\settings\\BillingSettingsPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Loading billing information...",
+      "line": 58
+    }
+  ],
+  "src\\pages\\settings\\GeneralSettingsPage.tsx": [
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Profile",
+      "line": 88
+    }
+  ],
+  "src\\pages\\SettingsPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "👶",
+      "line": 250
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "🏠",
+      "line": 268
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "🏢",
+      "line": 286
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "📝",
+      "line": 304
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Profile",
+      "line": 340
+    }
+  ],
+  "src\\pages\\SignInPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "AnyiCulture",
+      "line": 59
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Cultural Exchange",
+      "line": 55
+    }
+  ],
+  "src\\pages\\SignUpPage.tsx": [
+    {
+      "type": "JSX_TEXT",
+      "text": "AnyiCulture",
+      "line": 72
+    },
+    {
+      "type": "ATTR",
+      "attr": "alt",
+      "text": "Cultural Exchange",
+      "line": 68
+    }
+  ],
+  "src\\services\\educationService.ts": [
+    {
+      "type": "JSX_TEXT",
+      "text": "): Promise",
+      "line": 363
+    }
+  ],
+  "src\\services\\notificationService.ts": [
+    {
+      "type": "JSX_TEXT",
+      "text": "): Promise",
+      "line": 152
+    }
+  ],
+  "src\\services\\recommendationEngine.ts": [
+    {
+      "type": "JSX_TEXT",
+      "text": "Promise",
+      "line": 50
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "= 3 && daysUntil",
+      "line": 331
+    }
+  ],
+  "src\\services\\searchService.ts": [
+    {
+      "type": "JSX_TEXT",
+      "text": "): Promise",
+      "line": 325
+    }
+  ],
+  "src\\services\\visaService.ts": [
+    {
+      "type": "JSX_TEXT",
+      "text": "): Promise",
+      "line": 111
+    }
+  ],
+  "src\\utils\\formValidation.ts": [
+    {
+      "type": "JSX_TEXT",
+      "text": "(value: T, rules: ValidationRule",
+      "line": 28
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "val.length",
+      "line": 55
+    },
+    {
+      "type": "JSX_TEXT",
+      "text": "= minWords && count",
+      "line": 62
+    }
+  ]
+}

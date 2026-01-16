@@ -1,0 +1,22 @@
+export const LANGUAGES = [
+  { code: 'en', name_en: 'English', name_zh: '英语' },
+  { code: 'zh', name_en: 'Chinese (Mandarin)', name_zh: '中文 (普通话)' },
+  { code: 'es', name_en: 'Spanish', name_zh: '西班牙语' },
+  { code: 'fr', name_en: 'French', name_zh: '法语' },
+  { code: 'de', name_en: 'German', name_zh: '德语' },
+  { code: 'ja', name_en: 'Japanese', name_zh: '日语' },
+  { code: 'ko', name_en: 'Korean', name_zh: '韩语' },
+  { code: 'it', name_en: 'Italian', name_zh: '意大利语' },
+  { code: 'pt', name_en: 'Portuguese', name_zh: '葡萄牙语' },
+  { code: 'ru', name_en: 'Russian', name_zh: '俄语' },
+  { code: 'ar', name_en: 'Arabic', name_zh: '阿拉伯语' },
+  { code: 'hi', name_en: 'Hindi', name_zh: '印地语' },
+  { code: 'bn', name_en: 'Bengali', name_zh: '孟加拉语' },
+  { code: 'ms', name_en: 'Malay', name_zh: '马来语' },
+  { code: 'vi', name_en: 'Vietnamese', name_zh: '越南语' },
+  { code: 'th', name_en: 'Thai', name_zh: '泰语' },
+  { code: 'tr', name_en: 'Turkish', name_zh: '土耳其语' },
+  { code: 'nl', name_en: 'Dutch', name_zh: '荷兰语' },
+  { code: 'pl', name_en: 'Polish', name_zh: '波兰语' },
+  { code: 'uk', name_en: 'Ukrainian', name_zh: '乌克兰语' }
+].sort((a, b) => a.name_en.localeCompare(b.name_en));
