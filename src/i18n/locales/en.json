@@ -108,15 +108,30 @@
         "placeholder": "Enter user name",
         "confirm": "Delete User",
         "cancel": "Cancel"
-      }
+      },
+      "profileStatus": "Profile Status",
+      "createdAt": "Created At",
+      "userId": "User ID",
+      "rawMetadata": "Raw Metadata"
     },
     "dashboard": {
+      "title": "Dashboard",
       "userManagementSubtitle": "Manage platform users",
       "analyticsDescription": "Platform analytics overview",
       "awaitingAssessment": "Awaiting Assessment",
       "needsVerification": "Needs Verification",
       "liveChatInteractions": "Live Chat Interactions",
-      "activeLearningModules": "Active Learning Modules"
+      "activeLearningModules": "Active Learning Modules",
+      "liveInquiries": "Live Inquiries",
+      "educationSubtitle": "Review and manage education program applications",
+      "marketplaceSubtitle": "Moderate and manage marketplace listings",
+      "eventsSubtitle": "Manage upcoming and past community events",
+      "viewAll": "View All",
+      "noNewInquiries": "No new inquiries",
+      "requiresAction": "Requires Action"
+    },
+    "actionLabels": {
+      "copyContact": "Copy Contact Info"
     },
     "common": {
       "delete": "Delete",
@@ -125,7 +140,12 @@
       "failedToStartChat": "Failed to start conversation. Please try again.",
       "noResults": "No results found",
       "filter": "Filter",
-      "applicant": "Applicant"
+      "applicant": "Applicant",
+      "view": "View",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "feature": "Feature",
+      "unfeature": "Unfeature"
     },
     "analytics": {
       "title": "Analytics",
@@ -155,8 +175,18 @@
     "jobsManagementDesc": "Manage job postings and applications",
     "userManagement": "User Management",
     "userManagementDesc": "Manage user accounts and permissions",
+    "activity": "Activity Log",
     "activityLog": "Activity Log",
     "activityLogDesc": "View admin actions and system activity",
+    "eventsManagement": "Events Management",
+    "moderation": "Moderation",
+    "sidebar": {
+      "navigation": "Navigation",
+      "general": "General"
+    },
+    "header": {
+      "searchPlaceholder": "Search anything..."
+    },
     "auPairManagement": "Au Pair Management",
     "auPairManagementDesc": "Manage au pairs and host families",
     "visaManagement": {
@@ -199,31 +229,15 @@
     "marketplaceItems": "Marketplace Items",
     "visaApplications": "Visa Applications",
     "manageAndReview": "Manage and review",
-    "applicant": "Applicant",
-    "visaType": "Visa Type",
-    "status": "Status",
-    "submitted": "Submitted",
-    "actions": "Actions",
-    "noApplications": "No applications found",
     "securityNotice": "Security Notice",
     "securityNoticeDesc": "User management actions are logged and audited. Destructive actions require confirmation and cannot be undone.",
-    "user": "User",
-    "role": "Role",
-    "joined": "Joined",
     "viewDetails": "View Details",
     "messageUser": "Message User",
     "banUser": "Ban User",
     "deleteUser": "Delete User (Dangerous)",
-    "active": "Active",
-    "banned": "Banned",
-    "unknown": "Unknown",
     "userDetails": "User Details",
     "basicInfo": "Basic Information",
     "accountStatus": "Account Status",
-    "name": "Name",
-    "email": "Email",
-    "phone": "Phone",
-    "location": "Location",
     "lastLogin": "Last Login",
     "onboardingCompleted": "Onboarding Completed",
     "modules": {
@@ -231,6 +245,23 @@
       "jobsDesc": "Control and moderate professional job listings"
     },
     "primaryInterest": "Primary Interest",
+    "admin": "Admin",
+    "resource": "Resource",
+    "time": "Time",
+    "actions": "Actions",
+    "applicant": "Applicant",
+    "visaType": "Visa Type",
+    "status": "Status",
+    "submitted": "Submitted",
+    "active": "Active",
+    "banned": "Banned",
+    "unknown": "Unknown",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "joined": "Joined",
+    "role": "Role",
     "events": {
       "management": "Events Management",
       "all": "All Events",
@@ -254,15 +285,26 @@
       },
       "management": "Job Management",
       "search": "Search jobs...",
+      "managementSubtitle": "Control and moderate professional job listings",
       "stats": {
         "active": "Active Jobs",
         "featured": "Featured Jobs",
-        "total": "Total Jobs"
+        "total": "Total Jobs",
+        "views": "Views",
+        "applications": "Apps"
       }
     },
     "education": {
       "applications": "Applications",
       "approve": "Approve",
+      "columns": {
+        "applicant": "Applicant",
+        "program": "Program",
+        "contact": "Contact",
+        "date": "Date",
+        "status": "Status",
+        "action": "Action"
+      },
       "filter": {
         "all": "All Applications",
         "approved": "Approved",
@@ -284,6 +326,7 @@
       },
       "moderation": "Moderation",
       "search": "Search items...",
+      "obo": "(OBO)",
       "stats": {
         "active": "Active Listings",
         "sold": "Items Sold",
@@ -296,7 +339,7 @@
       "details": "Profile Details",
       "location": "Location",
       "children": "Children",
-      "managementSubtitle": "Management Subtitle",
+      "managementSubtitle": "Manage au pair and host family profiles",
       "noDescription": "No Description",
       "profileType": "Profile Type"
     },
@@ -337,7 +380,13 @@
       "sendResetEmail": "Send Reset Email",
       "confirmRevoke": "Are you sure you want to revoke this admin's access?",
       "emailSent": "Reset email sent successfully!",
-      "resetEmailError": "Failed to send reset email"
+      "resetEmailError": "Failed to send reset email",
+      "adminManagement": "Admin Management",
+      "adminManagementDesc": "Manage other administrators and their roles.",
+      "inviteAdmin": "Invite New Admin",
+      "enterEmail": "Enter email address",
+      "revokeSuccess": "Admin access revoked successfully",
+      "revokeError": "Failed to revoke admin access"
     },
     "feed": {
       "live": "Live Feed"
@@ -346,17 +395,17 @@
       "activeUsers": "Active Users",
       "interactions": "Interactions"
     },
-    "statusUpdated": "Status Updated",
-    "updateFailed": "Update Failed",
-    "jobUpdateFailed": "Job Update Failed",
-    "jobStatusFailed": "Job Status Failed",
-    "jobDeleteFailed": "Job Delete Failed",
-    "itemDeleteFailed": "Item Delete Failed",
-    "eventUpdateFailed": "Event Update Failed",
-    "eventDeleteFailed": "Event Delete Failed",
-    "codeGenerationFailed": "Code Generation Failed",
-    "codeDeleteFailed": "Code Delete Failed",
-    "contactCopied": "Contact Copied",
+    "statusUpdated": "Status updated successfully",
+    "updateFailed": "Failed to update status",
+    "jobUpdateFailed": "Job update failed",
+    "jobStatusFailed": "Failed to update job status",
+    "jobDeleteFailed": "Failed to delete job",
+    "itemDeleteFailed": "Failed to delete item",
+    "eventUpdateFailed": "Failed to update event",
+    "eventDeleteFailed": "Failed to delete event",
+    "codeGenerationFailed": "Failed to generate code",
+    "codeDeleteFailed": "Failed to delete code",
+    "contactCopied": "Contact info copied to clipboard",
     "activityLogRefresh": "Activity Log Refresh",
     "applicationUpdated": "Application updated successfully",
     "conversationFailed": "Failed to start conversation",
@@ -2187,6 +2236,33 @@
       "visaPurpose": "Visa Purpose",
       "visaType": "Visa Type"
     },
+    "detail": {
+      "notFound": "Application not found",
+      "backToDashboard": "Back to Dashboard",
+      "applicationId": "Application ID",
+      "documentsRequested": "Documents Requested",
+      "documentsRequestedDesc": "Please upload the required documents to continue processing your application.",
+      "uploadDocuments": "Upload Documents",
+      "approved": "Application Approved",
+      "approvedDesc": "Congratulations! Your visa application has been approved.",
+      "rejected": "Application Rejected",
+      "submitted": "Submitted",
+      "notSubmitted": "Not Submitted",
+      "lastUpdated": "Last Updated",
+      "personalInfo": "Personal Info",
+      "fullName": "Full Name",
+      "nationality": "Nationality",
+      "passportNumber": "Passport Number",
+      "passportExpiry": "Passport Expiry",
+      "currentResidence": "Current Residence",
+      "purposeDetails": "Purpose Details",
+      "documents": "Documents",
+      "noDocuments": "No documents uploaded yet",
+      "messages": "Messages",
+      "messagesDesc": "Communicate with the Visa Center team",
+      "openMessages": "Open Messages",
+      "timeline": "Timeline"
+    },
     "dashboard": {
       "activeApplications": "Active Applications",
       "continue": "Continue",
@@ -2970,6 +3046,102 @@
         "benefitInsurance": "Health Insurance",
         "languagesSpoken": "Languages Spoken at Home",
         "languagesPlaceholder": "Chinese, English, etc.",
+    "admin": {
+      "dashboard": {
+        "title": "Dashboard",
+        "liveInquiries": "Live Inquiries",
+        "liveInquiriesSubtitle": "Real-time feed of new applications",
+        "liveFeed": "Live Feed",
+        "noNewInquiries": "No new inquiries at the moment",
+        "growthOverview": "Growth Overview",
+        "systemHealth": "System Health",
+        "database": "Database",
+        "apiLatency": "API Latency",
+        "optimal": "Optimal",
+        "analyticsSubtitle": "View detailed platform analytics",
+        "quickActionsSubtitle": "Manage your platform efficiently",
+        "educationSubtitle": "Manage education program applications"
+      },
+      "portal": "Admin Portal",
+      "manageContent": "Manage Content & Users",
+      "switchToUserView": "User View",
+      "backToOverview": "Overview",
+      "welcomeBack": "Welcome Back",
+      "quickActions": "Quick Actions",
+      "totalUsers": "Total Users",
+      "totalJobs": "Total Jobs",
+      "educationPrograms": "Education Programs",
+      "totalEvents": "Total Events",
+      "pendingJobApplications": "Pending Job Apps",
+      "pendingVisaApplications": "Pending Visa Apps",
+      "pendingEducationInterests": "Pending Edu Apps",
+      "activeConversations": "Active Chats",
+      "needsReview": "Needs Review",
+      "educationManagement": "Education",
+      "jobsManagement": "Jobs",
+      "userManagement": "Users",
+      "visaManagement": "Visa",
+      "auPairManagement": "Au Pair",
+      "marketplace": {
+        "moderation": "Marketplace"
+      },
+      "eventsManagement": "Events",
+      "analytics": {
+        "title": "Analytics"
+      },
+      "settings": {
+        "title": "Settings"
+      },
+      "activity": "Activity Log",
+      "payments": "Payments",
+      "email": "Email",
+      "statusUpdated": "Status updated successfully",
+      "updateFailed": "Failed to update status",
+      "contactCopied": "Contact info copied to clipboard",
+      "viewDetails": "View Details",
+      "common": {
+        "unknown": "Unknown",
+        "contact": "Contact"
+      },
+      "education": {
+        "applications": "Education Applications",
+        "filter": {
+          "all": "All Applications",
+          "approved": "Approved",
+          "rejected": "Rejected",
+          "submitted": "Submitted",
+          "underReview": "Under Review"
+        },
+        "noApplications": "No education applications found",
+        "studentMotivation": "Student Motivation",
+        "markReview": "Mark Under Review",
+        "approve": "Approve",
+        "reject": "Reject",
+        "columns": {
+          "applicant": "Applicant",
+          "program": "Program",
+          "contact": "Contact",
+          "date": "Date",
+          "status": "Status",
+          "action": "Action"
+        }
+      },
+      "auPair": {
+        "managementSubtitle": "Manage au pair and host family profiles",
+        "profileType": "Profile Type",
+        "auPairs": "Au Pairs",
+        "hostFamilies": "Host Families",
+        "children": "Children",
+        "noDescription": "No description available"
+      },
+      "users": {
+        "userId": "User ID"
+      },
+      "actions": {
+        "call": "Call",
+        "copyContact": "Copy Contact"
+      }
+    },
         "requirements": "Additional Requirements",
         "requirementsPlaceholder": "Experience with toddlers, cooking skills, etc.",
         "expectations": "Your Expectations",

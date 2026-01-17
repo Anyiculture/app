@@ -381,26 +381,28 @@ export const adminService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    // Check if the current user is already a participant
-    const { data: conversation, error: getError } = await supabase
-      .from('conversations')
-      .select('participant1_id, participant2_id')
-      .eq('id', conversationId)
-      .single();
+    // Check if the current user is already a participant using the participants table
+    const { data: participants, error: getError } = await supabase
+      .from('conversation_participants')
+      .select('user_id')
+      .eq('conversation_id', conversationId)
+      .eq('user_id', user.id);
 
     if (getError) throw getError;
 
-    if (conversation.participant1_id === user.id || conversation.participant2_id === user.id) {
+    if (participants && participants.length > 0) {
       return; // Already a participant
     }
 
-    // Assign current admin as participant2
-    const { error: updateError } = await supabase
-      .from('conversations')
-      .update({ participant2_id: user.id })
-      .eq('id', conversationId);
+    // Add current admin to participants table
+    const { error: insertError } = await supabase
+      .from('conversation_participants')
+      .insert({ 
+        conversation_id: conversationId,
+        user_id: user.id 
+      });
 
-    if (updateError) throw updateError;
+    if (insertError) throw insertError;
     
     await this.logActivity('join_conversation', 'conversations', conversationId);
   },

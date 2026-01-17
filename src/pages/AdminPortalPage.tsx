@@ -1,37 +1,37 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService, AdminStats } from '../services/adminService';
 import { educationService } from '../services/educationService';
-import { jobsService, Job } from '../services/jobsService';
+import { messagingService } from '../services/messagingService';
 import { marketplaceService, MarketplaceItem } from '../services/marketplaceService';
 import { eventsService, Event } from '../services/eventsService';
 import { visaService } from '../services/visaService';
+import { jobsService, Job } from '../services/jobsService';
 import { 
   Button, 
   Loading, 
-  ConfirmDialog, 
   GlassCard,
-  BackgroundBlobs,
   Modal
 } from '../components/ui';
 import { useToast } from '../components/ui/Toast';
 import {
   Users, Briefcase, GraduationCap, Calendar,
-  AlertCircle, Clock, Activity, BarChart3,
-  Star, Eye, Trash2, Search, Download, Mail, MessageSquare, Plus, Copy, FileText,
-  ArrowLeft, UserCheck, LogOut, Lock, ShoppingBag, TrendingUp, MapPin, CheckCircle,
-  Zap, Shield, Globe, Sparkles, Rocket, CreditCard, Phone, X
+  Activity,
+  Trash2, Search, Download, Mail, MessageSquare, Plus, Copy, FileText,
+  UserCheck, Lock, ShoppingBag, TrendingUp, MapPin, CheckCircle,
+  Zap, Sparkles, Rocket, CreditCard, Phone, X
 } from 'lucide-react';
 import { VisaApplicationDetailView } from '../components/visa/VisaApplicationDetailView';
+import { AdminSidebar } from '../components/admin/AdminSidebar';
+import { AdminHeader } from '../components/admin/AdminHeader';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 
 export function AdminPortalPage() {
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,6 @@ export function AdminPortalPage() {
       setIsLocked(false);
     }
     
-    // Check for tab query parameter
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
     if (tabParam === 'settings') {
@@ -56,6 +55,15 @@ export function AdminPortalPage() {
   const handleUnlock = () => {
     setIsLocked(false);
     sessionStorage.setItem('admin_unlocked', 'true');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/signin');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   useEffect(() => {
@@ -78,9 +86,7 @@ export function AdminPortalPage() {
         return;
       }
 
-      console.log('Admin access granted, fetching dashboard stats...');
       const statsData = await adminService.getAdminStats();
-      console.log('Stats received in component:', statsData);
       setStats(statsData);
     } catch (error) {
       console.error('Error in AdminPortal access check:', error);
@@ -105,359 +111,91 @@ export function AdminPortalPage() {
   if (!stats) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50/30 overflow-hidden relative">
-      <BackgroundBlobs className="opacity-40" />
+    <div className="flex min-h-screen bg-[#F9FAFB] font-sans text-gray-900">
+      <AdminSidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onLogout={handleLogout} 
+      />
       
-      <div className="max-w-[100rem] mx-auto p-3 lg:p-8 space-y-4 lg:space-y-8 relative z-10">
-        {/* Header Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 bg-white/40 backdrop-blur-xl p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-white/60 shadow-xl shadow-purple-500/5"
-        >
-          <div className="flex items-center gap-5">
-            <div className="bg-gradient-to-tr from-vibrant-purple to-vibrant-pink p-3.5 rounded-2xl shadow-lg shadow-vibrant-purple/20 rotate-3">
-              <Shield className="text-white w-7 h-7" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-gray-900 font-display">
-                {t('admin.portal')}
-                <span className="text-vibrant-purple ml-2">.</span>
-              </h1>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                <p className="text-gray-500 text-sm font-medium tracking-wide uppercase">{t('admin.manageContent')}</p>
+      <div className="flex-1 ml-64">
+        <AdminHeader title={t(`admin.${activeTab}`)} />
+        
+        <main className="p-8 max-w-[1600px] mx-auto space-y-8">
+          {activeTab === 'overview' && (
+            <div className="space-y-8">
+              {/* Stats Row */}
+              <div className="grid grid-cols-4 gap-6">
+                <SimpleStatCard 
+                  title={t('admin.totalUsers')} 
+                  value={stats.totalUsers} 
+                  trend="+12%" 
+                  trendUp={true}
+                />
+                <SimpleStatCard 
+                  title={t('admin.totalJobs')} 
+                  value={stats.totalJobs} 
+                  trend="+5%" 
+                  trendUp={true}
+                />
+                <SimpleStatCard 
+                  title={t('admin.activeConversations')} 
+                  value={stats.activeConversations} 
+                  trend="+18%" 
+                  trendUp={true}
+                />
+                <SimpleStatCard 
+                  title={t('admin.analytics.pendingReviews')} 
+                  value={stats.pendingJobApplications + stats.pendingVisaApplications} 
+                  trend={t('admin.dashboard.requiresAction')} 
+                  trendUp={false}
+                  alert
+                />
               </div>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <Button 
-                variant="outline" 
-                onClick={() => navigate('/dashboard')}
-                className="gap-2 rounded-full px-4 sm:px-6 py-2 border-gray-200 bg-white/50 hover:bg-white text-gray-600 hover:text-gray-900 transition-all font-bold shadow-sm text-[10px] sm:text-sm"
-              >
-                <LogOut size={14} className="sm:w-4 sm:h-4" />
-                {t('admin.switchToUserView')}
-              </Button>
-            <Button 
-                variant="outline" 
-                onClick={() => setActiveTab('settings')}
-                className={`gap-2 rounded-full px-4 sm:px-6 py-2 border-gray-200 bg-white/50 hover:bg-white transition-all font-bold shadow-sm text-[10px] sm:text-sm ${activeTab === 'settings' ? 'text-vibrant-purple border-vibrant-purple/30' : 'text-gray-600 hover:text-gray-900'}`}
-              >
-                <Shield size={14} className="sm:w-4 sm:h-4" />
-                {t('admin.settings.title')}
-              </Button>
-            {activeTab !== 'overview' && (
-              <Button 
-                variant="outline" 
-                onClick={() => setActiveTab('overview')} 
-                className="gap-2 rounded-full px-6 border-gray-200 bg-white/50 hover:bg-white text-vibrant-purple hover:text-vibrant-purple hover:border-vibrant-purple/30 font-bold transition-all shadow-sm"
-              >
-                <ArrowLeft size={16} />
-                {t('admin.backToOverview')}
-              </Button>
-            )}
-            <div className="hidden lg:flex items-center gap-3 pl-4 border-l border-gray-200/50">
-              <div className="text-right">
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{t('admin.welcomeBack')}</p>
-                <p className="text-sm font-extrabold text-gray-900">{user?.user_metadata?.full_name || 'Administrator'}</p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
-                {user?.user_metadata?.avatar_url ? (
-                  <img src={user.user_metadata.avatar_url} alt="Admin" className="w-full h-full object-cover" />
-                ) : (
-                  <Users size={20} className="text-gray-600" />
-                )}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {activeTab === 'overview' && (
-          <div className="space-y-10">
-            {/* Stats Dashboard */}
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-              <StatCard
-                icon={<Users size={20} className="sm:w-6 sm:h-6" />}
-                title={t('admin.totalUsers')}
-                value={stats.totalUsers}
-                gradient="from-blue-600 to-cyan-500"
-                delay={0.1}
-              />
-              <StatCard
-                icon={<Briefcase size={20} className="sm:w-6 sm:h-6" />}
-                title={t('admin.totalJobs')}
-                value={stats.totalJobs}
-                gradient="from-green-600 to-emerald-500"
-                delay={0.2}
-              />
-              <StatCard
-                icon={<GraduationCap size={20} className="sm:w-6 sm:h-6" />}
-                title={t('admin.educationPrograms')}
-                value={stats.totalEducationPrograms}
-                gradient="from-indigo-600 to-blue-500"
-                delay={0.3}
-              />
-              <StatCard
-                icon={<Calendar size={20} className="sm:w-6 sm:h-6" />}
-                title={t('admin.totalEvents')}
-                value={stats.totalEvents}
-                gradient="from-purple-600 to-pink-500"
-                delay={0.4}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-              <StatCard
-                icon={<Clock size={20} className="sm:w-6 sm:h-6" />}
-                title={t('admin.pendingJobApplications')}
-                value={stats.pendingJobApplications}
-                gradient="from-amber-500 to-orange-400"
-                badge={t('admin.needsReview')}
-                delay={0.5}
-              />
-              <StatCard
-                icon={<FileText size={20} className="sm:w-6 sm:h-6" />}
-                title={t('admin.pendingVisaApplications')}
-                value={stats.pendingVisaApplications}
-                gradient="from-rose-500 to-pink-400"
-                badge={t('admin.needsReview')}
-                delay={0.6}
-              />
-              <StatCard
-                icon={<AlertCircle size={20} className="sm:w-6 sm:h-6" />}
-                title={t('admin.pendingEducationInterests')}
-                value={stats.pendingEducationInterests}
-                gradient="from-orange-600 to-red-500"
-                badge={t('admin.needsReview')}
-                delay={0.7}
-              />
-              <StatCard
-                icon={<Activity size={20} className="sm:w-6 sm:h-6" />}
-                title={t('admin.activeConversations')}
-                value={stats.activeConversations}
-                gradient="from-sky-600 to-indigo-500"
-                delay={0.8}
-              />
-            </div>
-
-            {/* NEW HIGH-END QUICK ACTION BAR */}
-            <motion.div 
-               initial={{ opacity: 0, y: 30 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: 0.9 }}
-               className="bg-white/60 backdrop-blur-2xl rounded-2xl sm:rounded-[3rem] p-4 sm:p-8 border border-white shadow-2xl shadow-purple-500/10"
-            >
-               <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-8">
-                  <div className="p-1.5 sm:p-2 bg-vibrant-purple/10 rounded-full">
-                     <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-vibrant-purple" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg sm:text-2xl font-black text-gray-900 uppercase tracking-tight">{t('admin.quickActions')}</h2>
-                    <p className="text-[10px] sm:text-sm text-gray-500 font-medium">{t('admin.dashboard.quickActionsSubtitle')}</p>
-                  </div>
-               </div>
-
-               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-6">
-                  <ModernQuickAction
-                     icon={<GraduationCap size={20} className="sm:w-[28px] sm:h-[28px]" />}
-                     label={t('admin.educationManagement')}
-                     onClick={() => setActiveTab('education')}
-                     color="indigo"
-                  />
-                  <ModernQuickAction
-                     icon={<Briefcase size={20} className="sm:w-[28px] sm:h-[28px]" />}
-                     label={t('admin.jobsManagement')}
-                     onClick={() => setActiveTab('jobs')}
-                     color="emerald"
-                  />
-                  <ModernQuickAction
-                     icon={<Users size={20} className="sm:w-[28px] sm:h-[28px]" />}
-                     label={t('admin.userManagement')}
-                     onClick={() => setActiveTab('users')}
-                     color="blue"
-                  />
-                  <ModernQuickAction
-                     icon={<FileText size={20} className="sm:w-[28px] sm:h-[28px]" />}
-                     label={t('admin.visaManagement')}
-                     onClick={() => setActiveTab('visa')}
-                     color="rose"
-                  />
-                  <ModernQuickAction
-                     icon={<UserCheck size={20} className="sm:w-[28px] sm:h-[28px]" />}
-                     label={t('admin.auPairManagement')}
-                     onClick={() => setActiveTab('au-pair')}
-                     color="purple"
-                  />
-                   <ModernQuickAction
-                     icon={<Globe size={20} className="sm:w-[28px] sm:h-[28px]" />}
-                     label={t('admin.marketplace.moderation')}
-                     onClick={() => setActiveTab('marketplace')}
-                     color="orange"
-                  />
-               </div>
-            </motion.div>
-
-            {/* ANALYTICS PREVIEW SECTION */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-8">
-                   <LiveNotifications />
-                   
-                   <GlassCard className="p-8 h-[400px] flex flex-col justify-between">
-                      <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-4">
-                           <div className="p-3 bg-blue-50 rounded-2xl">
-                              <TrendingUp className="text-blue-600 w-6 h-6" />
-                           </div>
-                           <h3 className="text-xl font-bold text-gray-900">{t('admin.dashboard.growthOverview')}</h3>
-                         </div>
-                         <select className="bg-gray-50 border-0 rounded-full px-4 py-2 text-sm font-bold text-gray-600 ring-1 ring-gray-200">
-                            <option>{t('admin.dashboard.filter.last30Days')}</option>
-                            <option>{t('admin.dashboard.filter.last6Months')}</option>
-                         </select>
-                      </div>
-                      <div className="flex-1 w-full px-6 flex items-end justify-between gap-2 h-32 my-6">
-                        {[
-                          { label: 'Users', value: stats.totalUsers, color: 'bg-indigo-500' },
-                          { label: 'Jobs', value: stats.totalJobs, color: 'bg-emerald-500' },
-                          { label: 'Market', value: stats.totalMarketplaceItems, color: 'bg-orange-500' },
-                          { label: 'Events', value: stats.totalEvents, color: 'bg-blue-500' },
-                        ].map((item, i) => {
-                          const max = Math.max(stats.totalUsers, stats.totalJobs, stats.totalMarketplaceItems, stats.totalEvents) * 1.2 || 1;
-                          const height = Math.max((item.value / max) * 100, 10);
-                          
-                          return (
-                            <div key={i} className="flex flex-col items-center gap-2 group w-full">
-                              <div className="w-full bg-gray-100 rounded-t-lg relative h-32 overflow-hidden flex items-end group-hover:bg-gray-50 transition-colors">
-                                <motion.div 
-                                  initial={{ height: 0 }}
-                                  animate={{ height: `${height}%` }}
-                                  transition={{ duration: 1, delay: i * 0.1 }}
-                                  className={`w-full ${item.color} opacity-80 group-hover:opacity-100 transition-opacity rounded-t-lg mx-auto max-w-[40px]`}
-                                />
-                              </div>
-                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.label}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="flex items-center gap-8 pt-6 border-t border-gray-100/50">
-                         <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-blue-500" />
-                            <span className="text-sm font-bold text-gray-600">Active Users</span>
-                         </div>
-                         <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-vibrant-purple" />
-                            <span className="text-sm font-bold text-gray-600">Interactions</span>
-                         </div>
-                      </div>
-                   </GlassCard>
+              {/* Main Content Area - mimicking the 'Product' table look for Overview */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-gray-900">{t('admin.dashboard.liveInquiries')}</h3>
+                  <button className="text-sm font-medium text-purple-600 hover:text-purple-700">{t('admin.dashboard.viewAll')}</button>
                 </div>
-
-                <div className="space-y-6">
-                    <button 
-                      onClick={() => setActiveTab('analytics')}
-                      className="w-full group bg-gradient-to-r from-vibrant-purple to-vibrant-pink p-[2px] rounded-3xl shadow-xl shadow-vibrant-purple/20 transition-transform active:scale-95"
-                    >
-                      <div className="bg-white/90 backdrop-blur-xl rounded-[calc(1.5rem-2px)] p-6 h-full flex flex-col items-start text-left group-hover:bg-white/80 transition-colors">
-                        <BarChart3 size={40} className="text-vibrant-purple mb-4 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-xl font-black text-gray-900 mb-2 uppercase tracking-tight">{t('admin.analytics.title')}</h3>
-                        <p className="text-gray-500 text-sm font-medium leading-relaxed">{t('admin.dashboard.analyticsSubtitle')}</p>
-                      </div>
-                    </button>
-
-                    <button 
-                      onClick={() => setActiveTab('activity')}
-                      className="w-full group bg-white/60 backdrop-blur-xl border border-white p-6 rounded-3xl shadow-lg hover:shadow-xl transition-all active:scale-95 text-left"
-                    >
-                        <div className="flex items-center gap-4 mb-4">
-                           <div className="p-2 bg-gray-100 rounded-full group-hover:bg-vibrant-purple/10 transition-colors">
-                            <Activity size={24} className="text-gray-600 group-hover:text-vibrant-purple transition-colors" />
-                           </div>
-                           <h3 className="font-bold text-gray-900 uppercase tracking-tighter">{t('admin.dashboard.systemHealth')}</h3>
-                        </div>
-                        <div className="space-y-3">
-                           <div className="flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
-                              <span>{t('admin.dashboard.database')}</span>
-                              <span className="text-green-500">{t('admin.dashboard.optimal')}</span>
-                           </div>
-                           <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                              <motion.div 
-                                initial={{ width: 0 }}
-                                animate={{ width: "95%" }}
-                                transition={{ duration: 1.5, ease: "easeOut" }}
-                                className="bg-green-500 h-full" 
-                              />
-                           </div>
-                           <div className="flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
-                              <span>{t('admin.dashboard.apiLatency')}</span>
-                              <span className="text-blue-500">24ms</span>
-                           </div>
-                        </div>
-                    </button>
-                </div>
+                <LiveNotificationsTable />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === 'education' && <EducationAdminPanel />}
-        {activeTab === 'jobs' && <JobsAdminPanel />}
-        {activeTab === 'marketplace' && <MarketplaceAdminPanel />}
-        {activeTab === 'events' && <EventsAdminPanel />}
-        {activeTab === 'users' && <UsersAdminPanel />}
-        {activeTab === 'messages' && <MessagesAdminPanel />}
-        {activeTab === 'visa' && <VisaAdminPanel />}
-        {activeTab === 'au-pair' && <AuPairAdminPanel />}
-        {activeTab === 'payments' && <PaymentsAdminPanel />}
-        {activeTab === 'analytics' && <AnalyticsPanel />}
-        {activeTab === 'activity' && <ActivityLogPanel />}
-        {activeTab === 'settings' && <SettingsPanel />}
+          {activeTab === 'education' && <EducationAdminPanel />}
+          {activeTab === 'jobs' && <JobsAdminPanel />}
+          {activeTab === 'marketplace' && <MarketplaceAdminPanel />}
+          {activeTab === 'events' && <EventsAdminPanel />}
+          {activeTab === 'users' && <UsersAdminPanel />}
+          {activeTab === 'messages' && <MessagesAdminPanel />}
+          {activeTab === 'visa' && <VisaAdminPanel />}
+          {activeTab === 'au-pair' && <AuPairAdminPanel />}
+          {activeTab === 'payments' && <PaymentsAdminPanel />}
+          {activeTab === 'analytics' && <AnalyticsPanel />}
+          {activeTab === 'activity' && <ActivityLogPanel />}
+          {activeTab === 'settings' && <SettingsPanel />}
+        </main>
       </div>
     </div>
   );
 }
 
-function StatCard({ icon, title, value, gradient, badge, delay }: {
-  icon: React.ReactNode;
-  title: string;
-  value: number;
-  gradient: string;
-  badge?: string;
-  delay: number;
-}) {
+function SimpleStatCard({ title, value, trend, trendUp, alert }: { title: string, value: number, trend: string, trendUp: boolean, alert?: boolean }) {
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, duration: 0.5 }}
-      className="group relative bg-white/40 backdrop-blur-xl rounded-2xl sm:rounded-[2rem] p-3 sm:p-6 border border-white/60 shadow-lg hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 hover:-translate-y-1 overflow-hidden"
-    >
-      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradient} opacity-[0.03] blur-3xl -mr-10 -mt-10 group-hover:opacity-[0.1] transition-opacity`} />
-      
-      <div className="relative z-10">
-        <div className="flex items-start justify-between mb-6">
-          <div className={`p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-tr ${gradient} text-white shadow-lg shadow-current/20 group-hover:scale-110 transition-transform duration-500`}>
-            {icon}
-          </div>
-          {badge && (
-            <motion.span 
-              animate={{ opacity: [1, 0.5, 1] }} 
-              transition={{ duration: 2, repeat: Infinity }}
-              className="px-3 py-1 bg-gradient-to-r from-red-500/10 to-pink-500/10 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-red-500/20"
-            >
-              {badge}
-            </motion.span>
-          )}
-        </div>
-        <div>
-          <div className="text-xl sm:text-4xl font-black text-gray-900 mb-1 tracking-tighter">
-             {(value ?? 0).toLocaleString()}
-          </div>
-          <div className="text-[8px] sm:text-sm font-bold text-gray-400 uppercase tracking-widest">{title}</div>
-        </div>
+    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+      <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+      <div className="flex items-end justify-between">
+        <h3 className="text-2xl font-semibold text-gray-900">{value.toLocaleString()}</h3>
+        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+          alert ? 'bg-red-50 text-red-600' : 
+          trendUp ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-600'
+        }`}>
+          {trend}
+        </span>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -494,15 +232,13 @@ function ModernQuickAction({ icon, label, onClick, color }: {
   );
 }
 
-function LiveNotifications() {
-  const { t } = useTranslation();
+function LiveNotificationsTable() {
+  const { t } = useI18n();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadNotifications();
-    
-    // Subscribe to new education interest submissions for real-time updates
     const channel = supabase
       .channel('education_interests_changes')
       .on('postgres_changes', { 
@@ -522,7 +258,7 @@ function LiveNotifications() {
   const loadNotifications = async () => {
     try {
       setLoading(true);
-      const data = await educationService.getLatestInterests(5);
+      const data = await educationService.getLatestInterests(10);
       setNotifications(data);
     } catch (error) {
       console.error('Error loading live notifications:', error);
@@ -537,80 +273,73 @@ function LiveNotifications() {
     alert(t('admin.contactCopied'));
   };
 
-  if (!loading && notifications.length === 0) return null;
+  if (loading) return <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>;
+  if (notifications.length === 0) return <div className="p-8 text-center text-gray-500">{t('admin.dashboard.noNewInquiries')}</div>;
 
   return (
-    <div className="bg-white/60 backdrop-blur-2xl rounded-[3rem] p-8 border border-white shadow-2xl shadow-pink-500/5">
-       <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-             <div className="p-2 bg-vibrant-pink/10 rounded-full">
-                <Sparkles className="w-6 h-6 text-vibrant-pink" />
-             </div>
-             <div>
-               <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{t('admin.dashboard.liveInquiries')}</h2>
-               <p className="text-sm text-gray-500 font-medium tracking-tight">{t('admin.dashboard.liveInquiriesSubtitle')}</p>
-             </div>
-          </div>
-          <div className="flex items-center gap-2">
-             <div className="w-2 h-2 rounded-full bg-vibrant-pink animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-widest text-vibrant-pink">{t('admin.dashboard.liveFeed')}</span>
-          </div>
-       </div>
-       
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {notifications.map((notif, idx) => (
-            <motion.div
-              key={notif.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-white/80 backdrop-blur-md p-5 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group flex flex-col h-full"
-            >
-               <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-vibrant-purple to-vibrant-pink flex items-center justify-center text-white font-black text-lg shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
-                     {notif.full_name?.charAt(0) || 'U'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-black text-gray-900 leading-tight truncate uppercase tracking-tight">{notif.full_name}</p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">
-                       {notif.resource?.title || 'Education Program'}
-                    </p>
-                  </div>
-               </div>
-               
-               <div className="mt-auto flex items-center gap-2">
-                  <a 
-                    href={`mailto:${notif.email}`} 
-                    className="flex-1 py-2.5 bg-gray-50 hover:bg-vibrant-purple hover:text-white rounded-xl text-gray-600 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
-                  >
-                    <Mail size={12} />
-                    {t('admin.email')}
-                  </a>
-                  {notif.phone && (
-                    <a 
-                      href={`tel:${notif.phone}`} 
-                      className="flex-1 py-2.5 bg-gray-50 hover:bg-emerald-600 hover:text-white rounded-xl text-gray-600 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
-                    >
-                      <Phone size={12} />
-                      {t('admin.actions.call')}
-                    </a>
-                  )}
-                  <button 
-                    onClick={() => handleCopy(notif)}
-                    className="p-2.5 bg-gray-50 hover:bg-gray-900 hover:text-white rounded-xl text-gray-400 transition-all"
-                  >
-                    <Copy size={14} />
-                  </button>
-               </div>
-            </motion.div>
-          ))}
-       </div>
-    </div>
+    <table className="w-full text-left border-collapse">
+      <thead>
+        <tr>
+          <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">{t('admin.education.columns.applicant')}</th>
+          <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">{t('admin.education.columns.program')}</th>
+          <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">{t('admin.education.columns.contact')}</th>
+          <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">{t('admin.education.columns.date')}</th>
+          <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">{t('admin.education.columns.status')}</th>
+          <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100 text-right">{t('admin.education.columns.action')}</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-50">
+        {notifications.map((notif) => (
+          <tr key={notif.id} className="hover:bg-gray-50/50 transition-colors">
+            <td className="px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-medium text-xs">
+                  {notif.full_name?.charAt(0) || 'U'}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{notif.full_name}</p>
+                  <p className="text-xs text-gray-500">{t('admin.users.userId')}: ...{notif.user_id?.slice(-4)}</p>
+                </div>
+              </div>
+            </td>
+            <td className="px-6 py-4">
+              <span className="text-sm text-gray-600">{notif.resource?.title || 'Education Program'}</span>
+            </td>
+            <td className="px-6 py-4">
+              <div className="text-sm">
+                <p className="text-gray-900">{notif.email}</p>
+                <p className="text-gray-500 text-xs">{notif.phone || 'No Phone'}</p>
+              </div>
+            </td>
+            <td className="px-6 py-4">
+              <span className="text-sm text-gray-500">{new Date(notif.created_at).toLocaleDateString()}</span>
+            </td>
+            <td className="px-6 py-4">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                notif.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
+                notif.status === 'approved' ? 'bg-green-100 text-green-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {notif.status || 'Submitted'}
+              </span>
+            </td>
+            <td className="px-6 py-4 text-right">
+              <button 
+                onClick={() => handleCopy(notif)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <Copy size={16} />
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
 function EducationAdminPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [interests, setInterests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -651,15 +380,15 @@ function EducationAdminPanel() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
       <div className="flex items-center justify-between bg-white/40 backdrop-blur-xl p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-white/60 shadow-lg">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-gray-900 uppercase tracking-tight">{t('admin.education.applications')}</h2>
-          <p className="text-[10px] sm:text-sm text-gray-500 font-medium">{t('admin.dashboard.educationSubtitle')}</p>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">{t('admin.education.applications')}</h2>
+          <p className="text-sm text-gray-500 font-medium">{t('admin.dashboard.educationSubtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('admin.education.filter.all')}</span>
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('admin.education.filter.all')}</span>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="px-3 sm:px-6 py-1.5 sm:py-2.5 bg-white border-0 rounded-full text-[10px] sm:text-sm font-bold text-gray-700 ring-1 ring-gray-200 focus:ring-2 focus:ring-vibrant-purple transition-all cursor-pointer shadow-sm"
+            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer shadow-sm"
           >
             <option value="all">{t('admin.education.filter.all')}</option>
             <option value="submitted">{t('admin.education.filter.submitted')}</option>
@@ -687,26 +416,26 @@ function EducationAdminPanel() {
               <GlassCard className="p-4 sm:p-8 hover:shadow-2xl hover:shadow-purple-500/5 transition-all group">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                   <div className="flex items-center gap-6">
-                    <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-indigo-500 to-blue-500 flex items-center justify-center text-white shadow-xl shadow-indigo-500/20 group-hover:scale-110 transition-transform">
-                      <UserCheck size={24} className="sm:w-9 sm:h-9" />
+                    <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-lg">
+                      <UserCheck size={24} />
                     </div>
                     <div>
-                      <h3 className="text-lg sm:text-2xl font-black text-gray-900 tracking-tight">
+                      <h3 className="text-lg font-bold text-gray-900 tracking-tight">
                         {interest.full_name || interest.user?.profiles?.full_name || 'Anonymous User'}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1 sm:mt-2">
-                        <span className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm font-bold text-gray-500 bg-gray-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-full ring-1 ring-gray-100">
-                           <Mail size={12} className="sm:w-3.5 sm:h-3.5 text-vibrant-purple" />
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                           <Mail size={12} className="text-purple-500" />
                            {interest.email || interest.user?.email}
                         </span>
                         {interest.phone && (
-                          <span className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm font-bold text-gray-500 bg-gray-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-full ring-1 ring-gray-100">
-                             <Phone size={12} className="sm:w-3.5 sm:h-3.5 text-vibrant-pink" />
+                          <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                             <Phone size={12} className="text-pink-500" />
                              {interest.phone}
                           </span>
                         )}
-                        <span className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm font-bold text-gray-500 bg-gray-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-full ring-1 ring-gray-100">
-                           <GraduationCap size={12} className="sm:w-3.5 sm:h-3.5 text-blue-500" />
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                           <GraduationCap size={12} className="text-blue-500" />
                            {interest.resource?.title || 'Unknown Program'}
                         </span>
                       </div>
@@ -720,21 +449,21 @@ function EducationAdminPanel() {
                         navigator.clipboard.writeText(info);
                         alert(t('admin.contactCopied'));
                       }}
-                      className="flex items-center gap-2 px-4 py-1.5 bg-white border border-gray-100 rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-vibrant-purple hover:border-vibrant-purple/30 transition-all shadow-sm"
+                      className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-500 hover:text-purple-600 hover:border-purple-200 transition-all shadow-sm"
                     >
                       <Copy size={12} />
-                      {t('admin.actions.copyContact')}
+                      {t('admin.actionLabels.copyContact')}
                     </button>
                     <div className="flex flex-col items-end">
-                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
-                        interest.status === 'submitted' ? 'bg-blue-500 text-white' :
-                        interest.status === 'under_review' ? 'bg-amber-500 text-white' :
-                        interest.status === 'approved' ? 'bg-emerald-500 text-white' :
-                        'bg-rose-500 text-white'
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        interest.status === 'submitted' ? 'bg-blue-50 text-blue-600' :
+                        interest.status === 'under_review' ? 'bg-amber-50 text-amber-600' :
+                        interest.status === 'approved' ? 'bg-green-50 text-green-600' :
+                        'bg-red-50 text-red-600'
                       }`}>
                         {interest.status.replace('_', ' ')}
                       </span>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                      <p className="text-xs text-gray-400 font-medium mt-1">
                          {new Date(interest.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -742,27 +471,27 @@ function EducationAdminPanel() {
               </div>
 
               {interest.motivation && (
-                 <div className="mt-8 p-6 bg-gray-50/50 rounded-2xl border border-gray-100/50">
-                   <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                     <Sparkles size={14} className="text-vibrant-purple" />
+                 <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2">
+                     <Sparkles size={14} className="text-purple-500" />
                      {t('admin.education.studentMotivation')}
                    </p>
-                  <p className="text-gray-700 font-medium leading-relaxed italic">"{interest.motivation}"</p>
+                  <p className="text-sm text-gray-600 leading-relaxed italic">"{interest.motivation}"</p>
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-100/50">
+              <div className="flex flex-wrap items-center gap-2 mt-6 pt-4 border-t border-gray-100">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="rounded-full px-4 sm:px-8 text-[9px] sm:text-xs font-black uppercase tracking-widest border-amber-200 text-amber-600 hover:bg-amber-50"
+                  className="rounded-lg px-4 text-xs font-medium border-amber-200 text-amber-700 hover:bg-amber-50"
                   onClick={() => handleStatusUpdate(interest.id, 'under_review')}
                 >
                   {t('admin.education.markReview')}
                 </Button>
                 <Button
                   size="sm"
-                  className="rounded-full px-4 sm:px-8 text-[9px] sm:text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
+                  className="rounded-lg px-4 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
                   onClick={() => handleStatusUpdate(interest.id, 'approved')}
                 >
                    {t('admin.education.approve')}
@@ -770,7 +499,7 @@ function EducationAdminPanel() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="rounded-full px-4 sm:px-8 text-[9px] sm:text-xs font-black uppercase tracking-widest border-rose-200 text-rose-600 hover:bg-rose-50"
+                  className="rounded-lg px-4 text-xs font-medium border-rose-200 text-rose-700 hover:bg-rose-50"
                   onClick={() => handleStatusUpdate(interest.id, 'rejected')}
                 >
                    {t('admin.education.reject')}
@@ -786,7 +515,7 @@ function EducationAdminPanel() {
 }
 
 function JobsAdminPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -865,7 +594,7 @@ function JobsAdminPanel() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 bg-white/40 backdrop-blur-xl p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-white/60 shadow-lg">
         <div>
           <h2 className="text-lg sm:text-2xl font-black text-gray-900 uppercase tracking-tight">{t('admin.jobs.management')}</h2>
-          <p className="text-[10px] sm:text-sm text-gray-500 font-medium">Control and moderate professional job listings</p>
+          <p className="text-[10px] sm:text-sm text-gray-500 font-medium">{t('admin.jobs.managementSubtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative group">
@@ -951,12 +680,12 @@ function JobsAdminPanel() {
                       <div className="flex items-center gap-3 sm:gap-6 ml-auto">
                         <div className="text-center">
                           <p className="text-sm sm:text-lg font-black text-gray-900 leading-none">{job.views_count || 0}</p>
-                          <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Views</p>
+                          <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{t('admin.jobs.stats.views')}</p>
                         </div>
                         <div className="h-6 sm:h-8 w-[1px] bg-gray-200" />
                         <div className="text-center">
                           <p className="text-sm sm:text-lg font-black text-gray-900 leading-none">{job.applications_count || 0}</p>
-                          <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Apps</p>
+                          <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{t('admin.jobs.stats.applications')}</p>
                         </div>
                       </div>
                     </div>
@@ -1024,7 +753,7 @@ function JobsAdminPanel() {
 }
 
 function MarketplaceAdminPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [items, setItems] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1149,7 +878,8 @@ function MarketplaceAdminPanel() {
                        <div>
                           <h3 className="text-lg font-black text-gray-900 tracking-tight group-hover:text-vibrant-purple transition-colors">{item.title}</h3>
                           <p className="text-xl font-black text-vibrant-purple tracking-tighter mt-1">
-                            ${item.price} {item.negotiable && <span className="text-[10px] uppercase text-gray-400 font-black tracking-widest ml-1">(OBO)</span>}
+                            ${item.price}
+                            {item.negotiable && <span className="text-[10px] uppercase text-gray-400 font-black tracking-widest ml-1">{t('admin.marketplace.obo')}</span>}
                           </p>
                        </div>
                        <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
@@ -1157,7 +887,7 @@ function MarketplaceAdminPanel() {
                         item.status === 'sold' ? 'bg-blue-500 text-white' :
                         'bg-gray-400 text-white'
                       }`}>
-                        {item.status}
+                        {t(`admin.marketplace.filter.${item.status}`)}
                       </span>
                     </div>
                     
@@ -1217,7 +947,7 @@ function MarketplaceAdminPanel() {
 }
 
 function EventsAdminPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1467,7 +1197,7 @@ function DeleteUserModal({ isOpen, onClose, onConfirm, userName, t }: { isOpen: 
 }
 
 function UsersAdminPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const { showToast } = useToast();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1811,7 +1541,7 @@ function UsersAdminPanel() {
 }
 
 function AnalyticsPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -1997,7 +1727,7 @@ function AnalyticsPanel() {
 
 
 function VisaAdminPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const { showToast } = useToast();
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean;
@@ -2012,7 +1742,7 @@ function VisaAdminPanel() {
     variant: 'info',
     onConfirm: () => {},
   });
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
@@ -2021,6 +1751,17 @@ function VisaAdminPanel() {
   const [filter, setFilter] = useState('all');
   const [documents, setDocuments] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
+
+  // Filter applications based on selected filter
+  const filteredApplications = applications.filter(app => {
+    if (filter === 'all') return true;
+    // Map UI filter values to database status values if needed, 
+    // but here they seem to match (submitted, in_review, approved, rejected)
+    // Note: 'inReview' in filter dropdown vs 'in_review' in DB
+    if (filter === 'inReview') return app.status === 'in_review';
+    if (filter === 'documents_requested') return app.status === 'documents_requested';
+    return app.status === filter;
+  });
 
   useEffect(() => {
     loadApplications();
@@ -2092,6 +1833,13 @@ function VisaAdminPanel() {
       onConfirm: async () => {
         try {
           setUpdating(applicationId);
+          // Optimistic update
+          setApplications(prev => prev.map(app => 
+            app.id === applicationId 
+              ? { ...app, status: newStatus as any } 
+              : app
+          ));
+
           await visaService.updateApplicationStatus(applicationId, newStatus as any, notes);
           await adminService.logActivity(
             'visa_status_updated',
@@ -2099,11 +1847,12 @@ function VisaAdminPanel() {
             applicationId,
             { new_status: newStatus, notes }
           );
-          await loadApplications();
           showToast('success', t('common.success'));
         } catch (error) {
           console.error('Error updating status:', error);
           showToast('error', t('common.error'));
+          // Revert optimistic update on error
+          await loadApplications();
         } finally {
           setUpdating(null);
           setConfirmConfig(prev => ({ ...prev, isOpen: false }));
@@ -2118,41 +1867,28 @@ function VisaAdminPanel() {
          window.location.href = `/messages?conversation=${application.conversation_id}`;
          return;
        }
- 
-       const { data: conversation, error: convError } = await supabase
-         .from('conversations')
-         .insert({
-           participant1_id: user?.id,
-           participant2_id: application.user_id,
-           last_message: t('admin.visa.initialMessage', { 
-             name: application.profiles?.full_name || t('admin.common.applicant'),
-             type: application.visa_type 
-           }),
-           last_message_at: new Date().toISOString()
-         })
-         .select()
-         .single();
- 
-       if (convError) throw convError;
- 
+
+       // Use messagingService to create conversation correctly with participants
+       const initialMessage = t('admin.visa.initialMessage', { 
+         name: application.profiles?.full_name || t('admin.common.applicant'),
+         type: application.visa_type 
+       });
+
+       const { conversationId } = await messagingService.createConversationWithMessage({
+         otherUserId: application.user_id,
+         contextType: 'visa',
+         contextId: application.id,
+         relatedItemTitle: `Visa: ${application.visa_type}`,
+         initialMessage: initialMessage
+       });
+
+       // Update visa application with conversation ID
        await supabase
          .from('visa_applications')
-         .update({ conversation_id: conversation.id })
+         .update({ conversation_id: conversationId })
          .eq('id', application.id);
- 
-       await supabase
-         .from('messages')
-         .insert({
-           conversation_id: conversation.id,
-           sender_id: user?.id,
-           content: t('admin.visa.initialMessage', { 
-             name: application.profiles?.full_name || t('admin.common.applicant'),
-             type: application.visa_type 
-           }),
-           is_system: false
-         });
- 
-       window.location.href = `/messages?conversation=${conversation.id}`;
+
+       window.location.href = `/messages?conversation=${conversationId}`;
     } catch (error) {
       console.error('Error initiating conversation:', error);
       showToast('error', t('admin.common.failedToStartChat'));
@@ -2186,7 +1922,7 @@ function VisaAdminPanel() {
         </div>
       </div>
 
-      {applications.length === 0 ? (
+      {filteredApplications.length === 0 ? (
         <GlassCard className="text-center py-20">
           <FileText className="mx-auto text-gray-200 mb-4" size={80} />
           <p className="text-gray-400 font-bold uppercase tracking-widest">{t('admin.visa.noApplications')}</p>
@@ -2205,7 +1941,7 @@ function VisaAdminPanel() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {applications.map((app, idx) => (
+                {filteredApplications.map((app, idx) => (
                   <motion.tr 
                     key={app.id}
                     initial={{ opacity: 0, x: -10 }}
@@ -2336,7 +2072,7 @@ function VisaAdminPanel() {
 }
 
 function ActivityLogPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -2438,7 +2174,7 @@ function ActivityLogPanel() {
   );
 }
 function MessagesAdminPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'new' | 'read' | 'replied'>('all');
@@ -2587,7 +2323,7 @@ function MessagesAdminPanel() {
 }
 
 function PaymentsAdminPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [codes, setCodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -2749,7 +2485,7 @@ function PaymentsAdminPanel() {
 
 
 function AuPairAdminPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState<'au_pair' | 'host_family'>('au_pair');
@@ -2930,7 +2666,7 @@ function AuPairAdminPanel() {
                        />
                     </div>
                     <div className="space-y-4">
-                       <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Profile Status</h4>
+                       <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">{t('admin.users.profileStatus')}</h4>
                        <div className="flex items-center gap-3">
                           <div className={`w-3 h-3 rounded-full ${selectedProfile.profile_status === 'active' ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]' : 'bg-gray-300'}`} />
                           <span className="font-black text-gray-900 uppercase tracking-tight">{selectedProfile.profile_status}</span>
@@ -2947,16 +2683,16 @@ function AuPairAdminPanel() {
 
                     <div className="grid grid-cols-2 gap-8 mb-12">
                        <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Created At</span>
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">{t('admin.users.createdAt')}</span>
                           <span className="font-bold text-gray-900">{new Date(selectedProfile.created_at).toLocaleDateString()}</span>
                        </div>
                        <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">User ID</span>
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">{t('admin.users.userId')}</span>
                           <span className="font-bold text-gray-900 text-xs truncate block">{selectedProfile.user_id}</span>
                        </div>
                     </div>
 
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Raw Metadata</h4>
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">{t('admin.users.rawMetadata')}</h4>
                     <pre className="bg-gray-900 text-purple-300 p-8 rounded-[2rem] overflow-auto max-h-96 text-xs font-mono shadow-inner">
                       {JSON.stringify(selectedProfile, null, 2)}
                     </pre>
@@ -2971,7 +2707,7 @@ function AuPairAdminPanel() {
 }
 
 function SettingsPanel() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [admins, setAdmins] = useState<any[]>([]);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -3180,7 +2916,7 @@ function SettingsPanel() {
 }
 
 function LockScreen({ user, onUnlock }: { user: any; onUnlock: () => void }) {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [error, setError] = useState('');

@@ -16,7 +16,7 @@ export function GlassCard({ children, className, delay = 0, onClick }: GlassCard
       transition={{ duration: 0.5, delay }}
       onClick={onClick}
       className={cn(
-        "bg-white rounded-[2rem] border-2 border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden",
+        "bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden",
         className
       )}
     >

@@ -109,12 +109,36 @@
       }
     },
     "dashboard": {
+      "title": "仪表板",
       "userManagementSubtitle": "管理平台用户",
       "analyticsDescription": "平台分析概览",
       "awaitingAssessment": "等待评估",
       "needsVerification": "需要验证",
       "liveChatInteractions": "实时聊天互动",
-      "activeLearningModules": "活跃学习模块"
+      "activeLearningModules": "活跃学习模块",
+      "liveInquiries": "实时查询",
+      "educationSubtitle": "审查和管理教育计划申请",
+      "marketplaceSubtitle": "审核和管理市场列表",
+      "eventsSubtitle": "管理即将举行和过去的社区活动",
+      "viewAll": "查看全部",
+      "noNewInquiries": "暂无新查询",
+      "requiresAction": "需要处理"
+    },
+    "userManagement": "用户管理",
+    "userManagementDesc": "管理用户账户和权限",
+    "jobsManagement": "职位管理",
+    "jobsManagementDesc": "管理职位发布和申请",
+    "eventsManagement": "活动管理",
+    "auPairManagement": "互惠生管理",
+    "auPairManagementDesc": "管理互惠生和寄宿家庭",
+    "moderation": "审核管理",
+    "activity": "活动日志",
+    "sidebar": {
+      "navigation": "导航",
+      "general": "常规"
+    },
+    "header": {
+      "searchPlaceholder": "搜索任何内容..."
     },
     "common": {
       "delete": "删除",
@@ -142,6 +166,82 @@
     "educationPrograms": "教育项目",
     "activityLog": "活动日志",
     "activityLogSubtitle": "最近系统活动",
+    "marketplace": {
+      "filter": {
+        "active": "生效中",
+        "all": "所有商品",
+        "flagged": "被举报",
+        "sold": "已售出"
+      },
+      "moderation": "市场审核",
+      "search": "搜索商品...",
+      "obo": "(可议价)",
+      "stats": {
+        "active": "活跃列表",
+        "sold": "已售出商品",
+        "total": "总交易额"
+      }
+    },
+    "auPair": {
+      "auPairs": "互惠生",
+      "hostFamilies": "寄宿家庭",
+      "details": "资料详情",
+      "location": "位置",
+      "children": "孩子",
+      "managementSubtitle": "管理互惠生和寄宿家庭资料",
+      "noDescription": "暂无描述",
+      "profileType": "资料类型"
+    },
+    "visaManagement": {
+      "title": "签证管理",
+      "description": "管理签证申请",
+      "applications_count": "总申请数: {{count}}",
+      "noApplications": "未找到签证申请。",
+      "unnamed_application": "未命名申请",
+      "columns": {
+        "type": "类型",
+        "submitted": "提交时间",
+        "status": "状态"
+      },
+      "filter": {
+        "all": "所有状态",
+        "submitted": "已提交",
+        "inReview": "审核中",
+        "documents_requested": "补发文件",
+        "approved": "已批准",
+        "rejected": "已拒绝"
+      },
+      "details": {
+        "title": "申请详情",
+        "fullName": "全名",
+        "nationality": "国籍",
+        "dateOfBirth": "出生日期",
+        "passportNumber": "护照号码",
+        "notes": "管理员备注"
+      },
+      "actions": {
+        "updateStatus": "更新状态",
+        "messageApplicant": "给申请人发消息"
+      },
+      "confirmStatus": "您确定要将状态更改为 {{status}} 吗？",
+      "initialMessage": "您好 {{name}}，我正就您的 {{type}} 签证申请与您联系。"
+    },
+    "visaManagementDesc": "管理签证申请",
+    "payments": {
+      "title": "支付管理",
+      "description": "管理支付和兑换码",
+      "subtitle": "为手动支付验证（微信/支付宝）生成代码",
+      "generate": "生成新代码",
+      "generating": "生成中...",
+      "code": "代码",
+      "redeemedBy": "兑换人",
+      "createdAt": "创建时间",
+      "copy": "复制代码",
+      "copied": "已复制到剪贴板！",
+      "noCodes": "尚未生成代码。点击“生成新代码”开始。",
+      "pendingRedemption": "待兑换",
+      "confirmDelete": "您确定要删除此兑换码吗？"
+    },
     "settings": {
       "title": "管理员设置",
       "security": "安全与防护",
@@ -3694,6 +3794,113 @@
         "producer": {
           "name": "导演/制片"
         }
+      }
+    },
+    "legal": {
+      "name": "法律/咨询",
+      "subcategories": {
+        "lawyer": {
+          "name": "律师/法务"
+        },
+        "consultant": {
+          "name": "咨询顾问"
+        }
+      }
+    },
+    "admin": {
+      "dashboard": {
+        "title": "仪表板",
+        "liveInquiries": "实时咨询",
+        "liveInquiriesSubtitle": "新申请实时推送",
+        "liveFeed": "实时动态",
+        "noNewInquiries": "暂时没有新咨询",
+        "growthOverview": "增长概览",
+        "systemHealth": "系统健康",
+        "database": "数据库",
+        "apiLatency": "API 延迟",
+        "optimal": "最佳",
+        "analyticsSubtitle": "查看详细平台分析",
+        "quickActionsSubtitle": "高效管理您的平台",
+        "educationSubtitle": "管理教育项目申请"
+      },
+      "portal": "管理后台",
+      "manageContent": "内容与用户管理",
+      "switchToUserView": "用户视图",
+      "backToOverview": "概览",
+      "welcomeBack": "欢迎回来",
+      "quickActions": "快速操作",
+      "totalUsers": "总用户",
+      "totalJobs": "总职位",
+      "educationPrograms": "教育项目",
+      "totalEvents": "总活动",
+      "pendingJobApplications": "待审核职位",
+      "pendingVisaApplications": "待审核签证",
+      "pendingEducationInterests": "待审核教育",
+      "activeConversations": "活跃对话",
+      "needsReview": "需审核",
+      "educationManagement": "教育",
+      "jobsManagement": "职位",
+      "userManagement": "用户",
+      "visaManagement": "签证",
+      "auPairManagement": "互惠生",
+      "marketplace": {
+        "moderation": "市场"
+      },
+      "eventsManagement": "活动",
+      "analytics": {
+        "title": "分析"
+      },
+      "settings": {
+        "title": "设置"
+      },
+      "activity": "活动日志",
+      "payments": "支付",
+      "email": "邮件",
+      "statusUpdated": "状态已更新",
+      "updateFailed": "更新状态失败",
+      "contactCopied": "联系方式已复制",
+      "viewDetails": "查看详情",
+      "common": {
+        "unknown": "未知",
+        "contact": "联系"
+      },
+      "education": {
+        "applications": "教育申请",
+        "filter": {
+          "all": "全部申请",
+          "approved": "已批准",
+          "rejected": "已拒绝",
+          "submitted": "已提交",
+          "underReview": "审核中"
+        },
+        "noApplications": "未找到教育申请",
+        "studentMotivation": "学生动机",
+        "markReview": "标记审核",
+        "approve": "批准",
+        "reject": "拒绝",
+        "columns": {
+          "applicant": "申请人",
+          "program": "项目",
+          "contact": "联系方式",
+          "date": "日期",
+          "status": "状态",
+          "action": "操作"
+        }
+      },
+      "auPair": {
+        "managementSubtitle": "管理互惠生和寄宿家庭资料",
+        "profileType": "资料类型",
+        "auPairs": "互惠生",
+        "hostFamilies": "寄宿家庭",
+        "children": "孩子",
+        "noDescription": "暂无描述"
+      },
+      "users": {
+        "userId": "用户ID"
+      },
+      "actions": {
+        "call": "拨打",
+        "copyContact": "复制联系方式"
       }
     },
     "legal": {
