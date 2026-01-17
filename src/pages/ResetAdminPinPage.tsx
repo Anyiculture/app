@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import { Lock, ArrowLeft, Shield } from 'lucide-react';
-import { Button, Loading, GlassCard } from '../components/ui';
+import { Shield } from 'lucide-react';
+import { Button, Loading } from '../components/ui';
 
 export function ResetAdminPinPage() {
   const { t } = useTranslation();

@@ -32,8 +32,8 @@ export function MarketplacePostPage() {
   const contactMethods = useMemo<{ value: string; label: string; id: string }[]>(() => [
     { value: 'in_app', label: t('marketplacePost.contact_methods.in_app') || 'In-app Messaging', id: 'in_app' },
     { value: 'phone', label: t('marketplacePost.contact_methods.phone') || 'Phone', id: 'phone' },
-    { value: 'wechat', label: t('marketplace.post.contact_methods.wechat') || 'WeChat', id: 'wechat' },
-    { value: 'email', label: t('marketplace.post.contact_methods.email') || 'Email', id: 'email' },
+    { value: 'wechat', label: t('marketplacePost.contact_methods.wechat') || 'WeChat', id: 'wechat' },
+    { value: 'email', label: t('marketplacePost.contact_methods.email') || 'Email', id: 'email' },
   ], [t]);
 
   const [formData, setFormData] = useState({
@@ -477,18 +477,18 @@ export function MarketplacePostPage() {
                           }
                         }}
                       >
-                        <option value="">{t('marketplace.post.brand.select')}</option>
+                        <option value="">{t('marketplacePost.selectBrand')}</option>
                         {getBrands(formData.category).map(brand => (
                           <option key={brand} value={brand}>{brand}</option>
                         ))}
-                        <option value="other">{t('marketplace.post.brand.other')}</option>
+                        <option value="other">{t('marketplacePost.otherBrand')}</option>
                       </Select>
                       {isCustomBrand && (
                         <Input
                           type="text"
                           value={formData.brand}
                           onChange={(e) => handleChange('brand', e.target.value)}
-                          placeholder={t('marketplace.post.brand.enter')}
+                          placeholder={t('marketplacePost.enterBrand')}
                           autoFocus
                         />
                       )}
@@ -498,7 +498,7 @@ export function MarketplacePostPage() {
                       type="text"
                       value={formData.brand}
                       onChange={(e) => handleChange('brand', e.target.value)}
-                      placeholder={t('marketplace.post.brand.placeholder')}
+                      placeholder={t('marketplacePost.brandPlaceholder')}
                     />
                   )}
                 </div>
@@ -556,7 +556,7 @@ export function MarketplacePostPage() {
                       type="text"
                       value={formData.size}
                       onChange={(e) => handleChange('size', e.target.value)}
-                      placeholder={t('marketplace.post.size.placeholder')}
+                      placeholder={t('marketplacePost.sizePlaceholder')}
                     />
                   )}
                 </div>
@@ -684,7 +684,7 @@ export function MarketplacePostPage() {
                     onChange={(e) => setSelectedProvince(e.target.value)}
                     required
                   >
-                    <option value="">{t('marketplace.post.location.selectProvince')}</option>
+                    <option value="">{t('marketplacePost.selectProvince')}</option>
                     {getAllProvinces().map(province => (
                       <option key={province.name_en} value={province.name_en}>
                         {language === 'zh' ? province.name_zh : province.name_en}
@@ -703,7 +703,7 @@ export function MarketplacePostPage() {
                     required
                     disabled={!selectedProvince}
                   >
-                    <option value="">{t('marketplace.post.location.selectCity')}</option>
+                    <option value="">{t('marketplacePost.selectCity')}</option>
                     {availableCities.map(city => (
                       <option key={city.name_en} value={city.name_en}>
                         {language === 'zh' ? city.name_zh : city.name_en}

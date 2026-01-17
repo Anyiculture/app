@@ -117,12 +117,12 @@ export function Sidebar({ isOpen, onClose, onToggle: _onToggle }: SidebarProps) 
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">A</span>
               </div>
-              <span className="text-xl font-bold text-white">ANYCULTURE</span>
+              <span className="text-xl font-bold text-white">{t('common.brandUpper')}</span>
             </Link>
             <button
               onClick={onClose}
               className="lg:hidden p-2 hover:bg-slate-800 rounded-lg transition-colors"
-              aria-label="Close menu"
+              aria-label={t('common.closeMenu')}
             >
               <X size={20} />
             </button>
@@ -194,7 +194,7 @@ export function Sidebar({ isOpen, onClose, onToggle: _onToggle }: SidebarProps) 
                   }`}
                 >
                   <Shield size={20} className="flex-shrink-0" />
-                  <span className="font-medium text-sm">Admin Portal</span>
+                  <span className="font-medium text-sm">{t('nav.adminPortal')}</span>
                 </Link>
               )}
 

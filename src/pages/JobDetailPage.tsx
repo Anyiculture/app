@@ -35,6 +35,7 @@ import { QuickChatButton } from '../components/jobs/QuickChatButton';
 import { SayHiButton } from '../components/jobs/SayHiButton';
 import { GuardrailModal } from '../components/GuardrailModal';
 import { SuccessModal } from '../components/SuccessModal';
+import { TranslateWrapper } from '../components/ui/TranslateWrapper';
 import { supabase } from '../lib/supabase';
 
 interface EmployerProfile {
@@ -439,7 +440,12 @@ export function JobDetailPage() {
 
           <div className="mb-6">
             <h2 className="text-lg font-bold text-gray-900 mb-2">{t('jobs.jobDescription')}</h2>
-            <div className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">{job.description}</div>
+            <TranslateWrapper 
+              text={job.description}
+              dbTranslation={null}
+              as="div"
+              className="text-gray-700 whitespace-pre-line text-sm leading-relaxed"
+            />
           </div>
 
           {job.education_required && (

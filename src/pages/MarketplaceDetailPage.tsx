@@ -14,6 +14,7 @@ import {
 import { format } from 'date-fns';
 import { zhCN, enUS } from 'date-fns/locale';
 import { useToast } from '../components/ui/Toast';
+import { TranslateWrapper } from '../components/ui/TranslateWrapper';
 
 export function MarketplaceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -368,11 +369,12 @@ export function MarketplaceDetailPage() {
 
               <div className="border-t border-gray-100 pt-5">
                 <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('marketplaceDetail.description')}</h2>
-                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm">
-                  {language === 'zh' && item.description_zh
-                    ? item.description_zh
-                    : item.description || t('marketplaceDetail.noDescription')}
-                </p>
+                <TranslateWrapper 
+                  text={item.description || t('marketplaceDetail.noDescription')}
+                  dbTranslation={language === 'zh' ? item.description_zh : null}
+                  as="p"
+                  className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm"
+                />
               </div>
 
               {/* Product Specifications */}

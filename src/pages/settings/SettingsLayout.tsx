@@ -14,8 +14,10 @@ import {
   ChevronRight,
   Briefcase,
   Baby,
-  Home,
-  FileText
+  Home, 
+  FileText,
+  Bell,
+  Star
 } from 'lucide-react';
 
 export function SettingsLayout() {
@@ -66,7 +68,9 @@ export function SettingsLayout() {
 
   const navItems = [
     { to: '/settings/general', label: t('settings.generalProfile'), icon: User },
+    { to: '/settings/interests', label: t('settings.myInterests'), icon: Star },
     { to: '/settings/security', label: t('settings.accountSecurity'), icon: Shield },
+    { to: '/settings/notifications', label: t('settings.notifications.label'), icon: Bell },
     { to: '/settings/billing', label: t('settings.billingPlans'), icon: CreditCard },
   ];
 

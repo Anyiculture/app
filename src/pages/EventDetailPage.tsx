@@ -8,10 +8,11 @@ import { Button } from '../components/ui/Button';
 import { Loading } from '../components/ui/Loading';
 import { Calendar, MapPin, Users, Clock, ArrowLeft, User, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { TranslateWrapper } from '../components/ui/TranslateWrapper';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
@@ -207,9 +208,12 @@ export function EventDetailPage() {
 
               <div className="border-t pt-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('events.detail.aboutEvent')}</h2>
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {event.description || t('events.detail.noDescription')}
-                </p>
+                <TranslateWrapper 
+                  text={event.description || t('events.detail.noDescription')}
+                  dbTranslation={language === 'zh' ? event.description_zh : null}
+                  as="p"
+                  className="text-gray-700 whitespace-pre-wrap"
+                />
               </div>
             </div>
           </div>

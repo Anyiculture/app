@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StripeProduct } from '../../stripe-config';
 import { createCheckoutSession } from '../../lib/stripe';
 import { Loader2, CreditCard } from 'lucide-react';
+import { useI18n } from '../../contexts/I18nContext';
 
 interface SubscriptionCardProps {
   product: StripeProduct;
@@ -9,6 +10,7 @@ interface SubscriptionCardProps {
 
 export function SubscriptionCard({ product }: SubscriptionCardProps) {
   const [loading, setLoading] = useState(false);
+  const { t } = useI18n();
 
   const handleSubscribe = async () => {
     setLoading(true);
@@ -44,7 +46,7 @@ export function SubscriptionCard({ product }: SubscriptionCardProps) {
             {product.currencySymbol}{product.price}
           </span>
           {product.mode === 'subscription' && (
-            <span className="text-gray-600 ml-1">/month</span>
+            <span className="text-gray-600 ml-1">{t('subscription.month')}</span>
           )}
         </div>
         <button
@@ -57,7 +59,7 @@ export function SubscriptionCard({ product }: SubscriptionCardProps) {
           ) : (
             <CreditCard className="w-4 h-4 mr-2" />
           )}
-          {loading ? 'Processing...' : 'Subscribe Now'}
+          {loading ? t('common.processing') : t('subscription.subscribeNow')}
         </button>
       </div>
     </div>

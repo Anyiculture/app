@@ -320,7 +320,7 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
            });
            if (insertProfileError) {
              console.error('Failed to auto-create missing profile:', insertProfileError);
-             throw new Error('User profile missing. Please contact support.');
+             throw new Error(t('common.userProfileMissing'));
            }
         }
       }
@@ -425,7 +425,7 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
           ) : (
             <div className="text-center">
               <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-vibrant-purple to-vibrant-pink tracking-tight mb-2">
-                {t('common.editProfile') || 'Edit Profile'}
+                {t('common.editProfile')}
               </h2>
               <p className="text-gray-500">{t('jobsOnboarding.editProfileDesc')}</p>
             </div>
@@ -498,7 +498,7 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">{t('jobsOnboarding.middleName')} <span className="text-gray-400 font-normal">(Optional)</span></label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">{t('jobsOnboarding.middleName')} <span className="text-gray-400 font-normal">({t('auth.optional')})</span></label>
                   <input
                     type="text"
                     value={formData.middle_name}
@@ -531,7 +531,7 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
                   disabled={isViewOnly}
                 />
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">{t('jobsOnboarding.wechatId')} <span className="text-gray-400 font-normal">(Optional)</span></label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">{t('jobsOnboarding.wechatId')} <span className="text-gray-400 font-normal">({t('auth.optional')})</span></label>
                   <input
                     type="text"
                     value={formData.wechat_id}
@@ -971,8 +971,8 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
           setShowSaveConfirm(false);
           handleSubmit();
         }}
-        title={t('common.confirmSaveTitle') || "Save Changes?"}
-        message={t('common.confirmSaveMessage') || "Are you sure you want to save these changes? This action is irreversible."}
+        title={t('common.confirmSaveTitle')}
+        message={t('common.confirmSaveMessage')}
         confirmText={t('common.saveChanges')}
         type="danger"
       />
@@ -994,7 +994,9 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
            <div className="w-24 h-24 bg-purple-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
            </div>
-           <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('jobsOnboarding.creatingProfile')}</h3>
+           <h3 className="text-2xl font-bold text-gray-900 mb-2">
+             {isEditing ? t('common.saving') : t('jobsOnboarding.creatingProfile')}
+           </h3>
            <p className="text-gray-500">{t('jobsOnboarding.waitMessage')}</p>
         </div>
       )}

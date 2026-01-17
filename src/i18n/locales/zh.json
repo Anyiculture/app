@@ -57,8 +57,12 @@
         "acknowledge": "标记为已收到",
         "approve": "批准",
         "reject": "拒绝",
-        "requestDocs": "请求文件"
+        "requestDocs": "请求文件",
+        "updateStatus": "更新状态",
+        "messageApplicant": "给申请人发消息"
       },
+      "initialMessage": "您好 {{name}}，您的 {{type}} 签证申请正在审核中。我们将在此继续沟通。",
+      "confirmStatus": "确认将状态更改为 {{status}}？",
       "common": {
         "unknown": "未知",
         "noEmail": "无邮箱",
@@ -93,7 +97,16 @@
         "deleteMessage": "您确定要删除 {{userName}} 吗？"
       },
       "ban": "封禁",
-      "unban": "解封"
+      "unban": "解封",
+      "actionCompleted": "{{action}} 操作成功",
+      "actionFailed": "{{action}} 失败",
+      "deleteModal": {
+        "title": "删除用户",
+        "description": "为确认删除，请输入用户名：{{userName}}",
+        "placeholder": "输入用户名",
+        "confirm": "删除用户",
+        "cancel": "取消"
+      }
     },
     "dashboard": {
       "userManagementSubtitle": "管理平台用户",
@@ -107,7 +120,7 @@
       "delete": "删除",
       "deletionCancelled": "删除已取消",
       "search": "搜索",
-      "noResults": "未找到结果",
+      "failedToStartChat": "无法开始聊天，请重试。",
       "filter": "筛选",
       "applicant": "申请人"
     },
@@ -128,7 +141,16 @@
     "activeConversations": "活跃对话",
     "educationPrograms": "教育项目",
     "activityLog": "活动日志",
-    "activityLogSubtitle": "最近系统活动"
+    "activityLogSubtitle": "最近系统活动",
+    "settings": {
+      "title": "管理员设置",
+      "security": "安全与防护",
+      "passwordReset": "密码重置",
+      "passwordResetDesc": "请求为您的管理员账户发送密码重置链接。",
+      "sendResetEmail": "发送重置邮件",
+      "emailSent": "重置邮件已发送！",
+      "resetEmailError": "发送重置邮件失败"
+    }
   },
   "common": {
     "step": "步骤",
@@ -141,7 +163,7 @@
     "success": "成功",
     "linkCopied": "链接已复制到剪贴板",
     "save": "保存",
-    "saveChanges": "Save Changes",
+    "saveChanges": "保存更改",
     "chooseFile": "选择文件",
     "cancel": "取消",
     "delete": "删除",
@@ -182,6 +204,8 @@
     "active": "生效中",
     "yearsExp": "年经验",
     "editProfile": "编辑个人资料",
+    "viewProfile": "查看个人资料",
+    "confirmSaveTitle": "保存更改？",
     "goToJobs": "前往职位列表",
     "reloadPage": "重新加载",
     "technicalDetails": "技术详情",
@@ -205,6 +229,7 @@
     "minSalary": "最低薪资",
     "anyDistance": "任意距离",
     "distance": "距离",
+    "everywhere": "任意城市",
     "priceRange": "价格范围",
     "resetAll": "全部重置",
     "required": "必填",
@@ -266,7 +291,7 @@
     "thumbnailNumber": "Thumbnail Number",
     "unableToContact": "Unable To Contact",
     "unknown": "Unknown",
-    "urlPlaceholder": "Url Placeholder",
+    "urlPlaceholder": "https://example.com",
     "verify": "Verify",
     "welcome": "Welcome",
     "savePreferences": "Save Preferences",
@@ -312,7 +337,6 @@
     "premiumOnly": "仅限高级会员",
     "premiumProfile": "高级资料",
     "flexible": "灵活",
-    "confirmSaveTitle": "保存更改？",
     "confirmSaveMessage": "您确定要保存这些更改吗？此操作无法撤消。",
     "candidate": "候选人",
     "locationHidden": "位置隐藏"
@@ -473,27 +497,27 @@
       "trendingItems": "热门商品",
       "activeMembers": "1.2万+ 活跃会员"
     },
-    "auPairFeature1": "Au Pair Feature1",
-    "auPairFeature2": "Au Pair Feature2",
-    "auPairFeature3": "Au Pair Feature3",
-    "communityFeature1": "Community Feature1",
-    "communityFeature2": "Community Feature2",
-    "communityFeature3": "Community Feature3",
-    "educationFeature1": "Education Feature1",
-    "educationFeature2": "Education Feature2",
-    "educationFeature3": "Education Feature3",
-    "eventsFeature1": "Events Feature1",
-    "eventsFeature2": "Events Feature2",
-    "eventsFeature3": "Events Feature3",
-    "jobsFeature1": "Jobs Feature1",
-    "jobsFeature2": "Jobs Feature2",
-    "jobsFeature3": "Jobs Feature3",
-    "marketplaceFeature1": "Marketplace Feature1",
-    "marketplaceFeature2": "Marketplace Feature2",
-    "marketplaceFeature3": "Marketplace Feature3",
-    "visaFeature1": "Visa Feature1",
-    "visaFeature2": "Visa Feature2",
-    "visaFeature3": "Visa Feature3"
+    "auPairFeature1": "经过筛选的互惠生与寄宿家庭",
+    "auPairFeature2": "清晰的时间安排与职责说明",
+    "auPairFeature3": "安全有保障的家庭文化交流体验",
+    "communityFeature1": "按兴趣划分的本地社群",
+    "communityFeature2": "关于在华生活和工作的问答交流",
+    "communityFeature3": "分享经验、故事和实用建议",
+    "educationFeature1": "语言学校与高校课程资源",
+    "educationFeature2": "热门领域的短期技能提升课程",
+    "educationFeature3": "认证机构，价格透明",
+    "eventsFeature1": "周末聚会、节日活动和文化体验",
+    "eventsFeature2": "职业社交与学习活动",
+    "eventsFeature3": "按城市、价格和语言筛选活动",
+    "jobsFeature1": "精心筛选的一线城市岗位",
+    "jobsFeature2": "面向国际人才的认证雇主",
+    "jobsFeature3": "智能筛选，匹配你的技能",
+    "marketplaceFeature1": "社区成员发布的可信二手好物",
+    "marketplaceFeature2": "几分钟即可用手机发布物品",
+    "marketplaceFeature3": "内置聊天，轻松约定安全当面交易",
+    "visaFeature1": "针对不同签证类型的分步骤清单",
+    "visaFeature2": "材料提醒与状态跟踪",
+    "visaFeature3": "需要时可连接可信合作机构"
   },
   "about": {
     "title": "关于",
@@ -543,7 +567,7 @@
     "appDescription": "告诉我们为什么您是绝佳人选...",
     "appSuccessMessage": "我们将审核您的申请并尽快回复您。",
     "appSuccessDesc": "App Success Desc",
-    "resumePlaceholder": "Resume Placeholder",
+    "resumePlaceholder": "上传简历或链接",
     "appSuccess": "Application Submitted!"
   },
   "privacy": {
@@ -605,7 +629,7 @@
     "createNewAccount": "Create New Account",
     "createYourAccount": "Create Your Account",
     "creatingAccount": "Creating Account",
-    "emailPlaceholder": "Email Placeholder",
+    "emailPlaceholder": "请输入您的邮箱",
     "logInToExisting": "Log In To Existing",
     "or": "Or",
     "signInToAccount": "Sign In To Account",
@@ -1100,13 +1124,36 @@
     "searching": "搜索中...",
     "results": "个结果",
     "for": "搜索",
-    "categories": "[object Object]",
+    "categories": {
+      "select": "选择类别",
+      "subcategorySelect": "选择子类别",
+      "category": "类别",
+      "subcategory": "子类别"
+    },
     "fillRequired": "Fill Required",
     "itemNotFound": "Item Not Found",
     "loadFailed": "Load Failed",
     "maxImages": "Max Images",
     "noPermission": "No Permission",
-    "post": "[object Object]",
+    "post": {
+      "brand": {
+        "enter": "输入品牌",
+        "other": "其他",
+        "placeholder": "例如：Nike",
+        "select": "选择品牌"
+      },
+      "contact_methods": {
+        "email": "邮箱",
+        "wechat": "微信"
+      },
+      "location": {
+        "selectCity": "选择城市",
+        "selectProvince": "选择省份"
+      },
+      "size": {
+        "placeholder": "例如：M, L, 42"
+      }
+    },
     "priceRangeWithCurrency": "Price Range With Currency",
     "reportListing": "举报商品",
     "reset": "Reset",
@@ -1165,7 +1212,7 @@
     "description": "描述（英文）",
     "descriptionPlaceholder": "描述您的商品：状况、特点、出售原因等。",
     "photos": "照片",
-    "photosHelp": "添加商品图片链接（最多10张）",
+    "photosHelp": "上传商品图片（最多10张）",
     "imageUrl": "图片链接",
     "imageUrlPlaceholder": "https://example.com/image.jpg",
     "addImage": "添加图片",
@@ -1239,8 +1286,8 @@
       "create_success": "发布成功",
       "max_images": "最多上传10张图片",
       "upload_success": "图片上传成功",
-      "create_failed": "Create_failed",
-      "image_size": "Image_size"
+      "create_failed": "发布失败，请稍后重试",
+      "image_size": "图片大小超过限制，最大支持 5MB"
     },
     "optional": "(可选)",
     "selectSize": "Select Size"
@@ -1309,7 +1356,9 @@
       "events": "活动",
       "lifeInChina": "在中国生活"
     },
-    "myPosts": "[object Object]"
+    "myPosts": {
+      "title": "我的帖子"
+    }
   },
   "myJobs": {
     "title": "我的职位仪表板",
@@ -1401,6 +1450,9 @@
     "allLocations": "所有地点",
     "allTypes": "所有类型",
     "allLevels": "所有级别",
+    "allJobTypes": "所有职位类型",
+    "allRemoteTypes": "所有工作方式",
+    "allExperience": "所有经验水平",
     "featuredJobs": "精选职位",
     "allJobs": "所有职位",
     "recentJobs": "最新职位",
@@ -1478,7 +1530,12 @@
     "upTo": "最高",
     "addSkill": "Add Skill",
     "added": "Added",
-    "categories": "[object Object]",
+    "categories": {
+      "category": "职位类别",
+      "select": "选择职位类别",
+      "subcategory": "细分领域",
+      "subcategorySelect": "选择细分领域"
+    },
     "chat": "聊一聊",
     "employerPortal": "Employer Portal",
     "findTalent": "Find Talent",
@@ -1571,7 +1628,7 @@
     "submitApplication": "提交申请",
     "submitting": "提交中...",
     "additionalInfo": "Additional Info",
-    "additionalInfoPlaceholder": "Additional Info Placeholder",
+    "additionalInfoPlaceholder": "其他相关信息...",
     "almostDone": "Almost Done",
     "applicationSubmitted": "Application Submitted",
     "applicationSubmittedDesc": "Application Submitted Desc",
@@ -1608,7 +1665,14 @@
     "generalProfile": "通用资料",
     "myInterests": "我的兴趣",
     "accountSecurity": "账户安全",
-    "notifications": "通知",
+    "notifications": {
+      "label": "通知",
+      "title": "通知偏好",
+      "description": "管理您接收通知的方式。",
+      "loadError": "加载偏好设置失败。",
+      "saved": "偏好设置已保存。",
+      "saveError": "保存偏好设置失败。"
+    },
     "billingPlans": "账单与订阅",
     "updateSuccess": "资料更新成功！",
     "updateError": "更新资料失败，请重试。",
@@ -1805,14 +1869,14 @@
     "consultantsReady": "我们经验丰富的顾问将指导您完成整个流程的每一步",
     "contactUs": "联系我们",
     "landing": {
-      "title": "签证申请中心",
-      "subtitle": "您的签证申请之旅的专家指导",
+      "title": "签证服务",
+      "subtitle": "为您提供前往中国的专业指导。我们简化复杂的签证申请流程。",
       "learnMore": "了解更多",
-      "readyToStart": "准备开始申请签证了吗？",
-      "ctaDescription": "在整个签证申请过程中获得专家支持",
+      "readyToStart": "准备开始？",
+      "ctaDescription": "立即使用我们的向导系统开始您的签证申请流程。",
       "startApplication": "开始申请",
       "signInRequired": "需要登录",
-      "signInMessage": "请登录或创建帐户以开始您的签证申请"
+      "signInMessage": "请登录或创建账户以开始您的签证申请。"
     },
     "types": {
       "work_z": {
@@ -1991,9 +2055,41 @@
       "openMessages": "打开消息",
       "timeline": "时间轴"
     },
-    "educationLevels": "[object Object]",
-    "guidelines": "[object Object]",
-    "purposes": "[object Object]"
+    "educationLevels": {
+      "associate": "副学士学位",
+      "bachelor": "学士学位",
+      "high_school": "高中",
+      "language": "语言课程",
+      "master": "硕士学位",
+      "other": "其他",
+      "phd": "博士学位"
+    },
+    "guidelines": {
+      "title": "申请指南",
+      "timing": {
+        "title": "处理时间",
+        "description": "标准处理需要4个工作日。提供加急服务。"
+      },
+      "documents": {
+        "title": "所需文件",
+        "description": "根据签证类型准备您的护照、照片和证明文件。"
+      },
+      "assistance": {
+        "title": "专家协助",
+        "description": "我们的团队在您的申请过程中提供24/7支持。"
+      }
+    },
+    "purposes": {
+      "business": "商务",
+      "crew": "机组人员",
+      "family": "家庭",
+      "other": "其他",
+      "study": "学习",
+      "talent": "人才",
+      "tourism": "旅游",
+      "transit": "过境",
+      "work": "工作"
+    }
   },
   "messaging": {
     "title": "消息",
@@ -3248,6 +3344,20 @@
     "resumeTip": "提供简历有助于雇主快3倍审核您的资料。",
     "fullName": "全名",
     "enterFullName": "输入您的全名",
+    "employees": "员工",
+    "visitWebsite": "访问网站",
+    "viewLinkedin": "查看 LinkedIn",
+    "companyDescription": "关于我们",
+    "techStack": "技术栈",
+    "companyPhotos": "公司照片",
+    "openPositions": "在招职位",
+    "noOpenPositions": "暂无在招职位",
+    "companyDetails": "公司详情",
+    "type": "类型",
+    "founded": "成立年份",
+    "headquarters": "总部",
+    "officeAddress": "办公地址",
+    "imagesAndCulture": "图片与文化",
     "firstName": "名",
     "firstNamePlaceholder": "例如：John",
     "middleName": "中间名",
@@ -3287,8 +3397,6 @@
     "hybrid": "混合",
     "minSalary": "最低薪资（人民币/月）",
     "techStackQuestion": "贵公司使用哪些技术？",
-    "imagesAndCulture": "图片与文化",
-    "techStack": "技术栈",
     "companyInfo": "公司信息",
     "companyName": "公司名称",
     "industry": "行业",
@@ -3302,7 +3410,6 @@
     "recruitmentAgency": "招聘代理",
     "recruitmentAgencyDesc": "为客户招聘",
     "companyLogo": "公司Logo",
-    "companyPhotos": "公司照片",
     "website": "网站",
     "websitePlaceholder": "https://yourcompany.com",
     "readyToComplete": "准备完成",
@@ -3334,9 +3441,9 @@
     "techStackDesc": "分享您的技术栈有助于吸引相关的开发人才。",
     "resumeUrlPlaceholder": "https://yourresume.com",
     "failedToSaveRole": "保存角色失败，请重试。",
-    "bioPlaceholder": "Bio Placeholder",
-    "resumePlaceholder": "Resume Placeholder",
-    "salaryPlaceholder": "Salary Placeholder",
+    "bioPlaceholder": "请介绍一下自己...",
+    "resumePlaceholder": "上传简历或链接",
+    "salaryPlaceholder": "例如：10k-15k",
     "updateCompanyInfo": "Update Company Info",
     "bio": "Bio",
     "preferencesDescription": "What kind of work are you looking for?",
@@ -3395,17 +3502,7 @@
     "certName": "Certification Name",
     "issuingOrg": "Issuing Organization",
     "jobSeekerDesc": "寻找就业机会和职业发展",
-    "employerDesc": "发布职位并寻找合适的人才",
-    "companyDescription": "关于我们",
-    "companyDetails": "公司详情",
-    "type": "类型",
-    "founded": "成立年份",
-    "headquarters": "总部",
-    "officeAddress": "办公地址",
-    "openPositions": "在招职位",
-    "noOpenPositions": "暂无在招职位",
-    "visitWebsite": "访问网站",
-    "viewLinkedin": "查看 LinkedIn"
+    "employerDesc": "发布职位并寻找合适的人才"
   },
   "search": {
     "modules": "模块",
@@ -3422,7 +3519,9 @@
       "event": "活动",
       "marketplace": "市场",
       "education": "教育",
-      "community": "社区"
+      "community": "社区",
+      "au_pair": "互惠生",
+      "visa": "签证服务"
     }
   },
   "jobCategories": {
@@ -3691,569 +3790,23 @@
     }
   },
   "myEvents": {
-      "title": "我的活动",
-      "subtitle": "管理您的活动列表",
-      "createEvent": "创建活动",
-      "searchPlaceholder": "搜索活动...",
-      "noEvents": "暂无活动",
-      "startPosting": "开始创建您的第一个活动",
-      "createFirstEvent": "创建您的第一个活动",
-      "loading": "正在加载您的活动...",
-      "deleteConfirm": "您确定要删除此活动吗？",
-      "deleteError": "删除活动失败",
-      "attendees": "参与者",
-      "status": {
-        "published": "已发布",
-        "draft": "草稿",
-        "cancelled": "已取消"
-      },
-      "edit": "编辑"
+    "title": "我的活动",
+    "subtitle": "管理您的活动列表",
+    "createEvent": "创建活动",
+    "searchPlaceholder": "搜索活动...",
+    "noEvents": "暂无活动",
+    "startPosting": "开始创建您的第一个活动",
+    "createFirstEvent": "创建您的第一个活动",
+    "loading": "正在加载您的活动...",
+    "deleteConfirm": "您确定要删除此活动吗？",
+    "deleteError": "删除活动失败",
+    "attendees": "参与者",
+    "status": {
+      "published": "已发布",
+      "draft": "草稿",
+      "cancelled": "已取消"
     },
-  "admin": {
-    "portal": "管理后台",
-    "manageContent": "管理平台内容和用户",
-    "welcomeBack": "欢迎回来",
-    "overview": "概览",
-    "dashboard": {
-      "title": "仪表盘",
-      "liveInquiries": "实时咨询",
-      "liveInquiriesSubtitle": "学生的实时更新",
-      "liveFeed": "实时动态",
-      "growthOverview": "增长概览",
-      "chartPlaceholder": "图表展示",
-      "analyticsSubtitle": "查看详细报告和指标",
-      "systemHealth": "系统健康",
-      "database": "数据库",
-      "optimal": "最佳",
-      "apiLatency": "API 延迟",
-      "quickActionsSubtitle": "高效管理平台",
-      "filter": {
-        "last30Days": "最近30天",
-        "last6Months": "最近6个月"
-      }
-    },
-    "stats": {
-      "users": "用户总数",
-      "jobs": "发布职位",
-      "marketplace": "市场商品",
-      "events": "活动",
-      "education": "教育项目",
-      "pendingJobs": "待审职位",
-      "pendingEducation": "待审教育",
-      "pendingVisa": "待审签证",
-      "conversations": "对话",
-      "activeUsers": "活跃用户",
-      "interactions": "互动"
-    },
-    "totalUsers": "总用户数",
-    "totalJobs": "职位总数",
-    "educationPrograms": "教育项目",
-    "totalEvents": "活动总数",
-    "pendingJobApplications": "待处理职位申请",
-    "pendingVisaApplications": "待处理签证申请",
-    "pendingEducationInterests": "待处理教育意向",
-    "activeConversations": "活跃对话",
-    "needsReview": "需审核",
-    "quickActions": "快速操作",
-    "educationManagement": "教育管理",
-    "educationManagementDesc": "审核和管理教育项目申请",
-    "jobsManagement": "职位管理",
-    "jobsManagementDesc": "管理职位发布和申请",
-    "userManagement": "用户管理",
-    "userManagementDesc": "管理用户账户和权限",
-    "activityLog": "活动日志",
-    "activityLogDesc": "查看管理员操作和系统活动",
-    "auPairManagement": "互惠生管理",
-    "auPairManagementDesc": "管理互惠生和寄宿家庭",
-    "visaManagement": "签证管理",
-    "visaManagementDesc": "管理签证申请",
-    "backToDashboard": "返回仪表板",
-    "switchToUserView": "切换到用户视图",
-    "backToOverview": "返回概览",
-    "marketplaceItems": "市场商品",
-    "visaApplications": "签证申请",
-    "manageAndReview": "管理和审核",
-    "applicant": "申请人",
-    "visaType": "签证类型",
-    "status": "状态",
-    "submitted": "提交日期",
-    "actions": "操作",
-    "noApplications": "未找到申请",
-    "securityNotice": "安全提示",
-    "securityNoticeDesc": "用户管理操作已被记录并审计。破坏性操作需要确认且无法撤销。",
-    "user": "用户",
-    "role": "角色",
-    "joined": "加入时间",
-    "viewDetails": "查看详情",
-    "messageUser": "发消息给用户",
-    "banUser": "封禁用户",
-    "deleteUser": "删除用户（危险）",
-    "active": "活跃",
-    "banned": "已封禁",
-    "unknown": "未知",
-    "userDetails": "用户详情",
-    "basicInfo": "基本信息",
-    "accountStatus": "账户状态",
-    "name": "姓名",
-    "email": "邮箱",
-    "phone": "电话",
-    "location": "位置",
-    "lastLogin": "最后登录",
-    "onboardingCompleted": "入职完成",
-    "modules": {
-      "title": "模块",
-      "jobsDesc": "管理和审核专业职位列表"
-    },
-    "primaryInterest": "主要兴趣",
-    "events": {
-      "management": "活动管理",
-      "all": "所有活动",
-      "upcoming": "即将开始",
-      "past": "已结束",
-      "featured": "精选",
-      "create": "创建活动",
-      "edit": "编辑",
-      "delete": "删除",
-      "attendees": "参与者",
-      "city": "城市",
-      "date": "日期",
-      "rsvps": "Rsvps"
-    },
-    "users": {
-      "management": "用户管理",
-      "search": "搜索用户...",
-      "ban": "封禁",
-      "unban": "解封",
-      "delete": "删除",
-      "selected": "个已选",
-      "banSelected": "封禁所选",
-      "unbanSelected": "解封所选",
-      "processing": "处理中...",
-      "activeUsers": "活跃用户",
-      "bannedUsers": "封禁用户",
-      "totalUsers": "总用户",
-      "columns": {
-        "user": "用户",
-        "email": "邮箱",
-        "joined": "加入时间",
-        "status": "状态",
-        "actions": "操作"
-      },
-      "confirm": {
-        "banTitle": "封禁用户",
-        "banMessage": "确定要封禁该用户吗？封禁后用户将无法访问平台。",
-        "unbanTitle": "解封用户",
-        "unbanMessage": "确定要解封该用户吗？解封后用户将恢复访问权限。",
-        "deleteTitle": "删除用户账户",
-        "deleteMessage": "⚠️ 危险：此操作将永久删除该账户及所有相关数据。此操作无法撤销。",
-        "bulkBanTitle": "封禁用户",
-        "bulkBanMessage": "确定要封禁 {count} 位用户吗？",
-        "bulkUnbanTitle": "解封用户",
-        "bulkUnbanMessage": "确定要解封 {count} 位用户吗？"
-      },
-      "page": "页",
-      "searchPlaceholder": "搜索...",
-      "status": {
-        "active": "活跃",
-        "banned": "已封禁"
-      },
-      "title": "用户",
-      "profileStatus": "资料状态",
-      "createdAt": "创建时间",
-      "userId": "用户ID",
-      "rawMetadata": "原始元数据"
-    },
-    "analytics": {
-      "title": "分析报告",
-      "pendingReviews": "待审核",
-      "platformActivity": "平台动态",
-      "exportData": "导出数据",
-      "exportCsv": "导出 CSV",
-      "exportDesc": "导出平台数据以进行详细分析和报告"
-    },
-    "visa": {
-      "application": {
-        "back": "上一步",
-        "backToDashboard": "返回仪表板",
-        "currentResidence": "当前居住地",
-        "dateOfBirth": "出生日期",
-        "deleteAppError": "删除申请失败。",
-        "deleteError": "删除文件失败。",
-        "documentRequirements": "确保文件清晰可读。支持 PDF 或图片格式。",
-        "documents": "文件",
-        "documentsUploaded": "个文件已上传",
-        "edit": "编辑",
-        "educationLevel": "教育程度",
-        "employer": "雇主",
-        "employerPlaceholder": "输入雇主名称",
-        "familyContact": "家庭联系人",
-        "familyContactPlaceholder": "输入家庭联系人姓名",
-        "fileTooLarge": "文件过大 (最大 10MB)。",
-        "fillRequired": "请填写所有必填字段。",
-        "firstName": "名",
-        "incomplete": "未完成",
-        "lastName": "姓",
-        "missingDocuments": "缺少必需文件",
-        "nationality": "国籍",
-        "next": "下一步",
-        "of": "/",
-        "passportExpiry": "护照有效期",
-        "passportNumber": "护照号码",
-        "personalInfo": "个人信息",
-        "purpose": "目的",
-        "purposeDescription": "目的说明",
-        "purposeHelper": "如有必要，请提供更多详细信息。",
-        "purposePlaceholder": "描述您的访问目的...",
-        "saveDraft": "保存草稿",
-        "saveDraftError": "保存草稿失败。",
-        "saving": "保存中...",
-        "selectVisaType": "请选择签证类型。",
-        "startDate": "开始日期",
-        "step": "步骤",
-        "step1": {
-          "description": "选择最符合您访问目的的签证类型。",
-          "title": "选择签证类型"
-        },
-        "step2": {
-          "description": "输入您护照上的个人详细信息。",
-          "title": "个人信息"
-        },
-        "step3": {
-          "description": "提供有关您在中国计划活动的详细信息。",
-          "title": "访问目的"
-        },
-        "step4": {
-          "description": "上传签证申请所需的文件。",
-          "title": "文件上传"
-        },
-        "step5": {
-          "description": "在提交之前审核您的申请详情。",
-          "title": "审核并提交"
-        },
-        "submit": "提交",
-        "submitError": "提交申请失败。",
-        "submitting": "提交中...",
-        "success": {
-          "message": "您的签证申请已提交，管理员将很快进行审核。",
-          "title": "申请提交成功"
-        },
-        "title": "签证申请",
-        "upload": "上传",
-        "uploadAllDocuments": "请上传所有必需的文件。",
-        "uploadError": "上传文件失败。",
-        "uploading": "上传中...",
-        "visaPurpose": "签证目的",
-        "visaType": "签证类型"
-      },
-      "dashboard": {
-        "activeApplications": "活跃申请",
-        "continue": "继续",
-        "continueDraft": "继续草稿",
-        "continueDraftDesc": "恢复您上次保存的申请",
-        "drafts": "草稿",
-        "lastUpdated": "最后更新",
-        "noApplications": "无申请",
-        "noApplicationsDesc": "您尚未开始任何签证申请。",
-        "startFirst": "开始您的第一个申请",
-        "startNew": "开始新申请",
-        "startNewDesc": "开始新的签证申请流程",
-        "started": "开始于",
-        "subtitle": "管理您的签证申请",
-        "title": "签证仪表板",
-        "total": "总计",
-        "trackApplications": "跟踪申请",
-        "viewDetails": "查看详情"
-      },
-      "documents": {
-        "admission_letter": "录取通知书",
-        "invitation_letter": "邀请函",
-        "other": "其他文件",
-        "passport": "护照",
-        "photo": "照片",
-        "police_record": "无犯罪记录证明",
-        "work_permit": "工作许可"
-      },
-      "educationLevels": {
-        "associate": "大专",
-        "bachelor": "学士学位",
-        "high_school": "高中",
-        "language": "语言课程",
-        "master": "硕士学位",
-        "other": "其他",
-        "phd": "博士学位"
-      },
-      "purposes": {
-        "business": "商业",
-        "crew": "乘务",
-        "family": "家庭",
-        "other": "其他",
-        "study": "学习",
-        "talent": "人才",
-        "tourism": "旅游",
-        "transit": "过境",
-        "work": "工作"
-      },
-      "status": {
-        "approved": "已批准",
-        "documents_requested": "需补充材料",
-        "draft": "草稿",
-        "in_review": "审核中",
-        "rejected": "已拒绝",
-        "submitted": "已提交"
-      },
-      "types": {
-        "business_m": {
-          "description": "适用于打算去中国进行商业贸易活动的人员。",
-          "title": "M字签证 (商业)"
-        },
-        "crew_c": {
-          "description": "适用于执行国际航空、航海、陆路运输任务的机组人员。",
-          "title": "C字签证 (乘务)"
-        },
-        "family_q": {
-          "description": "适用于中国公民或永久居民的家庭成员。",
-          "title": "Q字签证 (家庭团聚)"
-        },
-        "family_s": {
-          "description": "适用于在中国工作或学习的外国人的家庭成员。",
-          "title": "S字签证 (私人事务)"
-        },
-        "other": {
-          "description": "其他签证类型。",
-          "title": "其他"
-        },
-        "student_x": {
-          "description": "适用于打算在中国学习超过6个月的人员。",
-          "title": "X字签证 (学习)"
-        },
-        "talent_r": {
-          "description": "适用于中国需要的高层次人才或特殊技能人才。",
-          "title": "R字签证 (人才)"
-        },
-        "tourist_l": {
-          "description": "适用于打算去中国旅游的人员。",
-          "title": "L字签证 (旅游)"
-        },
-        "work_z": {
-          "description": "适用于已获得就业许可并打算在中国工作的人员。",
-          "title": "Z字签证 (工作)"
-        }
-      },
-      "title": "签证管理",
-      "applications_count": "申请总数: {{count}}",
-      "noApplications": "未找到签证申请。",
-      "unnamed_application": "未命名申请",
-      "columns": {
-        "type": "类型",
-        "submitted": "提交时间",
-        "status": "状态",
-        "applicant": "申请人",
-        "actions": "操作"
-      },
-      "filter": {
-        "all": "所有状态",
-        "submitted": "已提交",
-        "inReview": "审核中",
-        "documents_requested": "需补充材料",
-        "approved": "已批准",
-        "rejected": "已拒绝"
-      },
-      "details": {
-        "title": "申请详情",
-        "fullName": "全名",
-        "nationality": "国籍",
-        "dateOfBirth": "出生日期",
-        "passportNumber": "护照号码",
-        "notes": "管理员备注",
-        "info": "申请人信息",
-        "data": "申请数据"
-      },
-      "actions": {
-        "updateStatus": "更新状态",
-        "messageApplicant": "联系申请人",
-        "acknowledge": "确认接收",
-        "approve": "批准",
-        "reject": "拒绝",
-        "requestDocs": "请求文件"
-      },
-      "confirmStatus": "您确定要将状态更改为 {{status}} 吗？",
-      "initialMessage": "你好 {{name}}，我是关于你的 {{type}} 签证申请联系你的。",
-      "subtitle": "处理和管理签证请求"
-    },
-    "auPair": {
-      "auPairs": "互惠生",
-      "hostFamilies": "寄宿家庭",
-      "details": "资料详情",
-      "location": "位置",
-      "children": "孩子",
-      "managementSubtitle": "管理互惠生和寄宿家庭",
-      "noDescription": "无描述",
-      "profileType": "资料类型"
-    },
-    "messages": {
-      "title": "客户留言",
-      "filter": {
-        "all": "所有留言",
-        "new": "新留言",
-        "read": "已读",
-        "replied": "已回复"
-      },
-      "reply": "回复",
-      "markRead": "标记为已读",
-      "markReplied": "标记为已回复",
-      "subject": "来自 AnyiCulture 的回复",
-      "contentLabel": "消息内容",
-      "subtitle": "管理员收件箱与支持"
-    },
-    "activityLogRefresh": "刷新日志",
-    "activityLogSubtitle": "最近的管理操作",
-    "applicationUpdated": "申请更新成功",
-    "codeDeleteFailed": "删除代码失败",
-    "codeGenerationFailed": "生成代码失败",
-    "common": {
-      "title": "通用",
-      "views": "浏览",
-      "apps": "申请",
-      "noResults": "未找到结果",
-      "view": "查看",
-      "delete": "删除",
-      "cancel": "取消",
-      "confirm": "确认",
-      "active": "活跃",
-      "inactive": "非活跃",
-      "processing": "处理中...",
-      "activate": "激活",
-      "contact": "联系",
-      "deactivate": "停用",
-      "feature": "精选",
-      "filter": "筛选",
-      "noEmail": "无邮箱",
-      "notSubmitted": "未提交",
-      "unfeature": "取消精选",
-      "unknown": "未知",
-      "applicant": "申请人"
-    },
-    "contactCopied": "联系方式已复制",
-    "conversationFailed": "启动对话失败",
-    "deletionCancelled": "取消删除",
-    "education": {
-      "title": "教育项目",
-      "subtitle": "管理申请和兴趣",
-      "tabs": {
-        "applications": "申请",
-        "interests": "普通兴趣"
-      },
-      "program": "项目",
-      "applicant": "申请人",
-      "status": "状态",
-      "date": "日期",
-      "actions": "操作",
-      "noApplications": "未找到申请",
-      "approve": "批准",
-      "reject": "拒绝",
-      "markReview": "标记为审核中",
-      "studentMotivation": "学生动机",
-      "filter": {
-        "all": "所有",
-        "submitted": "已提交",
-        "underReview": "审核中",
-        "approved": "已批准",
-        "rejected": "已拒绝"
-      }
-    },
-    "eventDeleteFailed": "删除活动失败",
-    "eventUpdateFailed": "更新活动失败",
-    "itemDeleteFailed": "删除商品失败",
-    "jobDeleteFailed": "删除职位失败",
-    "jobStatusFailed": "更新职位状态失败",
-    "jobUpdateFailed": "更新职位失败",
-    "jobs": {
-      "management": "职位管理",
-      "search": "搜索职位...",
-      "filter": {
-        "all": "所有职位",
-        "active": "活跃",
-        "inactive": "非活跃",
-        "featured": "精选"
-      },
-      "stats": {
-        "total": "总职位",
-        "active": "活跃职位",
-        "featured": "精选职位"
-      }
-    },
-    "lockScreen": {
-      "createTitle": "设置管理员 PIN",
-      "enterTitle": "管理后台已锁定",
-      "createDesc": "请为管理后台设置一个安全的 PIN 码。",
-      "enterDesc": "请输入您的管理员 PIN 码以继续。",
-      "newPin": "新 PIN 码",
-      "enterPin": "输入 PIN 码",
-      "confirmPin": "确认 PIN 码",
-      "setAndUnlock": "设置 PIN 并解锁",
-      "unlock": "解锁后台",
-      "error": {
-        "length": "PIN 码必须至少为 4 位",
-        "match": "PIN 码不匹配",
-        "incorrect": "PIN 码错误"
-      },
-      "returnToDashboard": "返回仪表板",
-      "forgotPassword": "忘记密码？"
-    },
-    "marketplace": {
-      "moderation": "内容审核",
-      "search": "搜索商品...",
-      "filter": {
-        "all": "所有商品",
-        "active": "活跃",
-        "sold": "已售出",
-        "flagged": "被举报"
-      },
-      "stats": {
-        "total": "总商品",
-        "active": "活跃商品",
-        "sold": "已售出"
-      }
-    },
-    "payments": {
-      "title": "支付与兑换码",
-      "subtitle": "管理兑换码",
-      "generate": "生成代码",
-      "generating": "生成中...",
-      "code": "代码",
-      "redeemedBy": "兑换人",
-      "createdAt": "创建时间",
-      "copy": "复制代码",
-      "copied": "代码已复制到剪贴板",
-      "noCodes": "暂无代码，点击生成新代码。",
-      "pendingRedemption": "待兑换",
-      "columns": {
-        "code": "代码",
-        "status": "状态",
-        "maxUses": "最大使用",
-        "expires": "过期时间",
-        "actions": "操作"
-      },
-      "active": "有效",
-      "redeemed": "已兑换"
-    },
-    "resource": "资源",
-    "statusUpdateFailed": "状态更新失败",
-    "statusUpdated": "状态更新成功",
-    "time": "时间",
-    "updateFailed": "更新失败",
-    "feed": {
-      "live": "实时动态"
-    },
-    "settings": {
-      "title": "管理员设置",
-      "security": "安全与防护",
-      "passwordReset": "密码重置",
-      "passwordResetDesc": "请求为您的管理员账户发送密码重置链接。",
-      "sendResetEmail": "发送重置邮件",
-      "emailSent": "重置邮件已发送！",
-      "resetEmailError": "发送重置邮件失败"
-    }
+    "edit": "编辑"
   },
   "categorySelector": {
     "placeholder": "选择分类",

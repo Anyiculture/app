@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useI18n } from '../../contexts/I18nContext';
 import { X, Calendar, Video, MapPin, Phone, Building } from 'lucide-react';
 
 import { interviewService, InterviewLocation } from '../../services/interviewService';
@@ -31,6 +32,7 @@ export function InterviewScheduler({
   onScheduled
 }: InterviewSchedulerProps) {
 
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     scheduled_at: '',
@@ -46,7 +48,7 @@ export function InterviewScheduler({
 
     try {
       const { data: { user } } = await (await import('../../lib/supabase')).supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(t('common.notAuthenticated') || 'Not authenticated');
 
       await interviewService.scheduleInterview({
         applicationId: applicationId,
@@ -72,7 +74,7 @@ export function InterviewScheduler({
       });
     } catch (error: any) {
       console.error('Failed to schedule interview:', error);
-      alert(error.message || 'Failed to schedule interview');
+      alert(error.message || t('jobs.interview.scheduleFailed'));
     } finally {
       setLoading(false);
     }
@@ -93,8 +95,8 @@ export function InterviewScheduler({
               <Calendar className="text-emerald-600" size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Schedule Interview</h2>
-              <p className="text-sm text-gray-600">with {intervieweeName}</p>
+              <h2 className="text-xl font-bold text-gray-900">{t('jobs.interview.scheduleInterview')}</h2>
+              <p className="text-sm text-gray-600">{t('jobs.interview.withName', { name: intervieweeName })}</p>
             </div>
           </div>
           <button
@@ -110,7 +112,7 @@ export function InterviewScheduler({
           {/* Date & Time */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date & Time *
+              {t('jobs.interview.dateTimeLabel')} *
             </label>
             <input
               type="datetime-local"
@@ -125,7 +127,7 @@ export function InterviewScheduler({
           {/* Duration */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Duration (minutes) *
+              {t('jobs.interview.durationLabel')} *
             </label>
             <div className="grid grid-cols-4 gap-2">
               {[30, 45, 60, 90].map(duration => (
@@ -139,7 +141,7 @@ export function InterviewScheduler({
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {duration} min
+                  {duration} {t('jobs.interview.durationSuffix') || 'min'}
                 </button>
               ))}
             </div>
@@ -148,7 +150,7 @@ export function InterviewScheduler({
           {/* Location Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Interview Location *
+              {t('jobs.interview.locationLabel')} *
             </label>
             <div className="grid grid-cols-2 gap-3">
               {LOCATION_OPTIONS.map(option => {
@@ -176,13 +178,13 @@ export function InterviewScheduler({
           {(['zoom', 'teams', 'other'] as InterviewLocation[]).includes(formData.location) && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Meeting Link {formData.location !== 'other' && '*'}
+                {t('jobs.interview.meetingLinkLabel')} {formData.location !== 'other' && '*'}
               </label>
               <input
                 type="url"
                 value={formData.meeting_url}
                 onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
-                placeholder="https://zoom.us/j/..."
+                placeholder={t('jobs.interview.meetingLinkPlaceholder')}
                 required={formData.location !== 'other'}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
@@ -192,12 +194,12 @@ export function InterviewScheduler({
           {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Interview Notes (Optional)
+              {t('jobs.interview.notesLabel')}
             </label>
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Add any additional details, topics to discuss, or preparation needed..."
+              placeholder={t('jobs.interview.notesPlaceholder')}
               rows={4}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
             />
@@ -210,14 +212,14 @@ export function InterviewScheduler({
               onClick={onClose}
               className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
-              {loading ? 'Scheduling...' : 'Schedule Interview'}
+              {loading ? t('jobs.interview.scheduling') : t('jobs.interview.submit')}
             </button>
           </div>
         </form>

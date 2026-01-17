@@ -85,7 +85,20 @@ export function SignUpPage() {
       </div>
 
       {/* Right Form Side */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
+      <div className="flex-1 flex flex-col justify-start pt-12 sm:pt-20 lg:justify-center lg:pt-0 px-4 sm:px-6 lg:px-20 xl:px-24">
+        {/* Mobile Header Text */}
+        <div className="lg:hidden text-center mb-8">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl shadow-lg shadow-blue-100 overflow-hidden">
+            <img 
+              src="/anyi_global_logo.png" 
+              alt="AnyiCulture" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight font-display">AnyiCulture</h1>
+          <p className="text-base text-gray-600 mt-2 font-medium">Start your adventure today</p>
+        </div>
+
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div className="flex justify-end mb-4">
             <button

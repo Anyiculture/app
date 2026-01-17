@@ -10,7 +10,8 @@ import {
   Linkedin, 
   ArrowLeft,
   CheckCircle,
-  Code
+  Code,
+  Image as ImageIcon
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Loading } from '../components/ui/Loading';
@@ -19,6 +20,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { jobsService, Job } from '../services/jobsService';
 import { JobCard } from '../components/JobCard';
 import { BackgroundBlobs } from '../components/ui/BackgroundBlobs';
+import { TranslateWrapper } from '../components/ui/TranslateWrapper';
 
 interface CompanyProfile {
   user_id: string;
@@ -207,7 +209,12 @@ export function CompanyProfilePage() {
                 {t('jobsOnboarding.companyDescription')}
               </h2>
               <div className="prose prose-blue max-w-none text-gray-600 whitespace-pre-line leading-relaxed">
-                {profile.company_description || <span className="text-gray-400 italic">{t('common.noDescription')}</span>}
+                <TranslateWrapper 
+                  text={profile.company_description || t('common.noDescription')}
+                  dbTranslation={null}
+                  as="div"
+                  className={!profile.company_description ? "text-gray-400 italic" : ""}
+                />
               </div>
             </section>
 
@@ -237,6 +244,7 @@ export function CompanyProfilePage() {
               <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
                 <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                   <span className="w-1 h-6 bg-purple-600 rounded-full"></span>
+                  <ImageIcon size={20} className="text-purple-600" />
                   {t('jobsOnboarding.companyPhotos')}
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -244,13 +252,14 @@ export function CompanyProfilePage() {
                     <button 
                       key={idx}
                       onClick={() => setSelectedImage(img)}
-                      className="aspect-video rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all transform hover:-translate-y-1 group"
+                      className="aspect-video rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all transform hover:-translate-y-1 group relative"
                     >
                       <img 
                         src={img} 
                         alt={`Gallery ${idx + 1}`} 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                     </button>
                   ))}
                 </div>
@@ -266,7 +275,7 @@ export function CompanyProfilePage() {
                 </span>
               </h2>
               {activeJobs.length > 0 ? (
-                <div className="space-y-4">
+                <div className="grid gap-4">
                   {activeJobs.map(job => (
                     <div key={job.id} onClick={() => navigate(`/jobs/${job.id}`)} className="cursor-pointer transform hover:-translate-y-1 transition-transform">
                       <JobCard job={job} />

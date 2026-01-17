@@ -6,6 +6,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from './ui/Toast';
 import { shareContent } from '../utils/shareUtils';
+import { TranslateWrapper } from './ui/TranslateWrapper';
 
 interface JobCardProps {
   job: Job;
@@ -78,9 +79,12 @@ export function JobCard({ job, isSaved, onSave, matchScore: _matchScore, isDashb
             {/* Title & Stats */}
             <div className="flex justify-between items-start">
                <div className="min-w-0 w-full">
-                 <h3 className={`${isDashboard ? 'text-xs mb-1' : 'text-[13px] sm:text-xl'} font-bold text-gray-900 leading-tight truncate group-hover/link:text-vibrant-purple transition-colors`}>
-                   {job.title}
-                 </h3>
+                 <TranslateWrapper 
+                   text={job.title}
+                   dbTranslation={null}
+                   as="h3"
+                   className={`${isDashboard ? 'text-xs mb-1' : 'text-[13px] sm:text-xl'} font-bold text-gray-900 leading-tight group-hover/link:text-vibrant-purple transition-colors`}
+                 />
                  <div className={`flex items-center gap-1 text-gray-500 ${isDashboard ? 'text-[10px]' : 'text-[11px] sm:text-sm mt-0.5'}`}>
                     <span className="font-medium text-gray-700 truncate max-w-[80px] sm:max-w-none">{job.company_name || 'Company'}</span>
                     {!isDashboard && <span className="text-gray-300">•</span>}

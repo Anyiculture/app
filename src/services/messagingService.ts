@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { notificationService } from './notificationService';
 
 export interface Meeting {
   id: string;
@@ -224,6 +225,33 @@ export const messagingService = {
     // Trigger update on conversation (last_message_at)
     // We do this to ensure conversation list is updated
     await supabase.rpc('update_conversation_timestamp', { conversation_id: conversationId });
+
+    // Send notification to the recipient
+    // We run this asynchronously to not block the response
+    (async () => {
+      try {
+        const { data: participants } = await supabase
+          .from('conversation_participants')
+          .select('user_id')
+          .eq('conversation_id', conversationId)
+          .neq('user_id', user.id)
+          .single();
+
+        if (participants) {
+            const notificationTitle = messageType === 'system' ? 'System Notification' : 'New Message';
+            
+            await notificationService.notifyUser({
+              userId: participants.user_id,
+              type: 'messages',
+              title: notificationTitle,
+              message: content.length > 50 ? content.substring(0, 50) + '...' : content,
+              linkUrl: `/messages?conversation=${conversationId}`,
+            });
+          }
+      } catch (err) {
+        console.error('Failed to send message notification:', err);
+      }
+    })();
 
     return data as Message;
   },

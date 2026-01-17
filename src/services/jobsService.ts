@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { notificationService } from './notificationService';
 
 export interface Job {
   id: string;
@@ -288,6 +289,30 @@ export const applicationsService = {
       .single();
 
     if (error) throw error;
+
+    // Notify the job poster
+    (async () => {
+      try {
+        const { data: job } = await supabase
+          .from('jobs')
+          .select('poster_id, title')
+          .eq('id', application.job_id)
+          .single();
+
+        if (job) {
+          await notificationService.notifyUser({
+            userId: job.poster_id,
+            type: 'applications',
+            title: 'New Job Application',
+            message: `You have received a new application for ${job.title}`,
+            linkUrl: `/jobs/manage/${application.job_id}`,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to send application notification:', err);
+      }
+    })();
+
     return data as JobApplication;
   },
 
@@ -313,6 +338,30 @@ export const applicationsService = {
       .single();
 
     if (error) throw error;
+
+    // Notify the applicant
+    (async () => {
+      try {
+        const { data: job } = await supabase
+          .from('jobs')
+          .select('title')
+          .eq('id', data.job_id)
+          .single();
+
+        if (job) {
+          await notificationService.notifyUser({
+            userId: data.applicant_id,
+            type: 'applications',
+            title: 'Application Update',
+            message: `Your application for ${job.title} has been ${status}`,
+            linkUrl: `/jobs/${data.job_id}`,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to send application status notification:', err);
+      }
+    })();
+
     return data as JobApplication;
   },
 

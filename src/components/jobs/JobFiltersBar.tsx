@@ -134,8 +134,8 @@ export function JobFiltersBar({
                   className="w-full appearance-none cursor-pointer pl-4 pr-10 py-3 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all outline-none bg-white/60 backdrop-blur-xl border-gray-100 text-gray-600 hover:border-vibrant-purple/30 hover:shadow-lg hover:shadow-vibrant-purple/5 focus:border-vibrant-purple focus:ring-4 focus:ring-vibrant-purple/10"
                 >
                   <option value="">{t('jobs.allJobTypes') || 'Job Type'}</option>
-                  <option value="full-time">{t('jobs.fullTime')}</option>
-                  <option value="part-time">{t('jobs.partTime')}</option>
+                  <option value="full_time">{t('jobs.fullTime')}</option>
+                  <option value="part_time">{t('jobs.partTime')}</option>
                   <option value="contract">{t('jobs.contract')}</option>
                   <option value="freelance">{t('jobs.freelance')}</option>
                   <option value="internship">{t('jobs.internship')}</option>
@@ -155,9 +155,9 @@ export function JobFiltersBar({
                    className="w-full appearance-none cursor-pointer pl-4 pr-10 py-3 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all outline-none bg-white/60 backdrop-blur-xl border-gray-100 text-gray-600 hover:border-vibrant-purple/30 hover:shadow-lg hover:shadow-vibrant-purple/5 focus:border-vibrant-purple focus:ring-4 focus:ring-vibrant-purple/10"
                 >
                    <option value="">{t('jobs.allRemoteTypes') || 'Remote'}</option>
-                   <option value="onsite">On-site</option>
-                   <option value="remote">Remote</option>
-                   <option value="hybrid">Hybrid</option>
+                   <option value="on_site">{t('jobs.onSite')}</option>
+                   <option value="remote">{t('jobs.remote')}</option>
+                   <option value="hybrid">{t('jobs.hybrid')}</option>
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none p-1.5 rounded-lg bg-gray-50 text-gray-400 group-hover:text-vibrant-purple transition-colors">
                   <ChevronDown size={12} strokeWidth={3} />
@@ -174,10 +174,10 @@ export function JobFiltersBar({
                    className="w-full appearance-none cursor-pointer pl-4 pr-10 py-3 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all outline-none bg-white/60 backdrop-blur-xl border-gray-100 text-gray-600 hover:border-vibrant-purple/30 hover:shadow-lg hover:shadow-vibrant-purple/5 focus:border-vibrant-purple focus:ring-4 focus:ring-vibrant-purple/10"
                 >
                    <option value="">{t('jobs.allExperience') || 'Experience'}</option>
-                   <option value="entry">Entry Level</option>
-                   <option value="mid">Mid Level</option>
-                   <option value="senior">Senior Level</option>
-                   <option value="executive">Executive</option>
+                   <option value="entry">{t('jobs.entry')}</option>
+                   <option value="mid">{t('jobs.mid')}</option>
+                   <option value="senior">{t('jobs.senior')}</option>
+                   <option value="executive">{t('jobs.executive')}</option>
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none p-1.5 rounded-lg bg-gray-50 text-gray-400 group-hover:text-vibrant-purple transition-colors">
                   <ChevronDown size={12} strokeWidth={3} />

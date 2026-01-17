@@ -8,7 +8,6 @@ import {
   FileText, 
   Users, 
   Search, 
-  Bell, 
   Menu,
   GraduationCap,
   LayoutDashboard,
@@ -17,9 +16,11 @@ import {
   ChevronDown,
   MessageSquare,
   Shield,
-  Globe
+  Globe,
+  User
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { NotificationCenter } from './NotificationCenter';
 
 // Custom rich icon wrappers with gradients/colors - Smaller Size
 const NavIcon = ({ icon: Icon, colorClass }: { icon: any, colorClass: string }) => (
@@ -143,12 +144,12 @@ export function TopNavigation() {
               <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-blue-100 group-hover:scale-105 transition-transform duration-300">
                 <img 
                   src="/anyi_global_logo.png" 
-                  alt="AnYiculture Logo" 
+                  alt={t('common.brandLogoAlt')} 
                   className="w-full h-full object-cover"
                 />
               </div>
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 hidden sm:block">
-                AnYiculture
+                {t('common.brand')}
               </span>
             </Link>
 
@@ -186,10 +187,7 @@ export function TopNavigation() {
             </div>
 
             {/* Notifications */}
-            <button className="relative p-2 rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-700 transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
-            </button>
+            <NotificationCenter />
 
             {/* Language Toggle */}
             {/* Language Toggle */}
@@ -242,12 +240,12 @@ export function TopNavigation() {
                         {t('nav.dashboard')}
                       </Link>
                       <Link 
-                        to="/profile" 
+                        to={`/profile/${user.id}`} 
                         onClick={() => setIsProfileMenuOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                       >
-                        <Users size={16} />
-                        {t('nav.profile')}
+                        <User size={16} />
+                        {t('common.viewProfile')}
                       </Link>
                       <Link 
                         to="/settings" 
@@ -264,7 +262,7 @@ export function TopNavigation() {
                           className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
                         >
                           <Shield size={16} />
-                          Admin Portal
+                          {t('nav.adminPortal')}
                         </Link>
                       )}
                     </div>

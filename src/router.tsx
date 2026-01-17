@@ -72,16 +72,17 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuPairProfilePage } from './pages/AuPairProfilePage';
 import { HostFamilyProfilePage } from './pages/HostFamilyProfilePage';
 
-import { SettingsPage } from './pages/SettingsPage';
 import { SettingsLayout } from './pages/settings/SettingsLayout';
 import { SettingsDashboardPage } from './pages/settings/SettingsDashboardPage';
 import { GeneralSettingsPage } from './pages/settings/GeneralSettingsPage';
+import { InterestsSettingsPage } from './pages/settings/InterestsSettingsPage';
 import { AuPairSettingsPage } from './pages/settings/AuPairSettingsPage';
 import { HostFamilySettingsPage } from './pages/settings/HostFamilySettingsPage';
 import { EmployerSettingsPage } from './pages/settings/EmployerSettingsPage';
 import { JobSeekerSettingsPage } from './pages/settings/JobSeekerSettingsPage';
 import { SecuritySettingsPage } from './pages/settings/SecuritySettingsPage';
 import { BillingSettingsPage } from './pages/settings/BillingSettingsPage';
+import { NotificationSettings } from './components/settings/NotificationSettings';
 
 import { CandidateProfilePage } from './pages/CandidateProfilePage';
 
@@ -167,7 +168,9 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <SettingsDashboardPage /> },
           { path: 'general', element: <GeneralSettingsPage /> },
+          { path: 'interests', element: <InterestsSettingsPage /> },
           { path: 'security', element: <SecuritySettingsPage /> },
+          { path: 'notifications', element: <NotificationSettings /> },
           { path: 'billing', element: <BillingSettingsPage /> },
           { path: 'au-pair', element: <AuPairSettingsPage /> },
           { path: 'host-family', element: <HostFamilySettingsPage /> },
@@ -177,7 +180,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'profile',
-        element: <SettingsPage />,
+        element: <SettingsDashboardPage />,
         errorElement: <ErrorBoundary />,
       },
       {

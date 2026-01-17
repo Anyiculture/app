@@ -4,6 +4,7 @@ import { MarketplaceItem } from '../../services/marketplaceService';
 import { useI18n } from '../../contexts/I18nContext';
 import { getCategoryById, CONDITION_OPTIONS } from '../../constants/marketplaceCategories';
 import { GlassCard } from '../ui/GlassCard';
+import { TranslateWrapper } from '../ui/TranslateWrapper';
 import { motion } from 'framer-motion';
 
 interface MarketplaceCardProps {
@@ -104,9 +105,12 @@ export function MarketplaceCard({ item, user, onToggleFavorite, getItemDistance,
           </div>
 
           <div className={`p-1 flex-1 flex flex-col`}>
-            <h3 className={`${isDashboard ? 'text-xs' : 'text-sm sm:text-base'} font-black text-gray-900 leading-tight uppercase tracking-tight mb-0.5 line-clamp-1 group-hover:text-vibrant-purple transition-colors`}>
-              {language === 'zh' && item.title_zh ? item.title_zh : item.title}
-            </h3>
+            <TranslateWrapper 
+              text={item.title}
+              dbTranslation={language === 'zh' ? item.title_zh : null}
+              as="h3"
+              className={`${isDashboard ? 'text-xs' : 'text-sm sm:text-base'} font-black text-gray-900 leading-tight uppercase tracking-tight mb-0.5 group-hover:text-vibrant-purple transition-colors`}
+            />
 
             <div className="flex flex-col gap-0.5 sm:gap-1 mt-auto">
               {isDashboard ? (

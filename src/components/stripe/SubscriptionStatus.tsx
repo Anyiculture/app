@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { STRIPE_PRODUCTS } from '../../stripe-config';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { useI18n } from '../../contexts/I18nContext';
 
 interface Subscription {
   subscription_status: string;
@@ -13,6 +14,7 @@ interface Subscription {
 export function SubscriptionStatus() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useI18n();
 
   useEffect(() => {
     fetchSubscription();
@@ -54,7 +56,7 @@ export function SubscriptionStatus() {
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div className="flex items-center">
           <Clock className="h-5 w-5 text-yellow-600 mr-2" />
-          <span className="text-yellow-800">No active subscription</span>
+          <span className="text-yellow-800">{t('subscription.noActive')}</span>
         </div>
       </div>
     );
@@ -75,15 +77,17 @@ export function SubscriptionStatus() {
           <XCircle className="h-5 w-5 text-red-600 mr-2" />
         )}
         <h3 className={`font-semibold ${isActive ? 'text-green-800' : 'text-red-800'}`}>
-          {product?.name || 'Subscription'}
+          {product?.name || t('subscription.title')}
         </h3>
       </div>
       <p className={`text-sm ${isActive ? 'text-green-700' : 'text-red-700'}`}>
-        Status: {subscription.subscription_status}
+        {t('subscription.status')}: {subscription.subscription_status}
       </p>
       {endDate && (
         <p className={`text-sm ${isActive ? 'text-green-700' : 'text-red-700'}`}>
-          {subscription.cancel_at_period_end ? 'Expires' : 'Renews'} on: {endDate}
+          {subscription.cancel_at_period_end 
+            ? t('subscription.expiresOn', { date: endDate })
+            : t('subscription.renewsOn', { date: endDate })}
         </p>
       )}
     </div>

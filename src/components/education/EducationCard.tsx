@@ -6,6 +6,7 @@ import { useToast } from '../ui/Toast';
 import { shareContent } from '../../utils/shareUtils';
 import { translateProgramType, translateDeliveryMode, translateEducationLevel } from '../../utils/educationTranslations';
 import { GlassCard } from '../ui/GlassCard';
+import { TranslateWrapper } from '../ui/TranslateWrapper';
 import { motion } from 'framer-motion';
 
 interface EducationCardProps {
@@ -115,9 +116,12 @@ export function EducationCard({ program, onToggleFavorite, isDashboard }: Educat
 
           {/* Content */}
           <div className="p-0.5 flex-1 flex flex-col">
-            <h3 className={`${isDashboard ? 'text-xs' : 'text-sm sm:text-base'} font-black text-gray-900 leading-tight uppercase tracking-tight mb-0.5 line-clamp-1 group-hover:text-vibrant-purple transition-colors`}>
-              {program.title}
-            </h3>
+            <TranslateWrapper 
+              text={program.title}
+              dbTranslation={language === 'zh' ? program.title_zh : null}
+              as="h3"
+              className={`${isDashboard ? 'text-xs' : 'text-sm sm:text-base'} font-black text-gray-900 leading-tight uppercase tracking-tight mb-0.5 group-hover:text-vibrant-purple transition-colors`}
+            />
             
             {isDashboard && (
                <div className="mt-auto pt-1 text-[9px] text-gray-400 font-bold uppercase truncate">

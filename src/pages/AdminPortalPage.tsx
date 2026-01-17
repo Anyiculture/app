@@ -14,14 +14,16 @@ import {
   Loading, 
   ConfirmDialog, 
   GlassCard,
-  BackgroundBlobs
+  BackgroundBlobs,
+  Modal
 } from '../components/ui';
+import { useToast } from '../components/ui/Toast';
 import {
   Users, Briefcase, GraduationCap, Calendar,
   AlertCircle, Clock, Activity, BarChart3,
   Star, Eye, Trash2, Search, Download, Mail, MessageSquare, Plus, Copy, FileText,
   ArrowLeft, UserCheck, LogOut, Lock, ShoppingBag, TrendingUp, MapPin, CheckCircle,
-  Zap, Shield, Globe, Sparkles, Rocket, CreditCard, Phone, X, ExternalLink
+  Zap, Shield, Globe, Sparkles, Rocket, CreditCard, Phone, X
 } from 'lucide-react';
 import { VisaApplicationDetailView } from '../components/visa/VisaApplicationDetailView';
 import { supabase } from '../lib/supabase';
@@ -1425,8 +1427,48 @@ function EventsAdminPanel() {
   );
 }
 
+function DeleteUserModal({ isOpen, onClose, onConfirm, userName, t }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; userName: string; t: any }) {
+  const [input, setInput] = useState('');
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={t('admin.users.deleteModal.title')}>
+      <div className="space-y-6">
+        <div className="p-4 bg-red-50 text-red-700 rounded-xl text-sm font-medium flex items-start gap-3">
+          <AlertCircle className="shrink-0 mt-0.5" size={16} />
+          <div>{t('admin.users.confirm.deleteMessage', { userName })}</div>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            {t('admin.users.confirm.deletePrompt', { userName })}
+          </label>
+          <input 
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all font-medium"
+              placeholder={t('admin.users.confirm.deleteConfirmationValue')}
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+             <Button variant="outline" onClick={onClose} className="rounded-xl">{t('admin.users.deleteModal.cancel')}</Button>
+             <Button 
+               variant="primary" 
+               className="bg-red-600 hover:bg-red-700 text-white border-red-600 rounded-xl" 
+               disabled={input !== t('admin.users.confirm.deleteConfirmationValue')} 
+               onClick={onConfirm}
+             >
+                {t('admin.users.deleteModal.confirm')}
+             </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 function UsersAdminPanel() {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -1434,6 +1476,7 @@ function UsersAdminPanel() {
   const [total, setTotal] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; userId: string; userName: string } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -1495,6 +1538,11 @@ function UsersAdminPanel() {
   };
 
   const handleUserAction = (userId: string, action: string, userName: string) => {
+    if (action === 'delete') {
+      setDeleteModal({ isOpen: true, userId, userName });
+      return;
+    }
+
     const actionConfig = {
       ban: {
         title: t('admin.users.confirm.banTitle'),
@@ -1507,12 +1555,6 @@ function UsersAdminPanel() {
         message: t('admin.users.confirm.unbanMessage', { userName }),
         variant: 'info' as const,
         confirmText: t('admin.users.unban')
-      },
-      delete: {
-        title: t('admin.users.confirm.deleteTitle'),
-        message: t('admin.users.confirm.deleteMessage', { userName }),
-        variant: 'danger' as const,
-        confirmText: t('admin.common.delete')
       }
     };
 
@@ -1520,15 +1562,6 @@ function UsersAdminPanel() {
     if (!config) return;
 
     const performAction = async () => {
-      // Additional confirmation for delete
-      if (action === 'delete') {
-        const confirmation = prompt(`Type "DELETE" to confirm permanent deletion of ${userName}'s account:`);
-        if (confirmation !== 'DELETE') {
-          alert(t('admin.deletionCancelled'));
-          return;
-        }
-      }
-
       try {
         setActionLoading(`${action}-${userId}`);
 
@@ -1536,18 +1569,16 @@ function UsersAdminPanel() {
           await adminService.updateUserStatus(userId, true);
         } else if (action === 'unban') {
           await adminService.updateUserStatus(userId, false);
-        } else if (action === 'delete') {
-          await adminService.deleteUser(userId);
         }
 
-        // Log the action (already handled in the service methods above)
-        alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action completed successfully`);
+        showToast('success', t('admin.users.actionCompleted', { action: action.charAt(0).toUpperCase() + action.slice(1) }));
         await loadUsers();
       } catch (error) {
         console.error(`Error ${action}ing user:`, error);
-        alert(`Failed to ${action} user`);
+        showToast('error', t('admin.users.actionFailed', { action }));
       } finally {
         setActionLoading(null);
+        setConfirmDialog(null);
       }
     };
 
@@ -1559,6 +1590,23 @@ function UsersAdminPanel() {
       variant: config.variant,
       confirmText: config.confirmText
     });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal) return;
+    const { userId } = deleteModal;
+    try {
+        setActionLoading(`delete-${userId}`);
+        await adminService.deleteUser(userId);
+        showToast('success', t('admin.users.actionCompleted', { action: 'Delete' }));
+        await loadUsers();
+        setDeleteModal(null);
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showToast('error', t('admin.users.actionFailed', { action: 'delete' }));
+    } finally {
+        setActionLoading(null);
+    }
   };
 
   if (loading) return <Loading />;
@@ -1736,6 +1784,16 @@ function UsersAdminPanel() {
            {t('common.next')}
         </Button>
       </div>
+
+      {deleteModal && (
+        <DeleteUserModal
+          isOpen={deleteModal.isOpen}
+          onClose={() => setDeleteModal(null)}
+          onConfirm={handleDeleteConfirm}
+          userName={deleteModal.userName}
+          t={t}
+        />
+      )}
 
       {confirmDialog && (
         <ConfirmDialog
@@ -1940,6 +1998,20 @@ function AnalyticsPanel() {
 
 function VisaAdminPanel() {
   const { t } = useTranslation();
+  const { showToast } = useToast();
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'info' | 'success' | 'warning' | 'danger';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info',
+    onConfirm: () => {},
+  });
   const { user } = useAuth();
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1949,7 +2021,6 @@ function VisaAdminPanel() {
   const [filter, setFilter] = useState('all');
   const [documents, setDocuments] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
-  const [docsLoading, setDocsLoading] = useState(false);
 
   useEffect(() => {
     loadApplications();
@@ -1979,13 +2050,10 @@ function VisaAdminPanel() {
 
   const loadDocuments = async (appId: string) => {
     try {
-      setDocsLoading(true);
       const docs = await visaService.getDocuments(appId);
       setDocuments(docs || []);
     } catch (error) {
       console.error('Error loading documents:', error);
-    } finally {
-      setDocsLoading(false);
     }
   };
 
@@ -2016,39 +2084,32 @@ function VisaAdminPanel() {
       ? t('admin.visa.actions.acknowledge') 
       : t('admin.visa.confirmStatus', { status: statusLabel });
     
-    if (!confirm(confirmMessage)) return;
-
-    try {
-      setUpdating(applicationId);
-      
-      const { error } = await supabase
-        .from('visa_applications')
-        .update({
-          status: newStatus,
-          admin_notes: notes || '',
-          reviewed_by: user?.id || 'admin',
-          reviewed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', applicationId);
-
-      if (error) throw error;
-
-      await adminService.logActivity(
-        'visa_status_updated',
-        'visa_applications',
-        applicationId,
-        { new_status: newStatus, notes }
-      );
-
-      await loadApplications();
-      alert(t('common.success'));
-    } catch (error) {
-      console.error('Error updating status:', error);
-      alert(t('common.error'));
-    } finally {
-      setUpdating(null);
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: t('admin.visa.actions.updateStatus'),
+      message: confirmMessage,
+      variant: 'warning',
+      onConfirm: async () => {
+        try {
+          setUpdating(applicationId);
+          await visaService.updateApplicationStatus(applicationId, newStatus as any, notes);
+          await adminService.logActivity(
+            'visa_status_updated',
+            'visa_applications',
+            applicationId,
+            { new_status: newStatus, notes }
+          );
+          await loadApplications();
+          showToast('success', t('common.success'));
+        } catch (error) {
+          console.error('Error updating status:', error);
+          showToast('error', t('common.error'));
+        } finally {
+          setUpdating(null);
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   };
 
   const handleInitiateConversation = async (application: any) => {
@@ -2061,9 +2122,13 @@ function VisaAdminPanel() {
        const { data: conversation, error: convError } = await supabase
          .from('conversations')
          .insert({
-           context_type: 'visa',
-           context_id: application.id,
-           created_by: user?.id
+           participant1_id: user?.id,
+           participant2_id: application.user_id,
+           last_message: t('admin.visa.initialMessage', { 
+             name: application.profiles?.full_name || t('admin.common.applicant'),
+             type: application.visa_type 
+           }),
+           last_message_at: new Date().toISOString()
          })
          .select()
          .single();
@@ -2084,14 +2149,14 @@ function VisaAdminPanel() {
              name: application.profiles?.full_name || t('admin.common.applicant'),
              type: application.visa_type 
            }),
-           message_type: 'admin'
+           is_system: false
          });
  
        window.location.href = `/messages?conversation=${conversation.id}`;
-     } catch (error) {
-       console.error('Error initiating conversation:', error);
-       alert(t('admin.common.failedToStartChat'));
-     }
+    } catch (error) {
+      console.error('Error initiating conversation:', error);
+      showToast('error', t('admin.common.failedToStartChat'));
+    }
   };
 
 
@@ -2257,6 +2322,15 @@ function VisaAdminPanel() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        variant={confirmConfig.variant}
+        onConfirm={confirmConfig.onConfirm}
+        onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }
@@ -2553,7 +2627,7 @@ function PaymentsAdminPanel() {
   };
 
   const handleDeleteCode = async (id: string) => {
-    if (!confirm(t('admin.common.confirm'))) return;
+    if (!confirm(t('admin.payments.confirmDelete'))) return;
     try {
       await adminService.deleteRedemptionCode(id);
       loadCodes();
@@ -2916,7 +2990,7 @@ function SettingsPanel() {
   };
 
   const handleRevoke = async (roleId: string) => {
-    if (!confirm(t('admin.common.confirm'))) return;
+    if (!confirm(t('admin.settings.confirmRevoke'))) return;
     try {
       setLoading(true);
       await adminService.revokeRole(roleId);

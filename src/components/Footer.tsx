@@ -13,10 +13,10 @@ export function Footer() {
           
           {/* Brand & Copyright */}
           <div className="flex items-center gap-4">
-            <span className="font-bold text-gray-900 text-sm">AnYiculture</span>
+            <span className="font-bold text-gray-900 text-sm">{t('common.brand')}</span>
             <span>&copy; {currentYear}</span>
             <span className="hidden sm:inline text-gray-300">|</span>
-            <span className="hidden sm:inline">info@anyi-culture.cn</span>
+            <span className="hidden sm:inline">{t('common.brandEmail')}</span>
           </div>
 
           {/* Minimal Links */}

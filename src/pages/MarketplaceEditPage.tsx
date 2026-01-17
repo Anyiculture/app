@@ -760,7 +760,7 @@ export function MarketplaceEditPage() {
                 disabled={saving || uploadingImages || formData.images.length === 0}
                 className="flex-1"
               >
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? t('common.saving') : t('common.saveChanges')}
               </Button>
             </div>
           </form>
