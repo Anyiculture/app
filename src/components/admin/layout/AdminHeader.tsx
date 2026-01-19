@@ -1,8 +1,6 @@
-import React from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useI18n } from '../../../contexts/I18nContext';
-import { Bell, Search, Globe, Menu } from 'lucide-react';
-import { Button } from '../../ui/Button';
+import { Search, Globe, Menu } from 'lucide-react';
 
 interface AdminHeaderProps {
   onMenuClick?: () => void;

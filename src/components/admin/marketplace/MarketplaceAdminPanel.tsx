@@ -6,9 +6,11 @@ import { AdminTable } from '../ui/AdminTable';
 import { StatusBadge } from '../ui/StatusBadge';
 import { Button } from '../../ui/Button';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { Search, Trash2, Eye, CheckCircle, XCircle, ShoppingBag } from 'lucide-react';
+import { Search, Trash2, Eye, CheckCircle, ShoppingBag } from 'lucide-react';
 import { Input } from '../../ui/Input';
 import { useToast } from '../../ui/Toast';
+import { Modal } from '../../ui/Modal';
+import { MarketplaceDetailView } from '../../marketplace/MarketplaceDetailView';
 
 export function MarketplaceAdminPanel() {
   const { t } = useI18n();
@@ -21,6 +23,7 @@ export function MarketplaceAdminPanel() {
   
   // Action states
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [detailViewOpen, setDetailViewOpen] = useState(false);
   const [confirmStatusOpen, setConfirmStatusOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -52,10 +55,12 @@ export function MarketplaceAdminPanel() {
     
     setLoading(true);
     try {
-      console.warn('Search not fully implemented for marketplace yet');
-      loadItems();
+      const { data, total } = await adminService.searchMarketplaceItems(searchQuery);
+      setItems(data);
+      setTotalItems(total);
     } catch (error) {
       console.error('Search failed:', error);
+      showToast('error', t('admin.marketplace.searchError') || 'Search failed');
     } finally {
       setLoading(false);
     }
@@ -67,11 +72,16 @@ export function MarketplaceAdminPanel() {
     setProcessing(true);
     try {
       const newStatus = selectedItem.status === 'active' ? 'sold' : 'active';
-      await adminService.updateStatus('marketplace_items', selectedItem.id, newStatus);
+      await adminService.updateMarketplaceItemStatus(selectedItem.id, newStatus);
       
       setItems(items.map(i => 
         i.id === selectedItem.id ? { ...i, status: newStatus } : i
       ));
+      
+      // Update selected item if it's currently being viewed
+      if (detailViewOpen && selectedItem) {
+        setSelectedItem({ ...selectedItem, status: newStatus });
+      }
       
       showToast('success', t('admin.marketplace.statusUpdateSuccess') || 'Item status updated');
       setConfirmStatusOpen(false);
@@ -80,7 +90,10 @@ export function MarketplaceAdminPanel() {
       showToast('error', t('admin.marketplace.statusUpdateError') || 'Failed to update status');
     } finally {
       setProcessing(false);
-      setSelectedItem(null);
+      // Don't clear selectedItem if detail view is open
+      if (!detailViewOpen) {
+        setSelectedItem(null);
+      }
     }
   };
 
@@ -89,13 +102,14 @@ export function MarketplaceAdminPanel() {
 
     setProcessing(true);
     try {
-      await adminService.deleteItem('marketplace_items', selectedItem.id);
+      await adminService.deleteMarketplaceItem(selectedItem.id);
       
       setItems(items.filter(i => i.id !== selectedItem.id));
       setTotalItems(prev => prev - 1);
       
       showToast('success', t('admin.marketplace.deleteSuccess') || 'Item deleted');
       setConfirmDeleteOpen(false);
+      setDetailViewOpen(false); // Close detail view if open
     } catch (error) {
       console.error('Failed to delete item:', error);
       showToast('error', t('admin.marketplace.deleteError') || 'Failed to delete item');
@@ -180,7 +194,10 @@ export function MarketplaceAdminPanel() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open(`/marketplace/${item.id}`, '_blank')}
+              onClick={() => {
+                setSelectedItem(item);
+                setDetailViewOpen(true);
+              }}
               className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
               title={t('common.view')}
             >
@@ -235,6 +252,61 @@ export function MarketplaceAdminPanel() {
           </Button>
         </div>
       </div>
+
+
+
+       <Modal
+        isOpen={detailViewOpen}
+        onClose={() => {
+          setDetailViewOpen(false);
+          setSelectedItem(null);
+        }}
+        title={t('admin.marketplace.itemDetails') || 'Item Details'}
+        maxWidth="4xl"
+      >
+        <div className="p-0">
+           <MarketplaceDetailView
+            item={selectedItem}
+            loading={false}
+            onBack={() => {
+              setDetailViewOpen(false);
+              setSelectedItem(null);
+            }}
+            actionSlot={
+              <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-100 mt-4">
+                 <h3 className="text-sm font-semibold text-gray-900">{t('admin.common.adminActions') || 'Admin Actions'}</h3>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                   <Button
+                      variant="outline"
+                      onClick={() => setConfirmStatusOpen(true)}
+                       className={selectedItem?.status === 'active' ? "text-orange-700 border-orange-200 hover:bg-orange-50" : "text-green-700 border-green-200 hover:bg-green-50"}
+                    >
+                      {selectedItem?.status === 'active' ? (
+                         <>
+                           <CheckCircle size={16} className="mr-2" />
+                           {t('admin.actions.markSold') || 'Mark as Sold'}
+                         </>
+                      ) : (
+                         <>
+                           <CheckCircle size={16} className="mr-2" />
+                           {t('admin.actions.activate') || 'Activate'}
+                         </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                      onClick={() => setConfirmDeleteOpen(true)}
+                    >
+                      <Trash2 size={16} className="mr-2" />
+                      {t('admin.actions.delete') || 'Delete Item'}
+                    </Button>
+                 </div>
+              </div>
+            }
+          />
+        </div>
+      </Modal>
 
       <ConfirmDialog
         isOpen={confirmStatusOpen}

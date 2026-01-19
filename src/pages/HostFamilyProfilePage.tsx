@@ -7,16 +7,13 @@ import {
   CheckCircle,
   ArrowLeft,
   MessageCircle,
-  Clock,
   Globe,
   ChevronLeft,
   ChevronRight,
   Baby,
   Heart,
-  ShieldCheck,
   Award,
-  Sparkles,
-  Video
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '../components/ui/GlassCard';
@@ -293,16 +290,22 @@ export function HostFamilyProfilePage() {
                         {t('hostFamily.profile.familyValues') || 'Family Values'}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {profile.parenting_style && (
+                        {profile.parenting_styles && profile.parenting_styles.length > 0 && (
                             <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-sm">
                                 <span className="block text-[9px] text-vibrant-purple font-black uppercase tracking-[0.2em] mb-3">{t('hostFamily.profile.parentingStyle')}</span>
-                                <p className="text-sm font-bold text-gray-700 leading-relaxed italic">"{profile.parenting_style}"</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {profile.parenting_styles.map((style, i) => (
+                                        <span key={i} className="text-sm font-bold text-gray-700 italic">
+                                            {t(`auPair.onboarding.options.parenting.${style}`) || style}{i < (profile.parenting_styles?.length || 0) - 1 ? ',' : ''}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
                         )}
-                        {profile.house_rules && (
+                        {profile.house_rules_details && (
                             <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-sm">
                                 <span className="block text-[9px] text-vibrant-purple font-black uppercase tracking-[0.2em] mb-3">{t('hostFamily.profile.houseRules')}</span>
-                                <p className="text-sm font-bold text-gray-700 leading-relaxed italic">"{profile.house_rules}"</p>
+                                <p className="text-sm font-bold text-gray-700 leading-relaxed italic">"{profile.house_rules_details}"</p>
                             </div>
                         )}
                     </div>

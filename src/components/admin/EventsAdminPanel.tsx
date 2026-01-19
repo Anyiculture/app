@@ -5,6 +5,7 @@ import { StartConversationButton } from './ui/StartConversationButton';
 import { Button, Modal } from '../ui';
 import { Search, Eye, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
+import { EventDetailView } from '../../components/events/EventDetailView';
 
 const SimpleCard = ({ children, className = "", noPadding = false }: { children: React.ReactNode, className?: string, noPadding?: boolean }) => (
   <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${noPadding ? '' : 'p-6'} ${className}`}>
@@ -102,6 +103,7 @@ export function EventsAdminPanel() {
                 <th className="px-6 py-3 font-medium">{t('admin.events.columns.title')}</th>
                 <th className="px-6 py-3 font-medium hidden md:table-cell">{t('admin.events.columns.organizer')}</th>
                 <th className="px-6 py-3 font-medium hidden lg:table-cell">{t('admin.events.columns.date')}</th>
+                <th className="px-6 py-3 font-medium">Image</th>
                 <th className="px-6 py-3 font-medium">{t('admin.events.columns.status')}</th>
                 <th className="px-6 py-3 font-medium text-right">{t('admin.events.columns.actions')}</th>
               </tr>
@@ -109,7 +111,7 @@ export function EventsAdminPanel() {
             <tbody className="divide-y divide-gray-100">
               {events.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                     {t('admin.events.noEvents')}
                   </td>
                 </tr>
@@ -128,6 +130,15 @@ export function EventsAdminPanel() {
                     </td>
                     <td className="px-6 py-4 text-gray-600 hidden lg:table-cell">
                       {event.start_time ? format(new Date(event.start_time), 'MMM d, yyyy') : '-'}
+                    </td>
+                    <td className="px-6 py-4">
+                        {event.image_urls?.[0] ? (
+                            <img src={event.image_urls[0]} alt={event.title} className="w-12 h-12 rounded object-cover" />
+                        ) : (
+                            <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center text-gray-400">
+                                <Eye size={16} />
+                            </div>
+                        )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
@@ -191,66 +202,55 @@ export function EventsAdminPanel() {
           isOpen={!!selectedEvent}
           onClose={() => setSelectedEvent(null)}
           title={`Event: ${selectedEvent.title}`}
+          maxWidth="4xl"
         >
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs text-gray-500 uppercase font-bold">{t('admin.events.columns.status')}</label>
-                <p className="font-medium capitalize">{t(`admin.events.status.${selectedEvent.status}`) || selectedEvent.status}</p>
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 uppercase font-bold">{t('admin.events.columns.date')}</label>
-                <p className="font-medium">{selectedEvent.start_time ? format(new Date(selectedEvent.start_time), 'PPp') : '-'}</p>
-              </div>
-              <div className="col-span-2">
-                <label className="text-xs text-gray-500 uppercase font-bold">Location</label>
-                <p className="font-medium">{selectedEvent.location_name} ({selectedEvent.address})</p>
-              </div>
-              <div className="col-span-2">
-                 <label className="text-xs text-gray-500 uppercase font-bold">Description</label>
-                 <p className="text-sm text-gray-700 mt-1">{selectedEvent.description}</p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
-              <StartConversationButton 
-                  userId={selectedEvent.organizer_id} 
-                  userName={selectedEvent.organizer?.full_name || 'Organizer'} 
-                  contextType="event" 
-                  sourceContext={`Event: ${selectedEvent.title}`}
-                  size="sm"
-                  variant="outline"
-                  className="mr-auto"
-                  label={t('admin.actions.messageUser')}
-              />
-              {selectedEvent.status !== 'published' && (
-                <Button
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => handleStatusUpdate(selectedEvent.id, 'published')}
-                >
-                  Publish
-                </Button>
-              )}
-              {selectedEvent.status !== 'cancelled' && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-orange-600 border-orange-200 hover:bg-orange-50"
-                  onClick={() => handleStatusUpdate(selectedEvent.id, 'cancelled')}
-                >
-                  Cancel Event
-                </Button>
-              )}
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-red-600"
-                onClick={() => handleDelete(selectedEvent.id)}
-              >
-                {t('admin.actions.delete')}
-              </Button>
-            </div>
+          <div className="p-0">
+             <EventDetailView 
+               event={selectedEvent} 
+               loading={false} 
+               onBack={() => setSelectedEvent(null)}
+               customActions={
+                  <div className="flex flex-col gap-2">
+                    <StartConversationButton 
+                        userId={selectedEvent.organizer_id} 
+                        userName={selectedEvent.organizer?.full_name || 'Organizer'} 
+                        contextType="event" 
+                        sourceContext={`Event: ${selectedEvent.title}`}
+                        size="sm"
+                        variant="outline"
+                        className="w-full justify-center"
+                        label={t('admin.actions.messageUser')}
+                    />
+                    {selectedEvent.status !== 'published' && (
+                      <Button
+                        size="sm"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => handleStatusUpdate(selectedEvent.id, 'published')}
+                      >
+                        Publish
+                      </Button>
+                    )}
+                    {selectedEvent.status !== 'cancelled' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-orange-600 border-orange-200 hover:bg-orange-50"
+                        onClick={() => handleStatusUpdate(selectedEvent.id, 'cancelled')}
+                      >
+                        Cancel Event
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full text-red-600 hover:bg-red-50"
+                      onClick={() => handleDelete(selectedEvent.id)}
+                    >
+                      {t('admin.actions.delete')}
+                    </Button>
+                  </div>
+               }
+             />
           </div>
         </Modal>
       )}

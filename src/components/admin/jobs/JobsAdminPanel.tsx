@@ -77,7 +77,7 @@ export function JobsAdminPanel() {
     setProcessing(true);
     try {
       const newStatus = selectedJob.status === 'active' ? 'closed' : 'active';
-      await adminService.updateStatus('jobs', selectedJob.id, newStatus);
+      await adminService.updateJobStatus(selectedJob.id, newStatus);
       
       setJobs(jobs.map(j => 
         j.id === selectedJob.id ? { ...j, status: newStatus } : j
@@ -99,7 +99,7 @@ export function JobsAdminPanel() {
 
     setProcessing(true);
     try {
-      await adminService.deleteItem('jobs', selectedJob.id);
+      await adminService.deleteJob(selectedJob.id);
       
       setJobs(jobs.filter(j => j.id !== selectedJob.id));
       setTotalJobs(prev => prev - 1);

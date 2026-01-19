@@ -3,7 +3,7 @@ import { useAuth } from './contexts/AuthContext';
 import { Footer } from './components/Footer';
 import { TopNavigation } from './components/TopNavigation';
 import ScrollToTop from './components/ScrollToTop';
-import { AlertTriangle, Database } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 export default function App() {
   const { connectionError } = useAuth();
@@ -13,6 +13,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#eaecf0] font-sans">
+      <ScrollToTop />
 
       
 

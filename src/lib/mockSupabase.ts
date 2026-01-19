@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 // Mock User Data
@@ -102,25 +102,25 @@ class MockQueryBuilder {
     return this;
   }
   
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   gt(column: string, value: any) {
     this.data = this.data.filter(item => item[column] > value);
     return this;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   lt(column: string, value: any) {
     this.data = this.data.filter(item => item[column] < value);
     return this;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   gte(column: string, value: any) {
     this.data = this.data.filter(item => item[column] >= value);
     return this;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   lte(column: string, value: any) {
     this.data = this.data.filter(item => item[column] <= value);
     return this;
@@ -131,13 +131,13 @@ class MockQueryBuilder {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ilike(_column: string, _value: any) { return this; }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   is(column: string, value: any) {
     this.data = this.data.filter(item => item[column] === value);
     return this;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   in(column: string, value: any[]) {
     this.data = this.data.filter(item => value.includes(item[column]));
     return this;
@@ -159,7 +159,7 @@ class MockQueryBuilder {
       this.data = this.data.slice(0, count);
       return this; 
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   range(from: number, to: number) {
     this.data = this.data.slice(from, to + 1);
     return this;

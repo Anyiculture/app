@@ -59,6 +59,7 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
     
     // Images
     company_logo: '', // Removed default logo
+    company_license_url: '',
     company_images: [] as string[],
     
     // Technologies
@@ -101,6 +102,7 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
             registration_city: data.registration_city || '',
             office_address: data.office_address || '',
             company_logo: data.company_logo || '',
+            company_license_url: data.company_license_url || '',
             company_images: data.company_images || [],
             technologies: data.technologies || [],
             website: data.website || '',
@@ -152,6 +154,11 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
     } else if (step === 2) {
       if (!formData.registration_province || !formData.registration_city) {
         setError(t('common.required'));
+        return;
+      }
+    } else if (step === 3) {
+      if (!formData.company_license_url) {
+        setError(t('jobsOnboarding.companyLicenseRequired'));
         return;
       }
     }
@@ -231,6 +238,7 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
         office_address: formData.office_address || null,
         
         company_logo: formData.company_logo || null,
+        company_license_url: formData.company_license_url || null,
         company_images: formData.company_images.length > 0 ? formData.company_images : null,
         
         technologies: formData.technologies.length > 0 ? formData.technologies : null,
@@ -480,6 +488,23 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
           {(isEditing || step === 3) && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
                {isEditing && <h3 className="text-lg font-bold text-gray-900 pb-2 border-b">{t('jobsOnboarding.imagesAndCulture')}</h3>}
+               {/* Company License (Mandatory) */}
+               <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    {t('jobsOnboarding.companyLicense')} <span className="text-red-500">*</span>
+                  </label>
+                  <p className="text-sm text-gray-500 mb-4">{t('jobsOnboarding.companyLicenseDesc')}</p>
+                  <div className="max-w-[300px]">
+                    <ImageUpload
+                      value={formData.company_license_url ? [formData.company_license_url] : []}
+                      onChange={(urls) => updateField('company_license_url', urls[0] || '')}
+                      maxImages={1}
+                      bucketName="company-licenses"
+                      disabled={isViewOnly}
+                    />
+                  </div>
+               </div>
+
                {/* Logo */}
                <div>
                  <label className="block text-sm font-medium text-gray-900 mb-4">{t('jobsOnboarding.companyLogo')}</label>

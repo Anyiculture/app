@@ -1,18 +1,17 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
 
-const files = [
-  'src/i18n/locales/en.json',
-  'src/i18n/locales/zh.json'
-];
+try {
+  const content = fs.readFileSync('src/i18n/locales/en.json', 'utf8');
+  JSON.parse(content);
+  console.log('en.json is valid');
+} catch (e) {
+  console.error('en.json error:', e.message);
+}
 
-files.forEach(file => {
-  try {
-    const content = fs.readFileSync(file, 'utf8');
-    JSON.parse(content);
-    console.log(`✅ ${file} is valid JSON`);
-  } catch (error) {
-    console.error(`❌ ${file} is INVALID JSON`);
-    console.error(error.message);
-  }
-});
+try {
+  const content = fs.readFileSync('src/i18n/locales/zh.json', 'utf8');
+  JSON.parse(content);
+  console.log('zh.json is valid');
+} catch (e) {
+  console.error('zh.json error:', e.message);
+}

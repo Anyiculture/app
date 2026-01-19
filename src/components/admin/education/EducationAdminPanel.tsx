@@ -9,6 +9,9 @@ import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { Search, Trash2, Eye, CheckCircle, XCircle, GraduationCap } from 'lucide-react';
 import { Input } from '../../ui/Input';
 import { useToast } from '../../ui/Toast';
+import { Modal } from '../../ui/Modal';
+import { EducationDetailView } from '../../education/EducationDetailView';
+
 
 export function EducationAdminPanel() {
   const { t } = useI18n();
@@ -21,6 +24,7 @@ export function EducationAdminPanel() {
   
   // Action states
   const [selectedResource, setSelectedResource] = useState<any>(null);
+  const [viewResource, setViewResource] = useState<any>(null);
   const [confirmStatusOpen, setConfirmStatusOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -66,8 +70,8 @@ export function EducationAdminPanel() {
     
     setProcessing(true);
     try {
-      const newStatus = selectedResource.status === 'active' ? 'inactive' : 'active'; // assuming inactive for education instead of closed
-      await adminService.updateStatus('education_resources', selectedResource.id, newStatus);
+      const newStatus = selectedResource.status === 'active' ? 'inactive' : 'active';
+      await adminService.updateEducationProgramStatus(selectedResource.id, newStatus);
       
       setResources(resources.map(r => 
         r.id === selectedResource.id ? { ...r, status: newStatus } : r
@@ -89,7 +93,7 @@ export function EducationAdminPanel() {
 
     setProcessing(true);
     try {
-      await adminService.deleteItem('education_resources', selectedResource.id);
+      await adminService.deleteEducationProgram(selectedResource.id);
       
       setResources(resources.filter(r => r.id !== selectedResource.id));
       setTotalResources(prev => prev - 1);
@@ -118,6 +122,18 @@ export function EducationAdminPanel() {
             <p className="text-xs text-gray-500">{resource.institution_name}</p>
           </div>
         </div>
+      )
+    },
+    {
+      header: t('admin.education.columns.image') || 'Image',
+      cell: (resource: any) => (
+        resource.image_url ? (
+          <img src={resource.image_url} alt={resource.program_name} className="h-10 w-10 object-cover rounded" />
+        ) : (
+          <div className="h-10 w-10 rounded bg-gray-100 flex items-center justify-center text-gray-400">
+            <GraduationCap size={20} />
+          </div>
+        )
       )
     },
     {
@@ -174,7 +190,7 @@ export function EducationAdminPanel() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open(`/education/${resource.id}`, '_blank')}
+              onClick={() => setViewResource(resource)}
               className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
               title={t('common.view')}
             >
@@ -254,6 +270,31 @@ export function EducationAdminPanel() {
         variant="danger"
         loading={processing}
       />
+
+       {viewResource && (
+        <Modal
+          isOpen={!!viewResource}
+          onClose={() => setViewResource(null)}
+          title={t('admin.education.programDetails') || 'Program Details'}
+          size="xl"
+        >
+          <div className="max-h-[80vh] overflow-y-auto p-4">
+            <EducationDetailView
+              program={viewResource}
+              isOwner={false}
+              isFavorited={false}
+              hasInterest={false}
+              onToggleFavorite={() => {}}
+              onContact={() => {}}
+              onApply={() => {}}
+              onEdit={() => {}}
+              isAuthenticated={true}
+              onSignIn={() => {}}
+              isAdminView={true}
+            />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

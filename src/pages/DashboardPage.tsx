@@ -392,14 +392,14 @@ function JobsShelfContent() {
         }
 
         // Fetch employer profiles for logos
-        const posterIds = [...new Set(jobsData.map(job => job.poster_id))];
+        const posterIds = [...new Set(jobsData.map((job: any) => job.poster_id))];
         const { data: profiles } = await supabase
           .from('profiles_employer')
           .select('id, company_logo, company_name')
           .in('id', posterIds);
 
-        const jobsWithLogos = jobsData.map(job => {
-          const profile = profiles?.find(p => p.id === job.poster_id);
+        const jobsWithLogos = jobsData.map((job: any) => {
+          const profile = profiles?.find((p: any) => p.id === job.poster_id);
           return {
             ...job,
             company_logo: profile?.company_logo,

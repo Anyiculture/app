@@ -6,9 +6,7 @@ import { GraduationCap, ArrowLeft, Plus, Sparkles, Heart } from 'lucide-react';
 import { educationService, EducationResource } from '../services/educationService';
 import { EducationFiltersBar } from '../components/education/EducationFiltersBar';
 import { EducationCard } from '../components/education/EducationCard';
-import { GlassCard } from '../components/ui/GlassCard';
 import { BackgroundBlobs } from '../components/ui';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export function EducationPage() {
   const { t } = useI18n();
@@ -90,21 +88,19 @@ export function EducationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 font-sans relative overflow-hidden">
       <BackgroundBlobs />
       
       {/* Top Navigation Bar */}
       <div className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm hidden md:block">
         <div className="max-w-[100rem] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <motion.button
-              whileHover={{ scale: 1.1, x: -2 }}
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={() => navigate('/dashboard')}
-              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-vibrant-purple transition-colors rounded-xl bg-white/40 border border-white/60 shadow-sm"
+              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-vibrant-purple transition-all rounded-xl bg-white/40 border border-white/60 shadow-sm hover:scale-105 active:scale-95"
             >
               <ArrowLeft size={20} />
-            </motion.button>
+            </button>
             <div>
               <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">
                 {t('nav.education')}
@@ -156,7 +152,7 @@ export function EducationPage() {
         {/* Results Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/80 border border-white/60 shadow-xl flex items-center justify-center text-vibrant-purple">
+            <div className="w-14 h-14 rounded-2xl bg-white border border-gray-200 shadow-sm flex items-center justify-center text-vibrant-purple">
               <GraduationCap size={28} />
             </div>
             <div>
@@ -182,48 +178,36 @@ export function EducationPage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <GlassCard key={i} className="h-72 animate-pulse p-3 border-white/20">
-                <div className="w-full aspect-video bg-white/20 rounded-2xl mb-6" />
-                <div className="h-6 bg-white/20 rounded-lg w-3/4 mb-4" />
-                <div className="h-4 bg-white/10 rounded-lg w-1/2" />
-              </GlassCard>
+              <div key={i} className="h-72 animate-pulse p-3 border border-gray-100 bg-white rounded-2xl shadow-sm">
+                <div className="w-full aspect-video bg-gray-100 rounded-xl mb-6" />
+                <div className="h-6 bg-gray-100 rounded-lg w-3/4 mb-4" />
+                <div className="h-4 bg-gray-50 rounded-lg w-1/2" />
+              </div>
             ))}
           </div>
         ) : programs.length === 0 ? (
-          <GlassCard className="py-24 border-dashed border-gray-200 bg-white/30 backdrop-blur-md">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-white border border-gray-100 rounded-[2rem] shadow-xl flex items-center justify-center mx-auto mb-8 text-gray-300">
-                <GraduationCap size={40} />
-              </div>
-              <h3 className="text-gray-900 text-3xl font-black uppercase tracking-tight mb-4">{t('education.browse.noProgramsTitle')}</h3>
-              <p className="text-gray-500 mb-10 max-w-sm mx-auto font-medium text-lg">{t('education.browse.noProgramsDescription')}</p>
-              <button
-                onClick={() => handleFilterChange('clear', null)}
-                className="px-10 py-4 bg-white border border-gray-200 text-[11px] font-black uppercase tracking-widest text-gray-700 rounded-2xl hover:bg-gray-50 transition-all shadow-sm"
-              >
-                {t('education.browse.clearAllFilters')}
-              </button>
+          <div className="py-24 border-2 border-dashed border-gray-200 rounded-3xl bg-white/50 text-center">
+            <div className="w-24 h-24 bg-white border border-gray-100 rounded-[2rem] shadow-sm flex items-center justify-center mx-auto mb-8 text-gray-300">
+              <GraduationCap size={40} />
             </div>
-          </GlassCard>
+            <h3 className="text-gray-900 text-3xl font-black uppercase tracking-tight mb-4">{t('education.browse.noProgramsTitle')}</h3>
+            <p className="text-gray-500 mb-10 max-w-sm mx-auto font-medium text-lg">{t('education.browse.noProgramsDescription')}</p>
+            <button
+              onClick={() => handleFilterChange('clear', null)}
+              className="px-10 py-4 bg-white border border-gray-200 text-[11px] font-black uppercase tracking-widest text-gray-700 rounded-2xl hover:bg-gray-50 transition-all shadow-sm"
+            >
+              {t('education.browse.clearAllFilters')}
+            </button>
+          </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
-            <AnimatePresence mode="popLayout">
-              {programs.map((program) => (
-                <motion.div
-                  key={program.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <EducationCard 
-                    program={program} 
-                    onToggleFavorite={handleToggleFavorite} 
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+            {programs.map((program) => (
+              <EducationCard 
+                key={program.id}
+                program={program} 
+                onToggleFavorite={handleToggleFavorite} 
+              />
+            ))}
           </div>
         )}
       </div>

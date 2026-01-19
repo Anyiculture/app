@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+
 import { useI18n } from '../../contexts/I18nContext';
 import { VisaApplication, VisaDocument, VisaApplicationHistory } from '../../services/visaService';
 import { ArrowLeft, FileText, Clock, CheckCircle, XCircle, AlertCircle, MessageSquare, Download } from 'lucide-react';

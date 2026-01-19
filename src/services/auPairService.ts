@@ -537,21 +537,25 @@ export const auPairService = {
 
     if (uploadError) throw uploadError;
 
-    // 2. Create payment record
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('payment_proofs')
+      .getPublicUrl(fileName);
+
+    // 2. Create payment submission record
     const { error: paymentError } = await supabase
-      .from('payments')
+      .from('payment_submissions')
       .insert({
         user_id: user.id,
+        image_url: publicUrl,
+        plan_type: 'au_pair_premium_monthly', // Defaulting to monthly based on UI
         amount: amount,
-        currency: 'CNY',
-        method: 'wechat',
-        status: 'pending',
-        proof_url: fileName
+        status: 'pending'
       });
 
     if (paymentError) throw paymentError;
 
-    // 3. Grant access (Mark as premium temporarily/permanently until admin review)
-    await this.upgradeToPremium();
+    // 3. User remains free until admin approves the submission
+    // The admin review process will trigger the upgrade via review_payment_submission RPC
   }
 };

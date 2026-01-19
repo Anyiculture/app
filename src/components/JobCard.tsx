@@ -12,7 +12,7 @@ interface JobCardProps {
   job: Job;
   isSaved?: boolean;
   onSave?: (id: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   matchScore?: number;
   isDashboard?: boolean;
 }
@@ -59,7 +59,7 @@ export function JobCard({ job, isSaved, onSave, matchScore: _matchScore, isDashb
 
   return (
     <Link to={`/jobs/${job.id}`} className="block h-full group/link">
-      <div className={`h-full bg-white border border-gray-200 hover:border-vibrant-purple/30 transition-all duration-200 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md flex ${isDashboard ? 'flex-col min-h-[160px]' : 'flex-row sm:flex-col gap-2 sm:gap-0 p-3 sm:p-6'} relative overflow-hidden`}>
+      <div className={`h-full bg-white border border-gray-300 hover:border-vibrant-purple/50 transition-all duration-200 rounded-xl sm:rounded-2xl shadow-md hover:shadow-lg flex ${isDashboard ? 'flex-col min-h-[160px]' : 'flex-row sm:flex-col gap-2 sm:gap-0 p-3 sm:p-6'} relative overflow-hidden`}>
         
         {/* Dashboard Media Card Style - Top Section */}
         {isDashboard ? (

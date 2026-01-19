@@ -426,16 +426,16 @@ export const adminService = {
 
     // Manual join to avoid missing FK issues
     if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(i => i.organizer_id || i.user_id))];
+        const userIds = [...new Set(data.map((i: any) => i.organizer_id || i.user_id))];
         if (userIds.length > 0) {
             const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
                 .in('id', userIds);
             
-            const eventsWithProfiles = data.map(item => ({
+            const eventsWithProfiles = data.map((item: any) => ({
                 ...item,
-                organizer: profiles?.find(p => p.id === (item.organizer_id || item.user_id))
+                organizer: profiles?.find((p: any) => p.id === (item.organizer_id || item.user_id))
             }));
             return { data: eventsWithProfiles, total: count || 0 };
         }
@@ -473,16 +473,16 @@ export const adminService = {
 
     // Manual join
     if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(i => i.seller_id || i.user_id))];
+        const userIds = [...new Set(data.map((i: any) => i.seller_id || i.user_id))];
         if (userIds.length > 0) {
             const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
                 .in('id', userIds);
             
-            const itemsWithProfiles = data.map(item => ({
+            const itemsWithProfiles = data.map((item: any) => ({
                 ...item,
-                seller: profiles?.find(p => p.id === (item.seller_id || item.user_id))
+                seller: profiles?.find((p: any) => p.id === (item.seller_id || item.user_id))
             }));
             return { data: itemsWithProfiles, total: count || 0 };
         }
@@ -503,6 +503,36 @@ export const adminService = {
     await this.logActivity('delete_marketplace_item', 'marketplace_items', id);
   },
 
+  async searchMarketplaceItems(query: string) {
+    const { data, error, count } = await supabase
+      .from('marketplace_items')
+      .select('*', { count: 'exact' })
+      .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    // Manual join
+    if (data && data.length > 0) {
+        const userIds = [...new Set(data.map((i: any) => i.seller_id || i.user_id))];
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+            
+            const itemsWithProfiles = data.map((item: any) => ({
+                ...item,
+                seller: profiles?.find((p: any) => p.id === (item.seller_id || item.user_id))
+            }));
+            return { data: itemsWithProfiles, total: count || 0 };
+        }
+    }
+
+    return { data: data || [], total: count || 0 };
+  },
+
   // --- Job Management ---
   async getJobs(limit: number = 20, offset: number = 0, status?: string) {
     let query = supabase
@@ -520,16 +550,16 @@ export const adminService = {
 
     // Manual join
     if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(i => i.poster_id || i.employer_id))];
+        const userIds = [...new Set(data.map((i: any) => i.poster_id || i.employer_id))];
         if (userIds.length > 0) {
             const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
                 .in('id', userIds);
             
-            const jobsWithProfiles = data.map(item => ({
+            const jobsWithProfiles = data.map((item: any) => ({
                 ...item,
-                employer: profiles?.find(p => p.id === (item.poster_id || item.employer_id))
+                employer: profiles?.find((p: any) => p.id === (item.poster_id || item.employer_id))
             }));
             return { data: jobsWithProfiles, total: count || 0 };
         }
@@ -567,16 +597,16 @@ export const adminService = {
 
     // Manual join
     if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(i => i.provider_id || i.creator_id || i.user_id))];
+        const userIds = [...new Set(data.map((i: any) => i.provider_id || i.creator_id || i.user_id))];
         if (userIds.length > 0) {
             const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
                 .in('id', userIds);
             
-            const resourcesWithProfiles = data.map(item => ({
+            const resourcesWithProfiles = data.map((item: any) => ({
                 ...item,
-                provider: profiles?.find(p => p.id === (item.provider_id || item.creator_id || item.user_id))
+                provider: profiles?.find((p: any) => p.id === (item.provider_id || item.creator_id || item.user_id))
             }));
             return { data: resourcesWithProfiles, total: count || 0 };
         }
@@ -609,16 +639,16 @@ export const adminService = {
 
     // Manual join
     if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(i => i.author_id))];
+        const userIds = [...new Set(data.map((i: any) => i.author_id))];
         if (userIds.length > 0) {
             const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
                 .in('id', userIds);
             
-            const postsWithProfiles = data.map(item => ({
+            const postsWithProfiles = data.map((item: any) => ({
                 ...item,
-                author: profiles?.find(p => p.id === item.author_id)
+                author: profiles?.find((p: any) => p.id === item.author_id)
             }));
             return { data: postsWithProfiles, total: count || 0 };
         }
@@ -650,16 +680,16 @@ export const adminService = {
 
     // Manual join
     if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(i => i.user_id))];
+        const userIds = [...new Set(data.map((i: any) => i.user_id))];
         if (userIds.length > 0) {
             const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
                 .in('id', userIds);
             
-            const submissionsWithProfiles = data.map(item => ({
+            const submissionsWithProfiles = data.map((item: any) => ({
                 ...item,
-                user: profiles?.find(p => p.id === item.user_id)
+                user: profiles?.find((p: any) => p.id === item.user_id)
             }));
             return { data: submissionsWithProfiles, total: count || 0 };
         }
@@ -693,16 +723,16 @@ export const adminService = {
 
     // Manual join
     if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(i => i.user_id))];
+        const userIds = [...new Set(data.map((i: any) => i.user_id))];
         if (userIds.length > 0) {
             const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
                 .in('id', userIds);
             
-            const transactionsWithProfiles = data.map(item => ({
+            const transactionsWithProfiles = data.map((item: any) => ({
                 ...item,
-                user: profiles?.find(p => p.id === item.user_id)
+                user: profiles?.find((p: any) => p.id === item.user_id)
             }));
             return { data: transactionsWithProfiles, total: count || 0 };
         }

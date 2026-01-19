@@ -175,7 +175,7 @@ export function JobsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 font-sans relative overflow-hidden">
       <BackgroundBlobs />
       
       {/* Top Navigation Bar */}

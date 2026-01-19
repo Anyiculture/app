@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { auPairService, AuPairProfile, HostFamilyProfile } from '../../services/auPairService';
 import { StartConversationButton } from './ui/StartConversationButton';
 import { Button, Modal } from '../ui';
-import { Search, Eye, MapPin } from 'lucide-react';
+import { Search, Eye, MapPin, Trash2, Ban, CheckCircle } from 'lucide-react';
+import { adminService } from '../../services/adminService';
 
 const SimpleCard = ({ children, className = "", noPadding = false }: { children: React.ReactNode, className?: string, noPadding?: boolean }) => (
   <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${noPadding ? '' : 'p-6'} ${className}`}>
@@ -34,8 +35,50 @@ export function AuPairAdminPanel() {
         setFamilies(data);
       }
     } catch (error) {
-      console.error('Error loading au pair data:', error);
+      console.error('Error loading data:', error);
     }
+  };
+
+  const handleBanUser = async (userId: string, currentStatus: string, type: 'aupair' | 'family') => {
+      // Toggle ban status
+      // Note: We are setting profile_status to 'banned' for visibility in this specific list
+      // and checking if it's currently banned to toggle back to 'active'
+      const isBanning = currentStatus !== 'banned';
+      const newStatus = isBanning ? 'banned' : 'active';
+      
+      if (window.confirm(isBanning ? 'Are you sure you want to ban this user?' : 'Unban this user?')) {
+        try {
+            await adminService.updateUserStatus(userId, isBanning); // Updates auth/profiles is_banned
+            
+            // Also update local profile status for visibility in this table
+            if (type === 'aupair') {
+                await auPairService.adminUpdateAuPairProfile(userId, { profile_status: newStatus });
+            } else {
+                await auPairService.adminUpdateHostFamilyProfile(userId, { profile_status: newStatus });
+            }
+            loadData();
+        } catch (error) {
+            console.error('Error updating ban status:', error);
+            alert('Failed to update status');
+        }
+      }
+  };
+
+  const handleDeleteUser = async (userId: string, type: 'aupair' | 'family') => {
+      if (window.confirm('Are you sure you want to delete this user? This will mark them as deleted but keep the record.')) {
+          try {
+              // Soft delete by setting status to 'deleted'
+              if (type === 'aupair') {
+                  await auPairService.adminUpdateAuPairProfile(userId, { profile_status: 'deleted' });
+              } else {
+                  await auPairService.adminUpdateHostFamilyProfile(userId, { profile_status: 'deleted' });
+              }
+              loadData();
+          } catch (error) {
+              console.error('Error deleting user:', error);
+              alert('Failed to delete user');
+          }
+      }
   };
 
   // Filtered data
@@ -95,6 +138,7 @@ export function AuPairAdminPanel() {
               <thead className="bg-gray-50 border-b border-gray-200 text-gray-500">
                 <tr>
                   <th className="px-6 py-3 font-medium">{t('admin.auPair.columns.user')}</th>
+                  <th className="px-6 py-3 font-medium">Photo</th>
                   <th className="px-6 py-3 font-medium hidden md:table-cell">{t('admin.auPair.columns.nationality')}</th>
                   <th className="px-6 py-3 font-medium hidden lg:table-cell">{t('admin.auPair.columns.experience')}</th>
                   <th className="px-6 py-3 font-medium">{t('admin.auPair.columns.status')}</th>
@@ -104,7 +148,7 @@ export function AuPairAdminPanel() {
               <tbody className="divide-y divide-gray-100">
                 {filteredAuPairs.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                       {t('admin.auPair.noProfiles')}
                     </td>
                   </tr>
@@ -115,11 +159,23 @@ export function AuPairAdminPanel() {
                         <div className="font-medium text-gray-900">{profile.display_name}</div>
                         <div className="text-xs text-gray-500">{profile.age} years old</div>
                       </td>
+                      <td className="px-6 py-4">
+                        {profile.profile_photos?.[0] ? (
+                            <img src={profile.profile_photos[0]} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
+                                <Eye size={16} />
+                            </div>
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-gray-600 hidden md:table-cell">{profile.nationality}</td>
                       <td className="px-6 py-4 text-gray-600 hidden lg:table-cell">{profile.childcare_experience_years} years</td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
-                          profile.profile_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                          profile.profile_status === 'active' ? 'bg-green-100 text-green-700' : 
+                          profile.profile_status === 'banned' ? 'bg-red-100 text-red-700' :
+                          profile.profile_status === 'deleted' ? 'bg-gray-200 text-gray-600' :
+                          'bg-yellow-100 text-yellow-700'
                         }`}>
                           {profile.profile_status}
                         </span>
@@ -135,8 +191,27 @@ export function AuPairAdminPanel() {
                                 variant="ghost"
                                 className="text-gray-500 hover:text-blue-600"
                             />
-                            <Button size="sm" variant="outline" onClick={() => handleViewProfile(profile, 'aupair')}>
-                            <Eye size={14} />
+                            <Button size="sm" variant="outline" onClick={() => handleViewProfile(profile, 'aupair')} title="View Profile">
+                                <Eye size={14} />
+                            </Button>
+                            <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className={profile.profile_status === 'banned' ? "text-green-600 hover:text-green-700" : "text-orange-600 hover:text-orange-700"}
+                                onClick={() => handleBanUser(profile.user_id, profile.profile_status, 'aupair')}
+                                title={profile.profile_status === 'banned' ? "Unban User" : "Ban User"}
+                            >
+                                {profile.profile_status === 'banned' ? <CheckCircle size={14} /> : <Ban size={14} />}
+                            </Button>
+                            <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-red-600 hover:text-red-700" 
+                                onClick={() => handleDeleteUser(profile.user_id, 'aupair')}
+                                title="Soft Delete User"
+                                disabled={profile.profile_status === 'deleted'}
+                            >
+                                <Trash2 size={14} />
                             </Button>
                         </div>
                       </td>
@@ -152,6 +227,7 @@ export function AuPairAdminPanel() {
               <thead className="bg-gray-50 border-b border-gray-200 text-gray-500">
                 <tr>
                   <th className="px-6 py-3 font-medium">Family Name</th>
+                  <th className="px-6 py-3 font-medium">Photo</th>
                   <th className="px-6 py-3 font-medium">Location</th>
                   <th className="px-6 py-3 font-medium">Children</th>
                   <th className="px-6 py-3 font-medium">Status</th>
@@ -161,7 +237,7 @@ export function AuPairAdminPanel() {
               <tbody className="divide-y divide-gray-100">
                 {filteredFamilies.length === 0 ? (
                     <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                         No profiles found.
                         </td>
                     </tr>
@@ -169,6 +245,19 @@ export function AuPairAdminPanel() {
                     filteredFamilies.map((profile) => (
                         <tr key={profile.id} className="hover:bg-gray-50/50">
                             <td className="px-6 py-4 font-medium text-gray-900">{profile.family_name}</td>
+                            <td className="px-6 py-4">
+                                {profile.family_photos?.[0] || profile.home_photos?.[0] ? (
+                                    <img 
+                                        src={profile.family_photos?.[0] || profile.home_photos?.[0]} 
+                                        alt="Family" 
+                                        className="w-10 h-10 rounded-full object-cover" 
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
+                                        <Eye size={16} />
+                                    </div>
+                                )}
+                            </td>
                             <td className="px-6 py-4 text-gray-600">
                                 <div className="flex items-center gap-1">
                                     <MapPin size={12} />
@@ -178,15 +267,39 @@ export function AuPairAdminPanel() {
                             <td className="px-6 py-4 text-gray-600">{profile.children_count}</td>
                             <td className="px-6 py-4">
                                 <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
-                                profile.profile_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                                  profile.profile_status === 'active' ? 'bg-green-100 text-green-700' : 
+                                  profile.profile_status === 'banned' ? 'bg-red-100 text-red-700' :
+                                  profile.profile_status === 'deleted' ? 'bg-gray-200 text-gray-600' :
+                                  'bg-yellow-100 text-yellow-700'
                                 }`}>
                                 {profile.profile_status}
                                 </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                                <Button size="sm" variant="outline" onClick={() => handleViewProfile(profile, 'family')}>
+                                <div className="flex justify-end gap-2">
+                                <Button size="sm" variant="outline" onClick={() => handleViewProfile(profile, 'family')} title="View Profile">
                                     <Eye size={14} />
                                 </Button>
+                                <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className={profile.profile_status === 'banned' ? "text-green-600 hover:text-green-700" : "text-orange-600 hover:text-orange-700"}
+                                    onClick={() => handleBanUser(profile.user_id, profile.profile_status, 'family')}
+                                    title={profile.profile_status === 'banned' ? "Unban User" : "Ban User"}
+                                >
+                                    {profile.profile_status === 'banned' ? <CheckCircle size={14} /> : <Ban size={14} />}
+                                </Button>
+                                <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="text-red-600 hover:text-red-700" 
+                                    onClick={() => handleDeleteUser(profile.user_id, 'family')}
+                                    title="Soft Delete User"
+                                    disabled={profile.profile_status === 'deleted'}
+                                >
+                                    <Trash2 size={14} />
+                                </Button>
+                                </div>
                             </td>
                         </tr>
                     ))

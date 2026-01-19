@@ -1,8 +1,8 @@
-import React from 'react';
+
 import { cn } from '../../../lib/utils';
 import { useI18n } from '../../../contexts/I18nContext';
 
-export type StatusVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'blue' | 'purple';
+export type StatusVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'blue' | 'purple';
 
 interface StatusBadgeProps {
   status: string;
@@ -34,7 +34,8 @@ export function StatusBadge({ status, variant, className, label }: StatusBadgePr
     info: "bg-sky-50 text-sky-700 border-sky-200",
     blue: "bg-blue-50 text-blue-700 border-blue-200",
     purple: "bg-purple-50 text-purple-700 border-purple-200",
-    neutral: "bg-gray-50 text-gray-600 border-gray-200"
+    neutral: "bg-gray-50 text-gray-600 border-gray-200",
+    default: "bg-gray-50 text-gray-600 border-gray-200"
   };
 
   return (

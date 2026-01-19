@@ -5,6 +5,8 @@ import { StartConversationButton } from './ui/StartConversationButton';
 import { Button, Modal } from '../ui';
 import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { VisaApplicationDetailView } from '../../components/visa/VisaApplicationDetailView';
+import { useNavigate } from 'react-router-dom';
 
 const SimpleCard = ({ children, className = "", noPadding = false }: { children: React.ReactNode, className?: string, noPadding?: boolean }) => (
   <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${noPadding ? '' : 'p-6'} ${className}`}>
@@ -17,9 +19,13 @@ export function VisaAdminPanel() {
   const [applications, setApplications] = useState<VisaApplication[]>([]);
   const [filter, setFilter] = useState('all');
   const [selectedApp, setSelectedApp] = useState<VisaApplication | null>(null);
+  const [selectedAppDocuments, setSelectedAppDocuments] = useState<any[]>([]);
+  const [selectedAppHistory, setSelectedAppHistory] = useState<any[]>([]);
+  // const [loadingDetails, setLoadingDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
@@ -33,6 +39,26 @@ export function VisaAdminPanel() {
       console.error('Error loading visa applications:', error);
     }
   };
+
+  useEffect(() => {
+    const loadDetails = async () => {
+        if (!selectedApp) return;
+        // setLoadingDetails(true);
+        try {
+            const [docs, hist] = await Promise.all([
+                visaService.getDocuments(selectedApp.id),
+                visaService.getApplicationHistory(selectedApp.id)
+            ]);
+            setSelectedAppDocuments(docs);
+            setSelectedAppHistory(hist);
+        } catch (error) {
+            console.error("Failed to load details", error);
+        } finally {
+            // setLoadingDetails(false);
+        }
+    };
+    loadDetails();
+  }, [selectedApp]);
 
   const handleStatusUpdate = async (id: string, status: any) => {
     try {
@@ -208,102 +234,66 @@ export function VisaAdminPanel() {
           isOpen={!!selectedApp}
           onClose={() => setSelectedApp(null)}
           title={`${t('admin.visa.details.title')}: ${selectedApp.full_name}`}
+          maxWidth="5xl"
         >
-          <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-            {/* Applicant Details */}
-            <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-                <h3 className="font-bold text-gray-900 border-b pb-2">Applicant Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-gray-500 uppercase font-bold">{t('admin.visa.columns.nationality')}</label>
-                    <p className="font-medium">{selectedApp.nationality_country || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 uppercase font-bold">Passport Number</label>
-                    <p className="font-medium">{selectedApp.passport_number || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 uppercase font-bold">Passport Expiry</label>
-                    <p className="font-medium">{selectedApp.passport_expiry ? format(new Date(selectedApp.passport_expiry), 'MMM d, yyyy') : '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 uppercase font-bold">Date of Birth</label>
-                    <p className="font-medium">{selectedApp.date_of_birth ? format(new Date(selectedApp.date_of_birth), 'MMM d, yyyy') : '-'}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-xs text-gray-500 uppercase font-bold">Current Residence</label>
-                    <p className="font-medium">
-                        {[selectedApp.current_city, selectedApp.current_province, selectedApp.current_country].filter(Boolean).join(', ') || '-'}
-                    </p>
-                  </div>
+          <div className="p-0">
+             <VisaApplicationDetailView
+                application={selectedApp}
+                documents={selectedAppDocuments}
+                history={selectedAppHistory}
+                onBack={() => setSelectedApp(null)}
+                onNavigateToMessages={() => {
+                    if (selectedApp.conversation_id) {
+                        navigate(`/admin/messages?conversation=${selectedApp.conversation_id}`);
+                    }
+                }}
+            />
+            
+            <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-lg">
+                <h3 className="font-semibold text-gray-900 mb-4">{t('admin.common.adminActions') || 'Admin Actions'}</h3>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleStatusUpdate(selectedApp.id, 'in_review')}
+                    disabled={selectedApp.status === 'in_review'}
+                  >
+                    {t('admin.visa.actions.markInReview')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleStatusUpdate(selectedApp.id, 'documents_requested')}
+                    disabled={selectedApp.status === 'documents_requested'}
+                  >
+                    {t('admin.visa.actions.requestDocs')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white ml-auto"
+                    onClick={() => handleStatusUpdate(selectedApp.id, 'approved')}
+                    disabled={selectedApp.status === 'approved'}
+                  >
+                    {t('admin.visa.actions.approve')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                    onClick={() => handleStatusUpdate(selectedApp.id, 'rejected')}
+                    disabled={selectedApp.status === 'rejected'}
+                  >
+                    {t('admin.visa.actions.reject')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-red-600"
+                    onClick={() => handleDelete(selectedApp.id)}
+                  >
+                    {t('admin.actions.delete')}
+                  </Button>
                 </div>
-            </div>
-
-            {/* Application Details */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs text-gray-500 uppercase font-bold">{t('admin.visa.columns.type')}</label>
-                <p className="font-medium uppercase">{selectedApp.visa_type.replace('_', ' ')}</p>
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 uppercase font-bold">{t('admin.visa.columns.status')}</label>
-                <p className="font-medium capitalize">{t(`admin.visa.status.${selectedApp.status}`) || selectedApp.status}</p>
-              </div>
-            </div>
-
-            {/* Admin Actions */}
-            <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
-              <StartConversationButton 
-                  userId={selectedApp.user_id} 
-                  userName={selectedApp.full_name || 'Applicant'} 
-                  contextType="visa" 
-                  sourceContext={`Visa Application: ${selectedApp.visa_type}`}
-                  size="sm"
-                  variant="outline"
-                  className="mr-auto"
-                  label={t('admin.visa.actions.messageApplicant')}
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleStatusUpdate(selectedApp.id, 'in_review')}
-                disabled={selectedApp.status === 'in_review'}
-              >
-                {t('admin.visa.actions.markInReview')}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleStatusUpdate(selectedApp.id, 'documents_requested')}
-                disabled={selectedApp.status === 'documents_requested'}
-              >
-                {t('admin.visa.actions.requestDocs')}
-              </Button>
-              <Button
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white ml-auto"
-                onClick={() => handleStatusUpdate(selectedApp.id, 'approved')}
-                disabled={selectedApp.status === 'approved'}
-              >
-                {t('admin.visa.actions.approve')}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-red-600 border-red-200 hover:bg-red-50"
-                onClick={() => handleStatusUpdate(selectedApp.id, 'rejected')}
-                disabled={selectedApp.status === 'rejected'}
-              >
-                {t('admin.visa.actions.reject')}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-red-600"
-                onClick={() => handleDelete(selectedApp.id)}
-              >
-                {t('admin.actions.delete')}
-              </Button>
             </div>
           </div>
         </Modal>
