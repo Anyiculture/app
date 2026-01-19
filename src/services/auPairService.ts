@@ -128,15 +128,6 @@ export interface UserSubscriptionStatus {
   onboardingCompleted: boolean;
 }
 
-export interface RedemptionCode {
-  id: string;
-  code: string;
-  type: string;
-  status: string;
-  used_at: string;
-  created_at: string;
-}
-
 export const auPairService = {
   async getUserSubscriptionStatus(): Promise<UserSubscriptionStatus> {
     try {
@@ -336,11 +327,36 @@ export const auPairService = {
     return data || [];
   },
 
+  async getAdminAuPairProfiles(): Promise<AuPairProfile[]> {
+    const { data, error } = await supabase
+      .from('au_pair_profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
   async getHostFamilyProfiles(): Promise<HostFamilyProfile[]> {
     const { data, error } = await supabase
       .from('host_family_profiles')
       .select('*')
       .eq('profile_status', 'active')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getAdminHostFamilyProfiles(): Promise<HostFamilyProfile[]> {
+    // Try RPC first
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_admin_host_family_profiles');
+    if (!rpcError) return rpcData || [];
+
+    // Fallback
+    const { data, error } = await supabase
+      .from('host_family_profiles')
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -460,6 +476,36 @@ export const auPairService = {
     return data;
   },
 
+  async adminUpdateHostFamilyProfile(userId: string, profile: Partial<HostFamilyProfile>) {
+    const { data, error } = await supabase
+      .from('host_family_profiles')
+      .update({
+        ...profile,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async adminUpdateAuPairProfile(userId: string, profile: Partial<AuPairProfile>) {
+    const { data, error } = await supabase
+      .from('au_pair_profiles')
+      .update({
+        ...profile,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async canSendMessage(): Promise<{ allowed: boolean; reason?: string }> {
     const status = await this.getUserSubscriptionStatus();
 
@@ -476,20 +522,6 @@ export const auPairService = {
     }
 
     return { allowed: true };
-  },
-
-  async redeemCode(code: string): Promise<{ success: boolean; message: string }> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { data, error } = await supabase.rpc('redeem_code', { code_input: code });
-
-    if (error) {
-      console.error('Redemption error:', error);
-      throw error;
-    }
-
-    return data;
   },
 
   async submitPaymentProof(file: File, amount: number) {
@@ -521,19 +553,5 @@ export const auPairService = {
 
     // 3. Grant access (Mark as premium temporarily/permanently until admin review)
     await this.upgradeToPremium();
-  },
-
-  async getRedemptionHistory(): Promise<RedemptionCode[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
-
-    const { data, error } = await supabase
-      .from('redemption_codes')
-      .select('*')
-      .eq('used_by', user.id)
-      .order('used_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
   }
 };

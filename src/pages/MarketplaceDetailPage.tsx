@@ -7,6 +7,7 @@ import { messagingService } from '../services/messagingService';
 import { Button } from '../components/ui/Button';
 import { Loading } from '../components/ui/Loading';
 import { Modal } from '../components/ui/Modal';
+import { TranslateWrapper } from '../components/ui/TranslateWrapper';
 import {
   ShoppingBag, MapPin, Tag, Calendar, ArrowLeft, MessageCircle,
   User, Heart, Eye, Phone, Flag, CheckCircle, Clock
@@ -14,7 +15,6 @@ import {
 import { format } from 'date-fns';
 import { zhCN, enUS } from 'date-fns/locale';
 import { useToast } from '../components/ui/Toast';
-import { TranslateWrapper } from '../components/ui/TranslateWrapper';
 
 export function MarketplaceDetailPage() {
   const { id } = useParams<{ id: string }>();

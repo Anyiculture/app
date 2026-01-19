@@ -5,9 +5,11 @@ import { notificationService, Notification } from '../services/notificationServi
 import { Button } from './ui/Button';
 import localizationUtils from '../utils/localization';
 import { useI18n } from '../contexts/I18nContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export function NotificationCenter() {
   const { t } = useI18n();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -16,16 +18,25 @@ export function NotificationCenter() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadNotifications();
-    loadUnreadCount();
-
-    const subscription = notificationService.subscribeToNotifications((_payload) => {
+    if (user) {
       loadNotifications();
       loadUnreadCount();
-    });
+    } else {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+
+    const subscription = user
+      ? notificationService.subscribeToNotifications((_payload) => {
+          loadNotifications();
+          loadUnreadCount();
+        })
+      : null;
 
     const interval = setInterval(() => {
-      loadUnreadCount();
+      if (user) {
+        loadUnreadCount();
+      }
     }, 30000);
 
     return () => {
@@ -36,7 +47,7 @@ export function NotificationCenter() {
       }
       clearInterval(interval);
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -53,19 +64,33 @@ export function NotificationCenter() {
 
   const loadNotifications = async () => {
     try {
+      if (!user) {
+        setNotifications([]);
+        return;
+      }
       const data = await notificationService.getNotifications(20);
       setNotifications(data);
     } catch (error) {
-      console.error('Failed to load notifications:', error);
+      const msg = String(error || '');
+      if (!msg.includes('Not authenticated')) {
+        console.error('Failed to load notifications:', error);
+      }
     }
   };
 
   const loadUnreadCount = async () => {
     try {
+      if (!user) {
+        setUnreadCount(0);
+        return;
+      }
       const count = await notificationService.getUnreadCount();
       setUnreadCount(count);
     } catch (error) {
-      console.error('Failed to load unread count:', error);
+      const msg = String(error || '');
+      if (!msg.includes('Not authenticated')) {
+        console.error('Failed to load unread count:', error);
+      }
     }
   };
 
@@ -132,13 +157,11 @@ export function NotificationCenter() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2 rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-700 transition-colors"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
+          <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
         )}
       </button>
 

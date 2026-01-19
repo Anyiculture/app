@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { profileService } from '../../services/profileService';
@@ -6,12 +7,13 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { supabase } from '../../lib/supabase';
-import { Save, User, Camera } from 'lucide-react';
+import { Save, User, Camera, Eye } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 
 export function GeneralSettingsPage() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   
@@ -70,14 +72,24 @@ export function GeneralSettingsPage() {
           <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{t('settings.profile.title')}</h2>
           <p className="text-gray-500 mt-2 text-md">{t('settings.profile.description')}</p>
         </div>
-        <Button 
-          onClick={handleProfileUpdate} 
-          disabled={loading} 
-          className="shadow-xl shadow-blue-200 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 hover:scale-105 transition-transform px-6 py-2.5 h-auto rounded-xl"
-        >
-          <Save size={18} className="mr-2" />
-          {loading ? t('common.saving') : t('common.saveChanges')}
-        </Button>
+        <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/settings/profile')}
+              className="border-gray-200 hover:bg-gray-50 text-gray-700"
+            >
+              <Eye size={18} className="mr-2" />
+              {t('settings.profile.preview') || 'My Profile'}
+            </Button>
+            <Button 
+              onClick={handleProfileUpdate} 
+              disabled={loading} 
+              className="shadow-xl shadow-blue-200 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 hover:scale-105 transition-transform px-6 py-2.5 h-auto rounded-xl"
+            >
+              <Save size={18} className="mr-2" />
+              {loading ? t('common.saving') : t('common.saveChanges')}
+            </Button>
+        </div>
       </div>
 
       {/* Avatar Section */}
@@ -146,41 +158,60 @@ export function GeneralSettingsPage() {
       <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
              <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-700">{t('settings.profile.displayName')}</label>
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.firstName')}</label>
                 <Input
-                  value={profileData.display_name || profileData.full_name || ''}
-                  onChange={(e) => setProfileData((prev: any) => ({ ...prev, display_name: e.target.value, full_name: e.target.value }))}
-                  placeholder={t('settings.profile.displayNamePlaceholder')}
-                  className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+                  value={profileData.first_name || ''}
+                  onChange={(e) => setProfileData((prev: any) => ({ ...prev, first_name: e.target.value }))}
+                  className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
                 />
              </div>
              <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-700">{t('settings.profile.phone')}</label>
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.lastName')}</label>
                 <Input
-                  value={profileData.phone || ''}
-                  onChange={(e) => setProfileData((prev: any) => ({ ...prev, phone: e.target.value }))}
-                  placeholder={t('settings.profile.phonePlaceholder')}
-                  className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+                  value={profileData.last_name || ''}
+                  onChange={(e) => setProfileData((prev: any) => ({ ...prev, last_name: e.target.value }))}
+                  className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
                 />
              </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.displayName')}</label>
+                <Input
+                  value={profileData.display_name || ''}
+                  onChange={(e) => setProfileData((prev: any) => ({ ...prev, display_name: e.target.value }))}
+                  placeholder={t('settings.profile.displayNamePlaceholder')}
+                  className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
+                />
+             </div>
+             <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.phone')}</label>
+                <Input
+                  value={profileData.phone || ''}
+                  onChange={(e) => setProfileData((prev: any) => ({ ...prev, phone: e.target.value }))}
+                  placeholder={t('settings.profile.phonePlaceholder')}
+                  className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
+                />
+             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-700">{t('settings.profile.dob')}</label>
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.dob')}</label>
                 <Input
                   type="date"
                   value={profileData.date_of_birth || ''}
                   onChange={(e) => setProfileData((prev: any) => ({ ...prev, date_of_birth: e.target.value }))}
-                  className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+                  className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-700">{t('settings.profile.gender')}</label>
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.gender')}</label>
                 <select
                   value={profileData.gender || ''}
                   onChange={(e) => setProfileData((prev: any) => ({ ...prev, gender: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-50/50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
                 >
                   <option value="">{t('common.select')}</option>
                   <option value="male">{t('common.male')}</option>
@@ -189,93 +220,129 @@ export function GeneralSettingsPage() {
                   <option value="prefer_not_to_say">{t('common.preferNotToSay')}</option>
                 </select>
               </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.nationality')}</label>
+                <Input
+                  value={profileData.nationality || ''}
+                  onChange={(e) => setProfileData((prev: any) => ({ ...prev, nationality: e.target.value }))}
+                  className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
+                />
+              </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700">{t('settings.profile.citizenship')}</label>
+            <label className="block text-sm font-medium text-gray-700">{t('settings.profile.citizenship')}</label>
             <Input
               value={profileData.citizenship_country || ''}
               onChange={(e) => setProfileData((prev: any) => ({ ...prev, citizenship_country: e.target.value }))}
               placeholder={t('settings.profile.citizenship')}
-              className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+              className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-700">{t('settings.profile.residence')}</label>
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.residence')}</label>
                 <Input
                   value={profileData.residence_country || ''}
                   onChange={(e) => setProfileData((prev: any) => ({ ...prev, residence_country: e.target.value }))}
                   placeholder={t('settings.profile.residence')}
-                  className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+                  className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-700">{t('settings.profile.province')}</label>
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.province')}</label>
                 <Input
                   value={profileData.residence_province || ''}
                   onChange={(e) => setProfileData((prev: any) => ({ ...prev, residence_province: e.target.value }))}
                   placeholder={t('settings.profile.province')}
-                  className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+                  className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-700">{t('settings.profile.city')}</label>
+                <label className="block text-sm font-medium text-gray-700">{t('settings.profile.city')}</label>
                 <Input
                   value={profileData.residence_city || profileData.current_city || ''}
                   onChange={(e) => setProfileData((prev: any) => ({ ...prev, residence_city: e.target.value, current_city: e.target.value }))}
                   placeholder={t('settings.profile.city')}
-                  className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+                  className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
                 />
               </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700">{t('settings.profile.bio')}</label>
+            <label className="block text-sm font-medium text-gray-700">{t('settings.profile.bio')}</label>
             <Textarea
               value={profileData.bio || ''}
               onChange={(e) => setProfileData((prev: any) => ({ ...prev, bio: e.target.value }))}
               placeholder={t('settings.profile.bioPlaceholder')}
-              rows={5}
-              className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl resize-none p-4"
+              rows={4}
+              className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg resize-none p-3"
             />
             <div className="flex justify-end mt-1">
-               <span className="text-xs text-gray-400 font-medium">{profileData.bio?.length || 0}/500</span>
+               <span className="text-xs text-gray-400">{profileData.bio?.length || 0}/500</span>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('settings.profile.emergencyContact')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">{t('settings.profile.contactName')}</label>
+                  <Input
+                    value={profileData.emergency_contact_name || ''}
+                    onChange={(e) => setProfileData((prev: any) => ({ ...prev, emergency_contact_name: e.target.value }))}
+                    className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
+                  />
+               </div>
+               <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">{t('settings.profile.contactPhone')}</label>
+                  <Input
+                    value={profileData.emergency_contact_phone || ''}
+                    onChange={(e) => setProfileData((prev: any) => ({ ...prev, emergency_contact_phone: e.target.value }))}
+                    className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
+                  />
+               </div>
+               <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">{t('settings.profile.relationship')}</label>
+                  <Input
+                    value={profileData.emergency_contact_relationship || ''}
+                    onChange={(e) => setProfileData((prev: any) => ({ ...prev, emergency_contact_relationship: e.target.value }))}
+                    className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
+                  />
+               </div>
             </div>
           </div>
 
           {/* User Goals */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700">{t('onboarding.userGoals')}</label>
+            <label className="block text-sm font-medium text-gray-700">{t('onboarding.userGoals')}</label>
             <Input
               value={profileData.user_goals || ''}
               onChange={(e) => setProfileData((prev: any) => ({ ...prev, user_goals: e.target.value }))}
               placeholder={t('onboarding.userGoalsDesc')}
-              className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+              className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
             />
-            <p className="text-xs text-gray-500">{t('onboarding.userGoalsDesc')}</p>
           </div>
 
           {/* Platform Intent */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700">{t('onboarding.platformIntent')}</label>
+            <label className="block text-sm font-medium text-gray-700">{t('onboarding.platformIntent')}</label>
             <Input
               value={profileData.platform_intent || ''}
               onChange={(e) => setProfileData((prev: any) => ({ ...prev, platform_intent: e.target.value }))}
               placeholder={t('onboarding.platformIntentDesc')}
-              className="bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+              className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
             />
-            <p className="text-xs text-gray-500">{t('onboarding.platformIntentDesc')}</p>
           </div>
 
           {/* Primary Interest */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700">{t('onboarding.primaryInterest')}</label>
+            <label className="block text-sm font-medium text-gray-700">{t('onboarding.primaryInterest')}</label>
             <select
               value={profileData.primary_interest || ''}
               onChange={(e) => setProfileData((prev: any) => ({ ...prev, primary_interest: e.target.value }))}
-              className="w-full px-3 py-2 bg-gray-50/50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all rounded-xl h-12"
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
             >
               <option value="">{t('common.select')}</option>
               <option value="jobs">{t('nav.jobs')}</option>

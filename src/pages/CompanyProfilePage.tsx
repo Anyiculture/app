@@ -10,17 +10,17 @@ import {
   Linkedin, 
   ArrowLeft,
   CheckCircle,
-  Code,
-  Image as ImageIcon
+  Briefcase
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Loading } from '../components/ui/Loading';
 import { Button } from '../components/ui/Button';
+import { TranslateWrapper } from '../components/ui/TranslateWrapper';
 import { useI18n } from '../contexts/I18nContext';
 import { jobsService, Job } from '../services/jobsService';
 import { JobCard } from '../components/JobCard';
 import { BackgroundBlobs } from '../components/ui/BackgroundBlobs';
-import { TranslateWrapper } from '../components/ui/TranslateWrapper';
+import { GlassCard } from '../components/ui/GlassCard';
 
 interface CompanyProfile {
   user_id: string;
@@ -70,7 +70,7 @@ export function CompanyProfilePage() {
         setProfile(profileData);
 
         // 2. Fetch Active Jobs
-        const jobs = await jobsService.getUserJobs(id, 'published');
+        const jobs = await jobsService.getUserJobs(id, 'active');
         setActiveJobs(jobs);
 
       } catch (err) {
@@ -99,30 +99,30 @@ export function CompanyProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-12 relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#eaecf0] pb-12 relative overflow-x-hidden font-sans">
       <BackgroundBlobs className="opacity-30" />
       
       {/* Header Banner */}
-      <div className="h-64 md:h-80 bg-gradient-to-r from-blue-600 to-indigo-800 relative overflow-hidden">
+      <div className="h-48 sm:h-64 bg-gradient-to-r from-blue-600 to-indigo-800 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
-        <div className="absolute top-6 left-4 md:left-8 z-10">
+        <div className="absolute top-4 left-4 z-10">
           <button 
             onClick={() => navigate(-1)} 
             className="flex items-center gap-2 text-white/90 hover:text-white bg-black/20 hover:bg-black/30 px-4 py-2 rounded-full transition-colors backdrop-blur-md border border-white/10"
           >
-            <ArrowLeft size={18} />
-            <span className="font-medium text-sm">{t('common.back')}</span>
+            <ArrowLeft size={16} />
+            <span className="font-bold text-xs uppercase tracking-widest">{t('common.back')}</span>
           </button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 -mt-16 sm:-mt-20">
         
         {/* Company Header Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8 -mt-20 md:-mt-24 mb-8">
-          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-end">
+        <GlassCard className="p-6 sm:p-8 mb-8">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
             {/* Logo */}
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-white shadow-lg p-2 flex-shrink-0 border-2 border-gray-100 -mt-12 md:-mt-16 mx-auto md:mx-0 relative z-10">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-white shadow-lg p-2 flex-shrink-0 border border-gray-100 relative z-10">
               {profile.company_logo ? (
                 <img 
                   src={profile.company_logo} 
@@ -137,48 +137,49 @@ export function CompanyProfilePage() {
             </div>
 
             {/* Basic Info */}
-            <div className="flex-1 text-center md:text-left w-full">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-1 w-full pt-2">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 flex items-center justify-center md:justify-start gap-2 mb-2">
+                  <h1 className="text-2xl md:text-4xl font-black text-gray-900 flex items-center gap-2 mb-2 leading-tight">
                     {profile.company_name}
                     {profile.verified && (
                       <CheckCircle className="text-blue-500 fill-blue-50" size={24} />
                     )}
                   </h1>
                   
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-6 text-sm md:text-base text-gray-600">
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 font-medium">
                     {profile.industry && (
-                      <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1 rounded-full">
-                        <Building2 size={16} className="text-gray-500" />
+                      <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1 rounded-lg">
+                        <Building2 size={14} className="text-gray-400" />
                         {profile.industry}
                       </span>
                     )}
                     {(profile.registration_city || profile.registration_province) && (
                       <span className="flex items-center gap-1.5">
-                        <MapPin size={16} className="text-gray-400" />
+                        <MapPin size={14} className="text-gray-400" />
                         {[profile.registration_city, profile.registration_province].filter(Boolean).join(', ')}
                       </span>
                     )}
                     {profile.company_size && (
                       <span className="flex items-center gap-1.5">
-                        <Users size={16} className="text-gray-400" />
+                        <Users size={14} className="text-gray-400" />
                         {profile.company_size} {t('jobsOnboarding.employees') || 'employees'}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-center md:justify-end gap-3 mt-4 md:mt-0">
+                <div className="flex items-center gap-3 mt-2 md:mt-0">
                   {profile.website && (
                     <a 
                       href={profile.website} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm"
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 font-bold text-sm"
                     >
-                      <Globe size={18} />
+                      <Globe size={16} />
                       <span className="hidden sm:inline">{t('jobsOnboarding.visitWebsite')}</span>
+                      <span className="sm:hidden">Website</span>
                     </a>
                   )}
                   {profile.linkedin_url && (
@@ -186,7 +187,7 @@ export function CompanyProfilePage() {
                       href={profile.linkedin_url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="p-2.5 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                      className="p-2.5 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100"
                       title={t('jobsOnboarding.viewLinkedin')}
                     >
                       <Linkedin size={20} />
@@ -196,19 +197,18 @@ export function CompanyProfilePage() {
               </div>
             </div>
           </div>
-        </div>
+        </GlassCard>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             
             {/* About Section */}
-            <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
+            <GlassCard className="p-6 sm:p-8">
+              <h2 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-3 uppercase tracking-wide border-l-4 border-blue-600 pl-3">
                 {t('jobsOnboarding.companyDescription')}
               </h2>
-              <div className="prose prose-blue max-w-none text-gray-600 whitespace-pre-line leading-relaxed">
+              <div className="prose prose-blue max-w-none text-gray-600 whitespace-pre-line leading-relaxed text-sm sm:text-base">
                 <TranslateWrapper 
                   text={profile.company_description || t('common.noDescription')}
                   dbTranslation={null}
@@ -216,35 +216,31 @@ export function CompanyProfilePage() {
                   className={!profile.company_description ? "text-gray-400 italic" : ""}
                 />
               </div>
-            </section>
+            </GlassCard>
 
             {/* Tech Stack */}
             {profile.technologies && profile.technologies.length > 0 && (
-              <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-indigo-600 rounded-full"></span>
-                  <Code size={20} className="text-indigo-600" />
+              <GlassCard className="p-6 sm:p-8">
+                <h2 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-3 uppercase tracking-wide border-l-4 border-indigo-600 pl-3">
                   {t('jobsOnboarding.techStack')}
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {profile.technologies.map((tech) => (
                     <span 
                       key={tech}
-                      className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-semibold border border-indigo-100"
+                      className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-bold border border-indigo-100 uppercase tracking-wide"
                     >
                       {tech}
                     </span>
                   ))}
                 </div>
-              </section>
+              </GlassCard>
             )}
 
             {/* Gallery */}
             {profile.company_images && profile.company_images.length > 0 && (
-              <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-purple-600 rounded-full"></span>
-                  <ImageIcon size={20} className="text-purple-600" />
+              <GlassCard className="p-6 sm:p-8">
+                <h2 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-3 uppercase tracking-wide border-l-4 border-purple-600 pl-3">
                   {t('jobsOnboarding.companyPhotos')}
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -252,7 +248,7 @@ export function CompanyProfilePage() {
                     <button 
                       key={idx}
                       onClick={() => setSelectedImage(img)}
-                      className="aspect-video rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all transform hover:-translate-y-1 group relative"
+                      className="aspect-video rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all transform hover:-translate-y-1 group relative"
                     >
                       <img 
                         src={img} 
@@ -263,14 +259,14 @@ export function CompanyProfilePage() {
                     </button>
                   ))}
                 </div>
-              </section>
+              </GlassCard>
             )}
 
             {/* Active Jobs */}
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between">
+            <div id="open-positions">
+              <h2 className="text-2xl font-black text-gray-900 mb-6 flex items-center justify-between">
                 <span>{t('jobsOnboarding.openPositions')}</span>
-                <span className="text-base font-medium px-3 py-1 bg-gray-100 rounded-full text-gray-600">
+                <span className="text-sm font-bold px-3 py-1 bg-gray-900 text-white rounded-full">
                   {activeJobs.length}
                 </span>
               </h2>
@@ -283,51 +279,51 @@ export function CompanyProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
-                    <Building2 size={32} />
+                <GlassCard className="p-12 text-center">
+                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-300">
+                    <Briefcase size={32} />
                   </div>
-                  <p className="text-gray-500 font-medium">{t('jobsOnboarding.noOpenPositions')}</p>
-                </div>
+                  <p className="text-gray-500 font-bold uppercase tracking-wide text-sm">{t('jobsOnboarding.noOpenPositions')}</p>
+                </GlassCard>
               )}
-            </section>
+            </div>
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-bl-full -mr-8 -mt-8 z-0"></div>
-                <h3 className="font-bold text-gray-900 mb-6 relative z-10">{t('jobsOnboarding.companyDetails')}</h3>
+              <GlassCard className="p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-bl-[4rem] -mr-8 -mt-8 z-0"></div>
+                <h3 className="font-black text-gray-900 mb-6 relative z-10 uppercase tracking-wide text-sm">{t('jobsOnboarding.companyDetails')}</h3>
                 
-                <div className="space-y-5 relative z-10">
+                <div className="space-y-6 relative z-10">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
-                      <Building2 size={20} />
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0 shadow-sm">
+                      <Building2 size={18} />
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">{t('jobsOnboarding.type')}</p>
-                      <p className="text-gray-900 font-medium capitalize">{profile.company_type || 'N/A'}</p>
+                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">{t('jobsOnboarding.type')}</p>
+                      <p className="text-gray-900 font-bold capitalize text-sm">{profile.company_type || 'N/A'}</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
-                      <Calendar size={20} />
+                    <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0 shadow-sm">
+                      <Calendar size={18} />
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">{t('jobsOnboarding.founded')}</p>
-                      <p className="text-gray-900 font-medium">{profile.founded_year || 'N/A'}</p>
+                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">{t('jobsOnboarding.founded')}</p>
+                      <p className="text-gray-900 font-bold text-sm">{profile.founded_year || 'N/A'}</p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 flex-shrink-0">
-                      <MapPin size={20} />
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 flex-shrink-0 shadow-sm">
+                      <MapPin size={18} />
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">{t('jobsOnboarding.headquarters')}</p>
-                      <p className="text-gray-900 font-medium leading-tight">
+                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">{t('jobsOnboarding.headquarters')}</p>
+                      <p className="text-gray-900 font-bold leading-tight text-sm">
                         {[profile.registration_city, profile.registration_province, profile.registration_country].filter(Boolean).join(', ')}
                       </p>
                     </div>
@@ -335,17 +331,17 @@ export function CompanyProfilePage() {
 
                   {profile.office_address && (
                      <div className="flex items-start gap-4">
-                       <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 flex-shrink-0">
-                         <MapPin size={20} />
+                       <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 flex-shrink-0 shadow-sm">
+                         <MapPin size={18} />
                        </div>
                        <div>
-                         <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">{t('jobsOnboarding.officeAddress')}</p>
-                         <p className="text-gray-900 font-medium leading-tight">{profile.office_address}</p>
+                         <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">{t('jobsOnboarding.officeAddress')}</p>
+                         <p className="text-gray-900 font-bold leading-tight text-sm">{profile.office_address}</p>
                        </div>
                      </div>
                   )}
                 </div>
-              </div>
+              </GlassCard>
             </div>
           </div>
         </div>
@@ -360,7 +356,7 @@ export function CompanyProfilePage() {
           <img 
             src={selectedImage} 
             alt="Full size" 
-            className="max-w-full max-h-[90vh] rounded-lg shadow-2xl"
+            className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl"
           />
           <button 
             onClick={() => setSelectedImage(null)}
@@ -368,7 +364,6 @@ export function CompanyProfilePage() {
           >
             <span className="sr-only">Close</span>
             <ArrowLeft className="w-6 h-6 rotate-180" /> 
-            {/* Using ArrowLeft rotated as close or could use X icon if imported */}
           </button>
         </div>
       )}

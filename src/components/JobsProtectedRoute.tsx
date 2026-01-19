@@ -6,7 +6,6 @@ import { JobsRoleSelection } from './JobsRoleSelection';
 import { JobSeekerOnboarding } from './JobSeekerOnboarding';
 import { EmployerOnboarding } from './EmployerOnboarding';
 import { adminService } from '../services/adminService';
-import { useI18n } from '../contexts/I18nContext';
 
 interface JobsProtectedRouteProps {
   children: ReactNode;
@@ -17,7 +16,6 @@ interface JobsProtectedRouteProps {
 export function JobsProtectedRoute({ children, requireRole = 'any', requireProfileCompletion = true }: JobsProtectedRouteProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -120,14 +118,14 @@ export function JobsProtectedRoute({ children, requireRole = 'any', requireProfi
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('common.loading')}</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
   if (showRoleSelection) {
-    return <JobsRoleSelection onRoleSelected={handleRoleSelected} />;
+    return <JobsRoleSelection onRoleSelected={handleRoleSelected} onClose={() => navigate('/dashboard')} />;
   }
 
   if (showOnboarding && selectedRole && user?.id) {

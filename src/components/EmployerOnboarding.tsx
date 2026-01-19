@@ -211,7 +211,7 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
           });
           if (insertProfileError) {
              console.error('Failed to auto-create missing profile:', insertProfileError);
-             throw new Error(t('common.userProfileMissing'));
+             throw new Error('User profile missing. Please contact support.');
           }
         }
       }
@@ -313,8 +313,8 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
                 <Building className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{t('common.editProfile')}</h2>
-                <p className="text-sm text-emerald-700">{t('jobsOnboarding.updateCompanyInfo')}</p>
+                <h2 className="text-xl font-bold text-gray-900">{t('common.editProfile') || 'Edit Profile'}</h2>
+                <p className="text-sm text-emerald-700">{t('jobsOnboarding.updateCompanyInfo') || 'Update your company information below'}</p>
               </div>
             </div>
           </div>
@@ -498,7 +498,7 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
                <div>
                  <label className="block text-sm font-medium text-gray-900 mb-4">
                    {t('jobsOnboarding.companyPhotos')}
-                   <span className="text-gray-500 font-normal ml-2">({t('common.maxCount', { count: 5 })})</span>
+                   <span className="text-gray-500 font-normal ml-2">(Max 5)</span>
                  </label>
                  
                  <div className="mt-4">
@@ -561,7 +561,7 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
                       value={formData.website}
                       onChange={(e) => updateField('website', e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none disabled:bg-gray-100"
-                      placeholder={t('jobsOnboarding.websitePlaceholder')}
+                      placeholder={t('jobsOnboarding.websitePlaceholder') || 'https://example.com'}
                       disabled={isViewOnly}
                     />
                   </div>
@@ -591,7 +591,7 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
               onClick={handleBack}
               className="px-6 py-2 text-gray-500 hover:text-gray-900 font-medium transition-colors"
             >
-              {step === 1 ? t('jobsOnboarding.changeRole') : t('common.back')}
+              {step === 1 ? t('jobsOnboarding.changeRole') || 'Change Role' : t('common.back')}
             </button>
           ) : (
             <div /> // Spacer
@@ -629,8 +629,8 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
           setShowSaveConfirm(false);
           handleSubmit();
         }}
-        title={t('common.confirmSaveTitle')}
-        message={t('common.confirmSaveMessage')}
+        title={t('common.confirmSaveTitle') || "Save Changes?"}
+        message={t('common.confirmSaveMessage') || "Are you sure you want to save these changes? This action is irreversible."}
         confirmText={t('common.saveChanges')}
         type="danger"
       />

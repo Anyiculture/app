@@ -64,7 +64,7 @@ export interface Message {
 
 export interface CreateConversationParams {
   otherUserId: string;
-  contextType: 'job' | 'aupair' | 'visa' | 'event' | 'marketplace' | 'community' | 'lifestyle' | 'education' | 'support';
+  contextType: 'job' | 'aupair' | 'visa' | 'event' | 'marketplace' | 'community' | 'lifestyle' | 'education' | 'support' | 'violation' | 'account';
   contextId?: string;
   relatedItemTitle?: string;
   initialMessage?: string;
@@ -143,6 +143,28 @@ export const messagingService = {
       console.error('Failed to get messages:', error);
       return [];
     }
+  },
+
+  /**
+   * Start an admin conversation with a system message
+   */
+  async startAdminConversation(
+    userId: string,
+    contextType: 'visa' | 'support' | 'violation' | 'account' = 'support',
+    systemMessage?: string
+  ): Promise<string> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Reuse existing createConversationWithMessage logic which handles RPC
+    const result = await this.createConversationWithMessage({
+      otherUserId: userId,
+      contextType: contextType,
+      initialMessage: systemMessage,
+      messageType: 'system' // Important: Mark as system message
+    });
+
+    return result.conversationId;
   },
 
   /**

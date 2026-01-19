@@ -143,7 +143,7 @@ export function SearchableDropdown({
             <div className="overflow-auto flex-1 py-1">
               {filteredOptions.length === 0 ? (
                 <div className="py-6 text-center text-sm text-gray-500">
-                  {t('common.noResults')}
+                  No options found.
                 </div>
               ) : (
                 filteredOptions.map((option) => {

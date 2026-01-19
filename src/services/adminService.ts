@@ -329,11 +329,15 @@ export const adminService = {
   },
 
   async deleteUser(userId: string): Promise<void> {
+    // Use the custom RPC for safe deletion
+    const { error } = await supabase.rpc('admin_delete_user', { target_user_id: userId });
+
+    if (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+    }
+    
     await this.logActivity('delete_user', 'profiles', userId);
-
-    const { error } = await supabase.auth.admin.deleteUser(userId);
-
-    if (error) throw error;
   },
 
   async updateUserStatus(userId: string, banned: boolean): Promise<void> {
@@ -381,75 +385,329 @@ export const adminService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    // Check if the current user is already a participant using the participants table
-    const { data: participants, error: getError } = await supabase
-      .from('conversation_participants')
-      .select('user_id')
-      .eq('conversation_id', conversationId)
-      .eq('user_id', user.id);
+    // Check if the current user is already a participant
+    const { data: conversation, error: getError } = await supabase
+      .from('conversations')
+      .select('participant1_id, participant2_id')
+      .eq('id', conversationId)
+      .single();
 
     if (getError) throw getError;
 
-    if (participants && participants.length > 0) {
+    if (conversation.participant1_id === user.id || conversation.participant2_id === user.id) {
       return; // Already a participant
     }
 
-    // Add current admin to participants table
-    const { error: insertError } = await supabase
-      .from('conversation_participants')
-      .insert({ 
-        conversation_id: conversationId,
-        user_id: user.id 
-      });
+    // Assign current admin as participant2
+    const { error: updateError } = await supabase
+      .from('conversations')
+      .update({ participant2_id: user.id })
+      .eq('id', conversationId);
 
-    if (insertError) throw insertError;
+    if (updateError) throw updateError;
     
     await this.logActivity('join_conversation', 'conversations', conversationId);
   },
 
-  async getRedemptionCodes() {
-    const { data, error } = await supabase
-      .from('redemption_codes')
-      .select(`
-        *,
-        redeemed_by_user:redeemed_by (
-          email,
-          full_name
-        )
-      `)
-      .order('created_at', { ascending: false });
+  // --- Events Management ---
+  async getEvents(limit: number = 20, offset: number = 0, status?: string) {
+    let query = supabase
+      .from('events')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data, error, count } = await query;
     if (error) throw error;
-    return data || [];
+
+    // Manual join to avoid missing FK issues
+    if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(i => i.organizer_id || i.user_id))];
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+            
+            const eventsWithProfiles = data.map(item => ({
+                ...item,
+                organizer: profiles?.find(p => p.id === (item.organizer_id || item.user_id))
+            }));
+            return { data: eventsWithProfiles, total: count || 0 };
+        }
+    }
+
+    return { data: data || [], total: count || 0 };
   },
 
-  async generateRedemptionCode(params: { code?: string; max_uses?: number; expires_at?: string }) {
-    // Generate a random code if not provided
-    const code = params.code || `VIP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    
-    const { data, error } = await supabase
-      .from('redemption_codes')
-      .insert({
-        code,
-        max_uses: params.max_uses || 1,
-        expires_at: params.expires_at || null // null means no expiration
-      })
-      .select()
-      .single();
-
+  async updateEventStatus(id: string, status: string) {
+    const { error } = await supabase.from('events').update({ status }).eq('id', id);
     if (error) throw error;
-    
-    await this.logActivity('generate_code', 'redemption_codes', data.id, { code });
-    return data;
+    await this.logActivity('update_event_status', 'events', id, { status });
   },
 
-  async deleteRedemptionCode(id: string) {
-    const { error } = await supabase
-      .from('redemption_codes')
-      .delete()
-      .eq('id', id);
+  async deleteEvent(id: string) {
+    const { error } = await supabase.from('events').delete().eq('id', id);
+    if (error) throw error;
+    await this.logActivity('delete_event', 'events', id);
+  },
+
+  // --- Marketplace Management ---
+  async getMarketplaceItems(limit: number = 20, offset: number = 0, status?: string) {
+    let query = supabase
+      .from('marketplace_items')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    // Manual join
+    if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(i => i.seller_id || i.user_id))];
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+            
+            const itemsWithProfiles = data.map(item => ({
+                ...item,
+                seller: profiles?.find(p => p.id === (item.seller_id || item.user_id))
+            }));
+            return { data: itemsWithProfiles, total: count || 0 };
+        }
+    }
+
+    return { data: data || [], total: count || 0 };
+  },
+
+  async updateMarketplaceItemStatus(id: string, status: string) {
+    const { error } = await supabase.from('marketplace_items').update({ status }).eq('id', id);
+    if (error) throw error;
+    await this.logActivity('update_marketplace_status', 'marketplace_items', id, { status });
+  },
+
+  async deleteMarketplaceItem(id: string) {
+    const { error } = await supabase.from('marketplace_items').delete().eq('id', id);
+    if (error) throw error;
+    await this.logActivity('delete_marketplace_item', 'marketplace_items', id);
+  },
+
+  // --- Job Management ---
+  async getJobs(limit: number = 20, offset: number = 0, status?: string) {
+    let query = supabase
+      .from('jobs')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    // Manual join
+    if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(i => i.poster_id || i.employer_id))];
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+            
+            const jobsWithProfiles = data.map(item => ({
+                ...item,
+                employer: profiles?.find(p => p.id === (item.poster_id || item.employer_id))
+            }));
+            return { data: jobsWithProfiles, total: count || 0 };
+        }
+    }
+
+    return { data: data || [], total: count || 0 };
+  },
+
+  async updateJobStatus(id: string, status: string) {
+    const { error } = await supabase.from('jobs').update({ status }).eq('id', id);
+    if (error) throw error;
+    await this.logActivity('update_job_status', 'jobs', id, { status });
+  },
+
+  async deleteJob(id: string) {
+    const { error } = await supabase.from('jobs').delete().eq('id', id);
+    if (error) throw error;
+    await this.logActivity('delete_job', 'jobs', id);
+  },
+
+  // --- Education Management ---
+  async getEducationResources(limit: number = 20, offset: number = 0, status?: string) {
+    let query = supabase
+      .from('education_resources')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    // Manual join
+    if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(i => i.provider_id || i.creator_id || i.user_id))];
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+            
+            const resourcesWithProfiles = data.map(item => ({
+                ...item,
+                provider: profiles?.find(p => p.id === (item.provider_id || item.creator_id || item.user_id))
+            }));
+            return { data: resourcesWithProfiles, total: count || 0 };
+        }
+    }
+
+    return { data: data || [], total: count || 0 };
+  },
+
+  async updateEducationProgramStatus(id: string, status: string) {
+    const { error } = await supabase.from('education_resources').update({ status }).eq('id', id);
+    if (error) throw error;
+    await this.logActivity('update_education_status', 'education_resources', id, { status });
+  },
+
+  async deleteEducationProgram(id: string) {
+    const { error } = await supabase.from('education_resources').delete().eq('id', id);
+    if (error) throw error;
+    await this.logActivity('delete_education_program', 'education_resources', id);
+  },
+
+  // --- Community Management ---
+  async getCommunityPosts(limit: number = 20, offset: number = 0) {
+    const { data, error, count } = await supabase
+      .from('community_posts')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) throw error;
-    await this.logActivity('delete_code', 'redemption_codes', id);
+
+    // Manual join
+    if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(i => i.author_id))];
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+            
+            const postsWithProfiles = data.map(item => ({
+                ...item,
+                author: profiles?.find(p => p.id === item.author_id)
+            }));
+            return { data: postsWithProfiles, total: count || 0 };
+        }
+    }
+
+    return { data: data || [], total: count || 0 };
+  },
+
+  async deleteCommunityPost(id: string) {
+    const { error } = await supabase.from('community_posts').delete().eq('id', id);
+    if (error) throw error;
+    await this.logActivity('delete_community_post', 'community_posts', id);
+  },
+
+  // --- Payment Management ---
+  async getPaymentSubmissions(limit: number = 20, offset: number = 0, status?: string) {
+    let query = supabase
+      .from('payment_submissions')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    // Manual join
+    if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(i => i.user_id))];
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+            
+            const submissionsWithProfiles = data.map(item => ({
+                ...item,
+                user: profiles?.find(p => p.id === item.user_id)
+            }));
+            return { data: submissionsWithProfiles, total: count || 0 };
+        }
+    }
+
+    return { data: data || [], total: count || 0 };
+  },
+
+  async updatePaymentSubmissionStatus(id: string, status: string, notes?: string) {
+    // Use the RPC function for safe processing (updating subscription etc.)
+    const { data, error } = await supabase.rpc('review_payment_submission', {
+      submission_id: id,
+      new_status: status,
+      notes: notes
+    });
+
+    if (error) throw error;
+    if (data && !data.success) throw new Error(data.message);
+    
+    await this.logActivity('review_payment', 'payment_submissions', id, { status, notes });
+  },
+
+  async getTransactions(limit: number = 20, offset: number = 0) {
+    const { data, error, count } = await supabase
+      .from('payments')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    // Manual join
+    if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(i => i.user_id))];
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+            
+            const transactionsWithProfiles = data.map(item => ({
+                ...item,
+                user: profiles?.find(p => p.id === item.user_id)
+            }));
+            return { data: transactionsWithProfiles, total: count || 0 };
+        }
+    }
+
+    return { data: data || [], total: count || 0 };
   }
 };

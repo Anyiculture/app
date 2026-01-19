@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../contexts/I18nContext';
 import { AuthLayout } from '../components/AuthLayout';
 import { supabase } from '../lib/supabase';
-import { Lock, AlertCircle } from 'lucide-react';
+import { Lock, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Button } from '../components/ui';
 
 export function ResetPasswordPage() {

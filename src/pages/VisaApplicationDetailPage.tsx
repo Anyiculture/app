@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { visaService, VisaApplication, VisaDocument, VisaApplicationHistory } from '../services/visaService';
 import { VisaApplicationDetailView } from '../components/visa/VisaApplicationDetailView';
+import { ArrowLeft, FileText, Clock, CheckCircle, XCircle, AlertCircle, MessageSquare, Download } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Loading } from '../components/ui/Loading';
 

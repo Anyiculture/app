@@ -7,7 +7,7 @@ import { adminService } from '../services/adminService';
 import { Send, MessageSquare, ArrowLeft, Search, Paperclip, Calendar, X, FileText, Check, Clock, ShieldCheck, Video, MapPin } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 
-export function MessagingPage() {
+export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { t } = useI18n();
@@ -335,7 +335,16 @@ export function MessagingPage() {
               ? 'bg-gray-900 text-white rounded-br-sm shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)]' 
               : 'bg-white text-gray-900 border border-gray-100 rounded-bl-sm group-hover:border-gray-200'
           }`}>
-            <p className="text-[12px] md:text-[13px] font-medium break-words whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+            <p className="text-[12px] md:text-[13px] font-medium break-words whitespace-pre-wrap leading-relaxed">
+              {msg.content.startsWith('TRANSLATE:') ? (() => {
+                  try {
+                    const { key, params } = JSON.parse(msg.content.substring(10));
+                    return t(key, params);
+                  } catch (e) {
+                    return msg.content;
+                  }
+                })() : msg.content}
+            </p>
           </div>
         )}
         
@@ -366,7 +375,7 @@ export function MessagingPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] mt-16 bg-white flex overflow-hidden border-t border-gray-100/50">
+    <div className={`${embedded ? 'h-full' : 'h-[calc(100vh-4rem)] mt-16'} bg-white flex overflow-hidden border-t border-gray-100/50`}>
       {/* Sidebar - List */}
       <div 
         style={{ width: window.innerWidth >= 768 ? `${sidebarWidth}px` : '100%' }}

@@ -3,11 +3,6 @@ export const translationService = {
   async translateText(text: string, toLang: 'zh' | 'en'): Promise<string> {
     if (!text) return '';
 
-    // Optimization: If text is already in target language (heuristic), return it.
-    const isChinese = this.hasChinese(text);
-    if (toLang === 'zh' && isChinese) return text;
-    if (toLang === 'en' && !isChinese) return text;
-
     try {
       // Determine source language (simple heuristic)
       // If target is 'zh', assume source is 'en' (or anything else)

@@ -7,31 +7,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 const SLIDES = [
   {
     id: 1,
-    image: 'https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=Happy%20diverse%20family%20walking%20in%20modern%20city%20park%20with%20rainbow%20kite%20asian%20parents%20and%20kids%20and%20black%20woman%20walking%20together&image_size=landscape_16_9',
+    image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=2070&auto=format&fit=crop',
     ctaLink: '/au-pair',
     color: 'from-blue-600 to-indigo-900'
   },
   {
     id: 2,
-    image: 'https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=Female%20singer%20recording%20in%20studio%20with%20microphone%20side%20profile%20professional%20music%20production&image_size=landscape_16_9',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
     ctaLink: '/jobs',
     color: 'from-violet-600 to-purple-900'
   },
   {
     id: 3,
-    image: 'https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=Outdoor%20sunny%20park%20event%20with%20red%20bean%20bag%20chairs%20and%20white%20umbrellas%20and%20palm%20trees%20festival%20atmosphere&image_size=landscape_16_9',
+    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop',
     ctaLink: '/events',
     color: 'from-slate-700 to-slate-900'
   },
   {
     id: 4,
-    image: 'https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=Secondhand%20market%20stall%20with%20vintage%20items%20and%20happy%20shoppers%20browsing%20sunny%20day&image_size=landscape_16_9',
+    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop',
     ctaLink: '/marketplace',
     color: 'from-emerald-600 to-teal-900'
   },
   {
     id: 5,
-    image: 'https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=Group%20of%20diverse%20friends%20having%20coffee%20and%20chatting%20in%20a%20cozy%20cafe%20warm%20lighting&image_size=landscape_16_9',
+    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2832&auto=format&fit=crop',
     ctaLink: '/community',
     color: 'from-orange-500 to-red-900'
   }
@@ -62,7 +62,7 @@ export function HeroCarousel() {
   const currentSlide = SLIDES_LOCALIZED[current];
 
   return (
-    <div className="relative w-full h-full min-h-[300px] rounded-2xl overflow-hidden shadow-lg shadow-blue-900/5 group mb-6 bg-gray-900">
+    <div className="relative w-full h-full min-h-[250px] rounded-2xl overflow-hidden shadow-lg shadow-blue-900/5 group mb-6 bg-gray-900">
       <AnimatePresence mode='popLayout'>
         <motion.div 
           key={current}

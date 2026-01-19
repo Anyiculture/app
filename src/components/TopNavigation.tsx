@@ -1,4 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
+import { GlobalSearch } from './GlobalSearch';
+import { NotificationCenter } from './NotificationCenter';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { 
@@ -7,7 +9,6 @@ import {
   Calendar, 
   FileText, 
   Users, 
-  Search, 
   Menu,
   GraduationCap,
   LayoutDashboard,
@@ -16,11 +17,9 @@ import {
   ChevronDown,
   MessageSquare,
   Shield,
-  Globe,
-  User
+  Globe
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { NotificationCenter } from './NotificationCenter';
 
 // Custom rich icon wrappers with gradients/colors - Smaller Size
 const NavIcon = ({ icon: Icon, colorClass }: { icon: any, colorClass: string }) => (
@@ -30,7 +29,7 @@ const NavIcon = ({ icon: Icon, colorClass }: { icon: any, colorClass: string }) 
 );
 
 export function TopNavigation() {
-  const { user, profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { t, language, setLanguage } = useI18n();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -55,12 +54,23 @@ export function TopNavigation() {
 
   // Check if user is admin
   useEffect(() => {
-    if (profile?.role === 'admin') {
-      setIsAdmin(true);
+    const checkAdmin = async () => {
+      try {
+        const { adminService } = await import('../services/adminService');
+        const isAdminUser = await adminService.checkIsAdmin();
+        setIsAdmin(isAdminUser);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+
+    if (user) {
+      checkAdmin();
     } else {
       setIsAdmin(false);
     }
-  }, [profile]);
+  }, [user]);
 
   const navItems = [
     { 
@@ -176,14 +186,9 @@ export function TopNavigation() {
           {/* Right Section */}
           <div className="flex items-center gap-3 sm:gap-4">
             
-            {/* Search Bar - Hidden on small mobile */}
-            <div className="hidden md:flex relative group">
-              <input 
-                type="text" 
-                placeholder={t('common.searchPlaceholder')} 
-                className="w-40 lg:w-56 pl-9 pr-4 py-2 bg-gray-100 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all outline-none placeholder-gray-500"
-              />
-              <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-blue-500 transition-colors" />
+            {/* Global Search */}
+            <div className="hidden md:block">
+              <GlobalSearch />
             </div>
 
             {/* Notifications */}
@@ -240,12 +245,12 @@ export function TopNavigation() {
                         {t('nav.dashboard')}
                       </Link>
                       <Link 
-                        to={`/profile/${user.id}`} 
+                        to="/profile" 
                         onClick={() => setIsProfileMenuOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                       >
-                        <User size={16} />
-                        {t('common.viewProfile')}
+                        <Users size={16} />
+                        {t('nav.profile')}
                       </Link>
                       <Link 
                         to="/settings" 
@@ -300,7 +305,7 @@ export function TopNavigation() {
       {isMobileMenuOpen && (
         <div className="xl:hidden border-t border-gray-100 bg-white/95 backdrop-blur-xl absolute w-full shadow-xl">
           <div className="p-4 space-y-2">
-             {navItems.filter(item => !item.requiresAuth || user).map((item) => (
+             {navItems.filter(item => (!item.requiresAuth || user)).map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}

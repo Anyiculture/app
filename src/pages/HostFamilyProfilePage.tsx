@@ -7,14 +7,16 @@ import {
   CheckCircle,
   ArrowLeft,
   MessageCircle,
+  Clock,
   Globe,
   ChevronLeft,
   ChevronRight,
   Baby,
   Heart,
+  ShieldCheck,
   Award,
   Sparkles,
-  // Removed unused icons
+  Video
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '../components/ui/GlassCard';
@@ -291,16 +293,16 @@ export function HostFamilyProfilePage() {
                         {t('hostFamily.profile.familyValues') || 'Family Values'}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {profile.parenting_styles && profile.parenting_styles.length > 0 && (
+                        {profile.parenting_style && (
                             <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-sm">
                                 <span className="block text-[9px] text-vibrant-purple font-black uppercase tracking-[0.2em] mb-3">{t('hostFamily.profile.parentingStyle')}</span>
-                            <p className="text-sm font-bold text-gray-700 leading-relaxed italic">"{profile.parenting_styles.join(', ')}"</p>
+                                <p className="text-sm font-bold text-gray-700 leading-relaxed italic">"{profile.parenting_style}"</p>
                             </div>
                         )}
-                    {profile.house_rules_details && (
+                        {profile.house_rules && (
                             <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-sm">
                                 <span className="block text-[9px] text-vibrant-purple font-black uppercase tracking-[0.2em] mb-3">{t('hostFamily.profile.houseRules')}</span>
-                            <p className="text-sm font-bold text-gray-700 leading-relaxed italic">"{profile.house_rules_details}"</p>
+                                <p className="text-sm font-bold text-gray-700 leading-relaxed italic">"{profile.house_rules}"</p>
                             </div>
                         )}
                     </div>

@@ -128,7 +128,7 @@ export default function MyJobsPage() {
       if (jobsError) throw jobsError;
 
       const allJobs = (jobsData as unknown as PostedJob[]) || [];
-      const activeJobs = allJobs.filter(j => j.status === 'published');
+      const activeJobs = allJobs.filter(j => j.status === 'active');
       const totalApplications = allJobs.reduce((sum, job) => {
         return sum + (job.applications?.[0]?.count || 0);
       }, 0);
@@ -196,8 +196,8 @@ export default function MyJobsPage() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      published: 'bg-green-100 text-green-800',
       active: 'bg-green-100 text-green-800',
+      published: 'bg-green-100 text-green-800', // Keep for backward compatibility
       inactive: 'bg-gray-100 text-gray-800',
       draft: 'bg-yellow-100 text-yellow-800',
       closed: 'bg-red-100 text-red-800',
@@ -212,8 +212,8 @@ export default function MyJobsPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'published':
-      case 'active': return <CheckCircle className="w-4 h-4" />;
+      case 'active':
+      case 'published': return <CheckCircle className="w-4 h-4" />;
       case 'closed': 
       case 'rejected': return <XCircle className="w-4 h-4" />;
       case 'draft': 
@@ -391,7 +391,7 @@ export default function MyJobsPage() {
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >
                     <option value="all">{t('myJobs.status.all')}</option>
-                    <option value="published">{t('myJobs.status.published')}</option>
+                    <option value="active">{t('myJobs.status.published')}</option>
                     <option value="inactive">{t('myJobs.status.inactive')}</option>
                     <option value="draft">{t('myJobs.status.draft')}</option>
                     <option value="closed">{t('myJobs.status.closed')}</option>

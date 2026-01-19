@@ -94,11 +94,12 @@ export function JobsPage() {
         experience_level: filters.experience_level.length ? filters.experience_level : undefined,
         sort: filters.sort,
       });
-      setJobs(result.jobs);
-      setTotalPages(result.totalPages);
+      setJobs(result.jobs || []); // Ensure array
+      setTotalPages(result.totalPages || 1);
     } catch (err) {
 
       console.error('Failed to load jobs:', err);
+      setJobs([]); // Reset to empty array on error
     } finally {
       setLoading(false);
     }

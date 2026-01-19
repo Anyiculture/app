@@ -125,15 +125,19 @@ export function GlobalSearch() {
     return icons[type] || '📄';
   };
 
+  const getResultTypeLabel = (type: string) => {
+     return t(`search.module.${type}`) || type;
+  };
+
   return (
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors group"
       >
-        <Search className="w-4 h-4 text-gray-600" />
-        <span className="text-sm text-gray-600">{t('common.searchPlaceholder')}</span>
-        <kbd className="hidden md:inline-flex items-center gap-1 px-2 py-1 bg-white border border-gray-300 rounded text-xs">
+        <Search className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
+        <span className="text-sm text-gray-500 group-hover:text-gray-700 w-24 text-left">{t('common.searchPlaceholder')}</span>
+        <kbd className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-gray-200 rounded text-[10px] text-gray-400 font-sans">
           <span>⌘</span>K
         </kbd>
       </button>
@@ -228,7 +232,7 @@ export function GlobalSearch() {
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-medium text-gray-900 truncate">{result.title}</h3>
                             <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
-                              {t(`search.module.${result.type}`) || result.type}
+                              {getResultTypeLabel(result.type)}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 line-clamp-2">{result.description}</p>

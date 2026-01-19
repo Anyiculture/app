@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Briefcase, Building } from 'lucide-react';
+import { Briefcase, Building, X } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
 
 interface JobsRoleSelectionProps {
@@ -19,7 +19,16 @@ export function JobsRoleSelection({ onRoleSelected, onClose }: JobsRoleSelection
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative">
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label={t('common.close') || 'Close'}
+          >
+            <X size={24} />
+          </button>
+        )}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('jobsOnboarding.chooseYourRole')}</h2>
           <p className="text-gray-600">{t('jobsOnboarding.roleSelectionDescription')}</p>

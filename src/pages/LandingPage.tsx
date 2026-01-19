@@ -135,18 +135,18 @@ export function LandingPage() {
                     </div>
                     
                     {/* HUGE STYLISH FONT */}
-                    <h1 className="font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-7xl lg:text-8xl mb-4 sm:mb-6 leading-[1.1] sm:leading-[0.9] lg:tracking-tight">
+                    <h1 className="font-display text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl lg:text-8xl mb-6 leading-[0.9] lg:tracking-tight">
                       {t('landing.heroTitle')} <br className="hidden lg:block"/>
                       <span className="font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-vibrant-purple via-pink-500 to-vibrant-pink animate-gradient-x p-1">
                         {t('landing.heroTitleHighlight')}
                       </span>
                     </h1>
                     
-                    <p className="mt-2 sm:mt-4 text-base sm:text-xl leading-7 sm:leading-8 text-gray-600 max-w-xl mx-auto lg:mx-0 font-medium font-serif">
+                    <p className="mt-4 text-xl leading-8 text-gray-600 max-w-xl mx-auto lg:mx-0 font-medium font-serif">
                         {t('landing.heroSubtitle')}
                     </p>
                     
-                    <div className="mt-6 sm:mt-8 hidden sm:flex items-center justify-center lg:justify-start gap-x-6">
+                    <div className="mt-8 hidden md:flex items-center justify-center lg:justify-start gap-x-6">
                       <Link to={user ? "/dashboard" : "/signup"}>
                         <Button size="lg" className="shadow-2xl shadow-vibrant-purple/30 rounded-full px-10 py-7 text-xl font-bold hover:scale-105 transition-transform bg-gray-900 text-white hover:bg-gray-800 border-0">
                            {user ? t('landing.goToDashboard') : t('landing.getStarted')} <ArrowRight className="ml-2 h-6 w-6" />
@@ -160,13 +160,13 @@ export function LandingPage() {
               </div>
               
               {/* Right Column: The "MAXIMUM DENSITY" Cloud */}
-              <div className="mt-8 sm:mt-16 lg:mt-0 relative z-10 h-[320px] sm:h-[500px] lg:h-[700px] w-full flex items-center justify-center perspective-[2000px]">
+              <div className="mt-12 sm:mt-16 lg:mt-0 relative z-10 h-[500px] lg:h-[700px] w-full flex items-center justify-center perspective-[2000px]">
                  
                  {/* 1. Pulsing Concentric Circles (Background) - BIGGER */}
-                 <ConcentricCircles className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130%] h-[130%] sm:w-[180%] sm:h-[180%] opacity-100" />
+                 <ConcentricCircles className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] h-[180%] opacity-100" />
                  
                  {/* Background Glows */}
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-gradient-to-tr from-vibrant-purple/30 to-vibrant-pink/30 rounded-full blur-[60px] sm:blur-[100px] animate-pulse -z-10" />
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-gradient-to-tr from-vibrant-purple/30 to-vibrant-pink/30 rounded-full blur-[100px] animate-pulse -z-10" />
 
                  <div className="relative w-full h-full max-w-2xl mx-auto">
                     
@@ -175,12 +175,12 @@ export function LandingPage() {
                     {/* Shape 1: Big Organic Blob (Top Left) */}
                     <motion.div
                       animate={{ 
-                        y: [0, -15, 0],
+                        y: [0, -25, 0],
                         rotate: [0, -5, 0],
                         borderRadius: ["60% 40% 30% 70% / 60% 30% 70% 40%", "30% 60% 70% 40% / 50% 60% 30% 60%", "60% 40% 30% 70% / 60% 30% 70% 40%"]
                       }}
                       transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute -top-6 -left-6 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 overflow-hidden shadow-2xl border-[4px] sm:border-[6px] border-white z-0 bg-indigo-50"
+                      className="absolute -top-10 -left-10 w-48 h-48 lg:w-64 lg:h-64 overflow-hidden shadow-2xl border-[6px] border-white z-0 bg-indigo-50"
                     >
                        <img 
                          src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80" 
@@ -192,11 +192,11 @@ export function LandingPage() {
                     {/* Shape 2: Tilted Square (Top Right) */}
                     <motion.div
                        animate={{ 
-                        y: [0, 15, 0],
+                        y: [0, 20, 0],
                         rotate: [10, 15, 10]
                       }}
                       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                      className="absolute top-0 right-0 w-28 h-36 sm:w-40 sm:h-52 lg:w-56 lg:h-72 rounded-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl border-[4px] sm:border-[6px] border-white z-10 rotate-12 bg-blue-50"
+                      className="absolute top-0 right-0 w-40 h-52 lg:w-56 lg:h-72 rounded-[3rem] overflow-hidden shadow-2xl border-[6px] border-white z-10 rotate-12 bg-blue-50"
                     >
                        <img 
                          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" 
@@ -211,7 +211,7 @@ export function LandingPage() {
                         scale: [1, 1.02, 1],
                       }}
                       transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-44 h-44 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-full overflow-hidden shadow-2xl border-[6px] sm:border-[8px] border-white z-20 ring-4 sm:ring-8 ring-vibrant-purple/10 bg-purple-50"
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 lg:w-80 lg:h-80 rounded-full overflow-hidden shadow-2xl border-[8px] border-white z-20 ring-8 ring-vibrant-purple/10 bg-purple-50"
                     >
                        <img 
                          src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=800&q=80" 
@@ -223,11 +223,11 @@ export function LandingPage() {
                      {/* Shape 4: Squircle (Bottom Left) */}
                      <motion.div
                        animate={{ 
-                        y: [0, -15, 0],
+                        y: [0, -20, 0],
                         rotate: [-5, -10, -5]
                       }}
                       transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                      className="absolute bottom-10 -left-4 w-32 h-24 sm:w-40 sm:h-32 lg:w-60 lg:h-48 rounded-[25px] sm:rounded-[40px] overflow-hidden shadow-2xl border-[4px] sm:border-[6px] border-white z-10 -rotate-6 bg-pink-50"
+                      className="absolute bottom-20 -left-4 w-40 h-32 lg:w-60 lg:h-48 rounded-[40px] overflow-hidden shadow-2xl border-[6px] border-white z-10 -rotate-6 bg-pink-50"
                     >
                        <img 
                          src="https://images.unsplash.com/photo-1478860409698-8707f313ee8b?auto=format&fit=crop&w=600&q=80" 
@@ -239,16 +239,17 @@ export function LandingPage() {
                     {/* Shape 5: Abstract Blob (Bottom Right) */}
                     <motion.div
                       animate={{ 
-                        y: [0, 20, 0],
+                        y: [0, 25, 0],
                         borderRadius: ["30% 70% 70% 30% / 30% 30% 70% 70%", "50% 50% 30% 70% / 50% 50% 70% 30%", "30% 70% 70% 30% / 30% 30% 70% 70%"]
                       }}
                       transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-                      className="absolute bottom-6 right-0 w-24 h-24 sm:w-36 sm:h-36 lg:w-48 lg:h-48 overflow-hidden shadow-2xl border-[4px] sm:border-[6px] border-white z-10 bg-orange-50"
+                      className="absolute bottom-10 right-0 w-36 h-36 lg:w-48 lg:h-48 overflow-hidden shadow-2xl border-[6px] border-white z-10 bg-orange-50"
                     >
                        <img 
                          src="https://images.unsplash.com/photo-1528605248644-14dd0402203f?auto=format&fit=crop&w=600&q=80" 
                          alt="Culture" 
                          className="w-full h-full object-cover opacity-90 hover:scale-110 transition-transform duration-700"
+                         onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/anyi_global_logo.png'; }}
                        />
                     </motion.div>
 
@@ -256,9 +257,9 @@ export function LandingPage() {
                     
                     {/* Extra Shape 6: Small Circle (Top Middle) */}
                     <motion.div
-                       animate={{ y: [0, 10, 0] }}
+                       animate={{ y: [0, 15, 0] }}
                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-                       className="absolute top-0 left-1/3 w-14 h-14 sm:w-20 sm:h-20 lg:w-28 lg:h-28 rounded-full overflow-hidden shadow-lg border-2 sm:border-4 border-white z-0 opacity-80"
+                       className="absolute top-0 left-1/3 w-20 h-20 lg:w-28 lg:h-28 rounded-full overflow-hidden shadow-lg border-4 border-white z-0 opacity-80"
                     >
                         <img 
                          src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=300&q=80" 
@@ -269,9 +270,9 @@ export function LandingPage() {
 
                     {/* Extra Shape 7: Tiny Squircle (Bottom Middle) */}
                      <motion.div
-                       animate={{ y: [0, -10, 0] }}
+                       animate={{ y: [0, -15, 0] }}
                        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 3.5 }}
-                       className="absolute bottom-4 left-1/3 w-12 h-12 sm:w-16 sm:h-16 lg:w-24 lg:h-24 rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border-2 sm:border-4 border-white z-20 opacity-90"
+                       className="absolute bottom-4 left-1/3 w-16 h-16 lg:w-24 lg:h-24 rounded-3xl overflow-hidden shadow-lg border-4 border-white z-20 opacity-90"
                     >
                         <img 
                          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=300&q=80" 
@@ -285,111 +286,111 @@ export function LandingPage() {
 
                      {/* Card 1: Education Label */}
                      <motion.div
-                      animate={{ y: [0, 8, 0] }}
+                      animate={{ y: [0, 10, 0] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-                      className="absolute top-12 sm:top-20 -left-6 sm:-left-8 lg:-left-12 z-40 bg-white/80 backdrop-blur-xl p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-xl border border-white/60 flex items-center gap-2 sm:gap-3 hover:scale-110 transition-transform cursor-pointer"
+                      className="absolute top-20 -left-8 lg:-left-12 z-40 bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-xl border border-white/60 flex items-center gap-3 hover:scale-110 transition-transform cursor-pointer"
                      >
-                       <div className="bg-indigo-100 p-1.5 sm:p-2 rounded-full">
-                          <GraduationCap className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-indigo-600" />
+                       <div className="bg-indigo-100 p-2 rounded-full">
+                          <GraduationCap className="w-5 h-5 text-indigo-600" />
                        </div>
                        <div className="text-left">
-                           <p className="text-[10px] sm:text-xs font-bold text-gray-800">{t('nav.education')}</p>
-                           <p className="text-[8px] sm:text-[10px] text-gray-500">{t('landing.heroFloating.topUniversities')}</p>
+                           <p className="text-xs font-bold text-gray-800">{t('nav.education')}</p>
+                           <p className="text-[10px] text-gray-500">{t('landing.heroFloating.topUniversities')}</p>
                        </div>
                      </motion.div>
 
                     {/* Card 2: Jobs Label */}
                     <motion.div
-                      animate={{ y: [0, -8, 0] }}
+                      animate={{ y: [0, -10, 0] }}
                       transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
-                      className="absolute top-8 sm:top-12 right-12 sm:right-16 lg:right-24 z-40 bg-white/80 backdrop-blur-xl p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-xl border border-white/60 flex items-center gap-2 sm:gap-3 hover:scale-110 transition-transform cursor-pointer"
+                      className="absolute top-12 right-16 lg:right-24 z-40 bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-xl border border-white/60 flex items-center gap-3 hover:scale-110 transition-transform cursor-pointer"
                     >
-                       <div className="bg-blue-100 p-1.5 sm:p-2 rounded-full">
-                         <Briefcase className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-600" />
+                       <div className="bg-blue-100 p-2 rounded-full">
+                         <Briefcase className="w-5 h-5 text-blue-600" />
                        </div>
                        <div className="text-left">
-                           <p className="text-[10px] sm:text-xs font-bold text-gray-800">{t('nav.jobs')}</p>
-                           <p className="text-[8px] sm:text-[10px] text-gray-500">{t('landing.heroFloating.newOpenings')}</p>
+                           <p className="text-xs font-bold text-gray-800">{t('nav.jobs')}</p>
+                           <p className="text-[10px] text-gray-500">{t('landing.heroFloating.newOpenings')}</p>
                        </div>
                     </motion.div>
 
                     {/* Card 3: Visa Status (Huge) */}
                     <motion.div
-                      animate={{ x: [0, 6, 0] }}
+                      animate={{ x: [0, 8, 0] }}
                       transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-                      className="absolute top-1/2 -left-10 sm:-left-16 lg:-left-32 -translate-y-1/2 z-50 bg-white/90 backdrop-blur-2xl p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xl border border-white/80 flex items-center gap-2 sm:gap-4 pr-4 sm:pr-8 hover:scale-105 transition-transform cursor-pointer"
+                      className="absolute top-1/2 -left-16 lg:-left-32 -translate-y-1/2 z-50 bg-white/90 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl border border-white/80 flex items-center gap-4 pr-8 hover:scale-105 transition-transform cursor-pointer"
                     >
-                      <div className="bg-green-100 p-2 sm:p-3 rounded-full relative">
-                        <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6 text-green-600" />
-                        <span className="absolute -top-1 -right-1 flex h-2 w-2 sm:h-3 sm:w-3">
+                      <div className="bg-green-100 p-3 rounded-full relative">
+                        <CheckCircle2 className="w-6 h-6 text-green-600" />
+                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-green-500"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                         </span>
                       </div>
                       <div className="text-left">
-                        <p className="text-[11px] sm:text-sm font-extrabold text-gray-900">{t('landing.heroFloating.visaApproved')}</p>
-                        <p className="text-[9px] sm:text-xs text-gray-500 font-semibold">{t('landing.heroFloating.justNow')}</p>
+                        <p className="text-sm font-extrabold text-gray-900">{t('landing.heroFloating.visaApproved')}</p>
+                        <p className="text-xs text-gray-500 font-semibold">{t('landing.heroFloating.justNow')}</p>
                       </div>
                     </motion.div>
 
                     {/* Card 4: Au Pair Label */}
                      <motion.div
-                      animate={{ x: [0, -6, 0] }}
+                      animate={{ x: [0, -8, 0] }}
                       transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 2.2 }}
-                      className="absolute top-2/3 right-0 lg:-right-8 z-40 bg-white/80 backdrop-blur-xl p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-xl border border-white/60 flex items-center gap-2 sm:gap-3 hover:scale-110 transition-transform cursor-pointer"
+                      className="absolute top-2/3 right-0 lg:-right-8 z-40 bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-xl border border-white/60 flex items-center gap-3 hover:scale-110 transition-transform cursor-pointer"
                      >
-                        <div className="bg-orange-100 p-1.5 sm:p-2 rounded-full">
-                           <Baby className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-orange-600" />
+                        <div className="bg-orange-100 p-2 rounded-full">
+                           <Baby className="w-5 h-5 text-orange-600" />
                         </div>
                         <div className="text-left">
-                           <p className="text-[10px] sm:text-xs font-bold text-gray-800">{t('nav.auPair')}</p>
-                           <p className="text-[8px] sm:text-[10px] text-gray-500">{t('landing.heroFloating.trustedFamilies')}</p>
+                           <p className="text-xs font-bold text-gray-800">{t('nav.auPair')}</p>
+                           <p className="text-[10px] text-gray-500">{t('landing.heroFloating.trustedFamilies')}</p>
                        </div>
                      </motion.div>
 
                     {/* Card 5: Marketplace Label */}
                      <motion.div
-                      animate={{ y: [0, -8, 0] }}
+                      animate={{ y: [0, -10, 0] }}
                       transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
-                      className="absolute bottom-16 sm:bottom-24 -left-2 sm:-left-4 lg:left-0 z-40 bg-white/80 backdrop-blur-xl p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-xl border border-white/60 flex items-center gap-2 sm:gap-3 hover:scale-110 transition-transform cursor-pointer"
+                      className="absolute bottom-24 -left-4 lg:left-0 z-40 bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-xl border border-white/60 flex items-center gap-3 hover:scale-110 transition-transform cursor-pointer"
                      >
-                        <div className="bg-pink-100 p-1.5 sm:p-2 rounded-full">
-                           <ShoppingBag className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-pink-600" />
+                        <div className="bg-pink-100 p-2 rounded-full">
+                           <ShoppingBag className="w-5 h-5 text-pink-600" />
                         </div>
                         <div className="text-left">
-                           <p className="text-[10px] sm:text-xs font-bold text-gray-800">{t('nav.marketplace')}</p>
-                           <p className="text-[8px] sm:text-[10px] text-gray-500">{t('landing.heroFloating.trendingItems')}</p>
+                           <p className="text-xs font-bold text-gray-800">{t('nav.marketplace')}</p>
+                           <p className="text-[10px] text-gray-500">{t('landing.heroFloating.trendingItems')}</p>
                        </div>
                      </motion.div>
 
                     {/* Card 6: Community Status (Huge) */}
                     <motion.div
-                      animate={{ y: [0, 8, 0] }}
+                      animate={{ y: [0, 10, 0] }}
                       transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2.8 }}
-                      className="absolute bottom-0 right-6 sm:right-10 lg:-bottom-8 lg:right-0 z-50 bg-white/90 backdrop-blur-2xl p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xl border border-white/80 flex items-center gap-2 sm:gap-4 pr-4 sm:pr-8 hover:scale-105 transition-transform cursor-pointer"
+                      className="absolute bottom-0 right-10 lg:-bottom-8 lg:right-0 z-50 bg-white/90 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl border border-white/80 flex items-center gap-4 pr-8 hover:scale-105 transition-transform cursor-pointer"
                     >
-                      <div className="bg-purple-100 p-2 sm:p-3 rounded-full">
-                        <MessageSquare className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" />
+                      <div className="bg-purple-100 p-3 rounded-full">
+                        <MessageSquare className="w-6 h-6 text-purple-600" />
                       </div>
                       <div className="text-left">
-                        <p className="text-[11px] sm:text-sm font-extrabold text-gray-900">{t('nav.community')}</p>
-                        <p className="text-[9px] sm:text-xs text-gray-500 font-semibold">{t('landing.heroFloating.activeMembers')}</p>
+                        <p className="text-sm font-extrabold text-gray-900">{t('nav.community')}</p>
+                        <p className="text-xs text-gray-500 font-semibold">{t('landing.heroFloating.activeMembers')}</p>
                       </div>
                     </motion.div>
                     
                     {/* Floating Icons - SCATTERED EVERYWHERE */}
                      <motion.div
-                      animate={{ y: [0, -20, 0], x: [0, 10, 0], rotate: [0, 10, 0] }}
+                      animate={{ y: [0, -30, 0], x: [0, 15, 0], rotate: [0, 10, 0] }}
                       transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute -top-8 right-1/2 w-10 h-10 sm:w-14 sm:h-14 bg-white shadow-xl rounded-full flex items-center justify-center z-20 text-xl sm:text-3xl border-2 sm:border-4 border-white/50"
+                      className="absolute -top-12 right-1/2 w-14 h-14 bg-white shadow-xl rounded-full flex items-center justify-center z-20 text-3xl border-4 border-white/50"
                     >
                        <span>🇨🇳</span>
                     </motion.div>
 
                     <motion.div
-                      animate={{ y: [0, 20, 0], x: [0, -10, 0], rotate: [0, -10, 0] }}
+                      animate={{ y: [0, 30, 0], x: [0, -15, 0], rotate: [0, -10, 0] }}
                       transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                      className="absolute -bottom-8 left-1/2 w-12 h-12 sm:w-16 sm:h-16 bg-white shadow-xl rounded-full flex items-center justify-center z-40 text-2xl sm:text-4xl border-2 sm:border-4 border-white/50"
+                      className="absolute -bottom-12 left-1/2 w-16 h-16 bg-white shadow-xl rounded-full flex items-center justify-center z-40 text-4xl border-4 border-white/50"
                     >
                        <span>🌏</span>
                     </motion.div>
@@ -397,9 +398,9 @@ export function LandingPage() {
                     <motion.div
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                      className="absolute top-1/2 right-0 w-8 h-8 sm:w-10 sm:h-10 bg-vibrant-pink shadow-lg rounded-full flex items-center justify-center z-40 text-white"
+                      className="absolute top-1/2 right-0 w-10 h-10 bg-vibrant-pink shadow-lg rounded-full flex items-center justify-center z-40 text-white"
                     >
-                       <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+                       <Heart className="w-5 h-5 fill-current" />
                     </motion.div>
 
                  </div>
@@ -410,12 +411,12 @@ export function LandingPage() {
       </div>
 
       {/* Modules Section - "4-over-3" Interlock Grid */}
-      <div id="services" className="relative py-12 sm:py-24 scroll-mt-20">
+      <div id="services" className="relative py-16 sm:py-24 scroll-mt-20">
         <BackgroundBlobs className="opacity-40 top-1/2 left-0 w-full" />
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="text-center mb-8 sm:mb-12">
-               <h2 className="font-display text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-vibrant-purple to-vibrant-pink animate-gradient-x">{t('landing.exploreServices')}</h2>
-               <p className="mt-2 text-sm sm:text-base text-gray-600">{t('landing.exploreServicesSubtitle')}</p>
+            <div className="text-center mb-12">
+               <h2 className="font-display text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-vibrant-purple to-vibrant-pink animate-gradient-x">{t('landing.exploreServices')}</h2>
+               <p className="mt-2 text-gray-600">{t('landing.exploreServicesSubtitle')}</p>
             </div>
             
             <motion.div 
@@ -423,12 +424,12 @@ export function LandingPage() {
                initial="hidden"
                whileInView="show"
                viewport={{ once: true, margin: "-100px" }}
-               className="flex flex-col gap-4 sm:gap-6"
+               className="flex flex-col gap-6"
             >
                {/* Top Row: 4 Items (Jobs, Marketplace, Events, Education) */}
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {modules.slice(0, 4).map((module) => (
-                      <Link key={module.link} to={module.link} className="col-span-1 h-56 sm:h-80">
+                      <Link key={module.link} to={module.link} className="col-span-1 h-80">
                           <motion.div variants={item} className="h-full w-full">
                              <GlowingCard 
                                 title={module.title}
@@ -443,9 +444,9 @@ export function LandingPage() {
                </div>
 
                {/* Bottom Row: 3 Items (Visa, Au Pair, Community) - Wider Cards */}
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    {/* Visa */}
-                  <Link to={modules[4].link} className="col-span-1 h-56 sm:h-72">
+                  <Link to={modules[4].link} className="col-span-1 h-72">
                       <motion.div variants={item} className="h-full w-full">
                          < GlowingCard 
                             title={modules[4].title}
@@ -458,7 +459,7 @@ export function LandingPage() {
                   </Link>
                   
                    {/* Au Pair */}
-                  <Link to={modules[5].link} className="col-span-1 h-56 sm:h-72">
+                  <Link to={modules[5].link} className="col-span-1 h-72">
                       <motion.div variants={item} className="h-full w-full">
                          <GlowingCard 
                             title={modules[5].title}
@@ -471,7 +472,7 @@ export function LandingPage() {
                   </Link>
 
                   {/* Community */}
-                  <Link to="/community" className="col-span-1 h-56 sm:h-72">
+                  <Link to="/community" className="col-span-1 h-72">
                      <motion.div variants={item} className="h-full w-full">
                         <GlowingCard
                            title={t('nav.community')}

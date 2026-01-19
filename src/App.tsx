@@ -2,7 +2,8 @@ import { Outlet } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { Footer } from './components/Footer';
 import { TopNavigation } from './components/TopNavigation';
-import { AlertTriangle } from 'lucide-react';
+import ScrollToTop from './components/ScrollToTop';
+import { AlertTriangle, Database } from 'lucide-react';
 
 export default function App() {
   const { connectionError } = useAuth();

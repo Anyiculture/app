@@ -16,7 +16,7 @@ export function About() {
            className="text-center"
         >
           <h1 className="font-display text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl mb-6">
-            {t('about.title')} <span className="text-vibrant-purple">{t('common.brand')}</span>
+            {t('about.title')} <span className="text-vibrant-purple">AnYiculture</span>
           </h1>
           <p className="mt-6 text-xl leading-8 text-gray-600 max-w-2xl mx-auto font-medium">
              {t('about.subtitle')}

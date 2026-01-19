@@ -1,20 +1,13 @@
-
-
 import { useState, useEffect } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { Button } from '../../components/ui/Button';
-import { CreditCard, Check, History, Gift } from 'lucide-react';
-import { auPairService, UserSubscriptionStatus, RedemptionCode } from '../../services/auPairService';
-import { useToast } from '../../components/ui/Toast';
+import { CreditCard, Check } from 'lucide-react';
+import { auPairService, UserSubscriptionStatus } from '../../services/auPairService';
 
 export function BillingSettingsPage() {
   const { t } = useI18n();
-  const { showToast } = useToast();
   const [status, setStatus] = useState<UserSubscriptionStatus | null>(null);
-  const [history, setHistory] = useState<RedemptionCode[]>([]);
   const [loading, setLoading] = useState(true);
-  const [redeemCode, setRedeemCode] = useState('');
-  const [redeeming, setRedeeming] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -22,35 +15,12 @@ export function BillingSettingsPage() {
 
   const loadData = async () => {
     try {
-      const [subStatus, redemptionHistory] = await Promise.all([
-        auPairService.getUserSubscriptionStatus(),
-        auPairService.getRedemptionHistory()
-      ]);
+      const subStatus = await auPairService.getUserSubscriptionStatus();
       setStatus(subStatus);
-      setHistory(redemptionHistory);
     } catch (error) {
       console.error('Failed to load billing data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleRedeem = async () => {
-    if (!redeemCode.trim()) return;
-    setRedeeming(true);
-    try {
-      const result = await auPairService.redeemCode(redeemCode);
-      if (result.success) {
-        showToast('success', result.message);
-        setRedeemCode('');
-        loadData(); // Refresh data
-      } else {
-        showToast('error', result.message);
-      }
-    } catch (error) {
-      showToast('error', 'Redemption failed');
-    } finally {
-      setRedeeming(false);
     }
   };
 
@@ -100,74 +70,12 @@ export function BillingSettingsPage() {
               </div>
 
               {status?.subscriptionStatus !== 'premium' && (
-                 <Button className="bg-white text-gray-900 hover:bg-gray-100 border-0 w-full md:w-auto">{t('settings.billing.upgradePlan')}</Button>
+                 <Button className="bg-white text-gray-900 hover:bg-gray-100 border-0 w-full md:w-auto">
+                    <CreditCard size={16} className="mr-2" />
+                    {t('settings.billing.upgradePlan')}
+                 </Button>
               )}
           </div>
-      </div>
-      
-      {/* Redemption Code Section */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Gift size={20} className="text-purple-600" />
-            {t('settings.billing.redeemCode')}
-          </h3>
-          <div className="flex gap-3">
-            <input 
-              type="text" 
-              placeholder={t('settings.billing.redeemPlaceholder')}
-              value={redeemCode}
-              onChange={(e) => setRedeemCode(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-            <Button 
-               isLoading={redeeming}
-               onClick={handleRedeem}
-               disabled={!redeemCode.trim()}
-            >
-              {t('settings.billing.redeem')}
-            </Button>
-          </div>
-      </div>
-      
-      <div>
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <History size={20} className="text-gray-600" />
-            {t('settings.billing.history')}
-          </h3>
-          {history.length > 0 ? (
-            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-               <table className="w-full text-left text-sm">
-                 <thead className="bg-gray-50 text-gray-600">
-                   <tr>
-                     <th className="px-6 py-3 font-medium">{t('common.date')}</th>
-                     <th className="px-6 py-3 font-medium">{t('common.code')}</th>
-                     <th className="px-6 py-3 font-medium">{t('common.type')}</th>
-                     <th className="px-6 py-3 font-medium">{t('common.status')}</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-gray-100">
-                    {history.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-gray-600">
-                          {new Date(item.used_at || item.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 font-mono text-gray-900">{item.code}</td>
-                        <td className="px-6 py-4 capitalize text-gray-600">{item.type.replace(/_/g, ' ')}</td>
-                        <td className="px-6 py-4">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 capitalize">
-                            {item.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                 </tbody>
-               </table>
-            </div>
-          ) : (
-            <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center text-gray-500">
-              {t('settings.billing.noHistory')}
-            </div>
-          )}
       </div>
     </div>
   );

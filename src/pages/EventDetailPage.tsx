@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Loading } from '../components/ui/Loading';
 import { Calendar, MapPin, Users, Clock, ArrowLeft, User, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
-import { TranslateWrapper } from '../components/ui/TranslateWrapper';
+import { TranslateWrapper } from '../components/ui';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();

@@ -75,6 +75,17 @@ export interface JobPreferences {
 
 // Jobs Service
 export const jobsService = {
+  // Get all jobs (Admin)
+  async getAllJobs() {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data as Job[]) || [];
+  },
+
   // Get paginated published jobs with filters
   async getJobs(
     page = 1,

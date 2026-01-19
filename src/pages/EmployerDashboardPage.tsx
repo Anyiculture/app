@@ -87,7 +87,7 @@ export function EmployerDashboardPage() {
 
         // Calculate stats
         const total = jobsData.length;
-        const active = jobsData.filter((j: any) => j.status === 'published').length;
+        const active = jobsData.filter((j: any) => j.status === 'active').length;
         const totalApps = jobsData.reduce((sum: number, job: any) => 
           sum + (job.job_applications?.[0]?.count || 0), 0
         );
@@ -115,7 +115,7 @@ export function EmployerDashboardPage() {
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { bg: string; text: string; label: string }> = {
-      published: { bg: 'bg-green-100', text: 'text-green-700', label: t('employerDashboard.statusPublished') },
+      active: { bg: 'bg-green-100', text: 'text-green-700', label: t('employerDashboard.statusPublished') },
       draft: { bg: 'bg-gray-100', text: 'text-gray-700', label: t('employerDashboard.statusDraft') },
       closed: { bg: 'bg-red-100', text: 'text-red-700', label: t('employerDashboard.statusClosed') }
     };
@@ -257,10 +257,10 @@ export function EmployerDashboardPage() {
                     >
                         {/* Status Icon - Tighter */}
                         <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 shrink-0 ${
-                            job.status === 'published' ? 'bg-green-50 text-green-600' : 
+                            job.status === 'active' ? 'bg-green-50 text-green-600' : 
                             job.status === 'closed' ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
                         }`}>
-                            {job.status === 'published' ? <TrendingUp size={14} className="sm:w-5 sm:h-5" /> : 
+                            {job.status === 'active' ? <TrendingUp size={14} className="sm:w-5 sm:h-5" /> : 
                              job.status === 'closed' ? <Briefcase size={14} className="sm:w-5 sm:h-5" /> : <FileText size={14} className="sm:w-5 sm:h-5" />}
                         </div>
                         

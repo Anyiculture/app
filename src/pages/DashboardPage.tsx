@@ -1,13 +1,13 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { JobCard } from '../components/JobCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { supabase } from '../lib/supabase';
 import { GeneralOnboarding } from '../components/GeneralOnboarding';
 import { HeroCarousel } from '../components/HeroCarousel';
-import { ChevronRight, Loader2, ShoppingBag, Briefcase, Calendar, GraduationCap, Users, Sparkles, ArrowRight, ShieldCheck, Baby, TrendingUp, Star, MessageSquare } from 'lucide-react';
+import { ChevronRight, Loader2, ShoppingBag, Briefcase, Calendar, GraduationCap, Users, Sparkles, ShieldCheck, Baby, TrendingUp, MessageSquare } from 'lucide-react';
 import { MarketplaceCard } from '../components/marketplace/MarketplaceCard';
-import { JobCard } from '../components/JobCard';
 import { EventCard } from '../components/events/EventCard';
 import { ProfileCard } from '../components/aupair/ProfileCard';
 import { EducationCard } from '../components/education/EducationCard';
@@ -81,7 +81,7 @@ export function DashboardPage() {
           .maybeSingle();
         
         if (hfProfile?.profile_status === 'pending_payment') {
-           window.location.href = '/au-pair/payment'; // Force redirect
+           navigate('/au-pair/payment');
            return;
         }
       }
@@ -108,6 +108,26 @@ export function DashboardPage() {
         <div className="text-center">
           <Loader2 className="animate-spin text-gray-400 mx-auto mb-4" size={32} />
           <p className="text-gray-500">Redirecting to login...</p>
+          {isAdmin && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <Link 
+                to="/admin" 
+                className="flex items-center gap-4 p-2 pr-6 bg-white/40 backdrop-blur-xl border border-white/60 rounded-full hover:bg-white/60 transition-all shadow-xl shadow-purple-500/5 group"
+              >
+                <div className="w-12 h-12 flex items-center justify-center bg-gray-900 text-white rounded-full">
+                  <ShieldCheck size={20} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-vibrant-purple uppercase tracking-widest">{t('dashboard.masterControl')}</span>
+                  <span className="font-bold text-gray-900">{t('nav.adminPortal')}</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
+          )}
         </div>
       </div>
     );
@@ -155,7 +175,7 @@ export function DashboardPage() {
               {t('common.welcome')}, <span className="text-gray-900 font-bold underline decoration-vibrant-purple/30 underline-offset-4">{profile?.display_name}</span>. {t('dashboard.readyAdventure')}
             </p>
           </motion.div>
-          
+
           {isAdmin && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -181,7 +201,7 @@ export function DashboardPage() {
         {/* Dynamic Greeting & Hero */}
         <div className="mb-10 sm:mb-16 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           <div className="lg:col-span-8 hidden lg:block">
-             <div className="relative h-full overflow-hidden rounded-[2.5rem] shadow-2xl group min-h-[300px]">
+             <div className="relative h-full overflow-hidden rounded-[2.5rem] shadow-2xl group min-h-[250px]">
                <HeroCarousel />
             </div>
           </div>
@@ -201,21 +221,11 @@ export function DashboardPage() {
                   <span className="text-sm font-bold text-gray-600 underline">{t('dashboard.joinMembers')}</span>
                </div>
              </GlassCard>
-             <GlassCard className="p-8 hover:border-vibrant-purple/40 transition-colors cursor-pointer group">
-                <div className="flex items-center justify-between mb-4">
-                   <div className="w-10 h-10 rounded-xl bg-gray-900 text-white flex items-center justify-center">
-                      <Star size={20} className="fill-yellow-400 text-yellow-400" />
-                   </div>
-                   <ArrowRight className="w-5 h-5 text-gray-400 group-hover:translate-x-1 transition-transform" />
-                </div>
-                <h4 className="font-black text-gray-900 uppercase tracking-widest text-xs mb-1">{t('dashboard.premiumFeature')}</h4>
-                <p className="font-bold text-gray-800">{t('dashboard.aiMatchScore')}</p>
-             </GlassCard>
           </div>
         </div>
 
         {/* Reimagined Module Sections (Instead of Shelves) */}
-        <div className="space-y-12 sm:space-y-20">
+        <div className="space-y-8 sm:space-y-12">
           {/* Marketplace Section */}
           <SectionContainer 
             id="marketplace"
@@ -367,15 +377,45 @@ function JobsShelfContent() {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      setJobs(data || []);
-      setLoading(false);
+      try {
+        const { data: jobsData } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        if (!jobsData) {
+          setJobs([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch employer profiles for logos
+        const posterIds = [...new Set(jobsData.map(job => job.poster_id))];
+        const { data: profiles } = await supabase
+          .from('profiles_employer')
+          .select('id, company_logo, company_name')
+          .in('id', posterIds);
+
+        const jobsWithLogos = jobsData.map(job => {
+          const profile = profiles?.find(p => p.id === job.poster_id);
+          return {
+            ...job,
+            company_logo: profile?.company_logo,
+            // Use profile company name if job doesn't have one, or prefer profile one?
+            // Job usually has company_name snapshot, but profile is source of truth.
+            // Let's keep job's company_name but add logo.
+            employer_logo: profile?.company_logo
+          };
+        });
+
+        setJobs(jobsWithLogos);
+      } catch (error) {
+        console.error('Error loading jobs:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);

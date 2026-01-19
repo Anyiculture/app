@@ -6,7 +6,6 @@ import { useI18n } from '../../contexts/I18nContext';
 import { useToast } from '../ui/Toast';
 import { shareContent } from '../../utils/shareUtils';
 import { GlassCard } from '../ui/GlassCard';
-import { TranslateWrapper } from '../ui/TranslateWrapper';
 import { motion } from 'framer-motion';
 
 interface EventCardProps {
@@ -15,7 +14,7 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, isDashboard }: EventCardProps) {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const { showToast } = useToast();
 
   const handleShare = async (e: React.MouseEvent) => {
@@ -96,12 +95,9 @@ export function EventCard({ event, isDashboard }: EventCardProps) {
           </div>
 
           <div className="p-0.5 flex-1 flex flex-col">
-            <TranslateWrapper 
-              text={event.title}
-              dbTranslation={language === 'zh' ? event.title_zh : null}
-              as="h3"
-              className={`${isDashboard ? 'text-xs' : 'text-sm sm:text-base'} font-black text-gray-900 leading-tight uppercase tracking-tight mb-0.5 group-hover:text-vibrant-purple transition-colors`}
-            />
+            <h3 className={`${isDashboard ? 'text-xs' : 'text-sm sm:text-base'} font-black text-gray-900 leading-tight uppercase tracking-tight mb-0.5 line-clamp-1 group-hover:text-vibrant-purple transition-colors`}>
+              {event.title}
+            </h3>
 
             {isDashboard && (
                <div className="flex flex-col mt-auto pt-1">
@@ -125,7 +121,7 @@ export function EventCard({ event, isDashboard }: EventCardProps) {
                    <div className="flex items-center gap-1.5">
                       <div className="relative">
                         {event.organizer?.avatar_url ? (
-                          <img src={event.organizer.avatar_url} alt={t('events.organizerAlt')} className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover border border-white shadow-sm" />
+                          <img src={event.organizer.avatar_url} alt="Org" className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover border border-white shadow-sm" />
                         ) : (
                           <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-vibrant-purple/10 flex items-center justify-center border border-white shadow-sm">
                              <User size={8} className="text-vibrant-purple" />

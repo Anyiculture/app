@@ -25,6 +25,7 @@ import { Loading } from '../components/ui/Loading';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { TranslateWrapper } from '../components/ui/TranslateWrapper';
 import { adminService } from '../services/adminService';
 import {
   translateJobType,
@@ -35,7 +36,6 @@ import { QuickChatButton } from '../components/jobs/QuickChatButton';
 import { SayHiButton } from '../components/jobs/SayHiButton';
 import { GuardrailModal } from '../components/GuardrailModal';
 import { SuccessModal } from '../components/SuccessModal';
-import { TranslateWrapper } from '../components/ui/TranslateWrapper';
 import { supabase } from '../lib/supabase';
 
 interface EmployerProfile {

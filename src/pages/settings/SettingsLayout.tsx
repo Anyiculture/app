@@ -14,10 +14,10 @@ import {
   ChevronRight,
   Briefcase,
   Baby,
-  Home, 
+  Home,
   FileText,
   Bell,
-  Star
+  Eye
 } from 'lucide-react';
 
 export function SettingsLayout() {
@@ -67,8 +67,7 @@ export function SettingsLayout() {
   };
 
   const navItems = [
-    { to: '/settings/general', label: t('settings.generalProfile'), icon: User },
-    { to: '/settings/interests', label: t('settings.myInterests'), icon: Star },
+    { to: '/settings/general', label: t('settings.profile.edit') || 'Edit Profile', icon: User },
     { to: '/settings/security', label: t('settings.accountSecurity'), icon: Shield },
     { to: '/settings/notifications', label: t('settings.notifications.label'), icon: Bell },
     { to: '/settings/billing', label: t('settings.billingPlans'), icon: CreditCard },
@@ -99,6 +98,23 @@ export function SettingsLayout() {
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">{t('settings.description')}</p>
                  </div>
+
+                <div className="mb-6">
+                    <NavLink
+                        to={`/profile/${user?.id}`}
+                        className={({ isActive }) => `w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left transition-all duration-300 ease-out group ${
+                            isActive
+                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200 scale-[1.02]'
+                                : 'bg-blue-50/50 text-blue-600 hover:bg-blue-50 hover:text-blue-700 border border-blue-100 hover:shadow-sm'
+                        }`}
+                    >
+                        <div className="flex items-center gap-3.5">
+                            <Eye size={20} className="text-blue-500 group-hover:text-blue-600" />
+                            <span className="font-semibold">{t('profilePage.viewProfile') || 'View Public Profile'}</span>
+                        </div>
+                        <ChevronRight size={16} className="text-blue-400" />
+                    </NavLink>
+                </div>
 
                 <nav className="space-y-1">
                     <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-4">{t('common.account')}</p>

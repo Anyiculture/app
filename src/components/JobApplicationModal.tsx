@@ -148,7 +148,7 @@ export function JobApplicationModal({
               value={formData.resume_url}
               onChange={(e) => setFormData(prev => ({ ...prev, resume_url: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              placeholder={t('applications.resumeUrlPlaceholder')}
+              placeholder="https://drive.google.com/your-resume"
               required
             />
             <p className="text-xs text-gray-500 mt-1">{t('applications.resumeUrlHelperText')}</p>
@@ -164,7 +164,7 @@ export function JobApplicationModal({
               value={formData.portfolio_url}
               onChange={(e) => setFormData(prev => ({ ...prev, portfolio_url: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              placeholder={t('applications.portfolioUrlPlaceholder')}
+              placeholder="https://your-portfolio.com"
             />
             <p className="text-xs text-gray-500 mt-1">{t('applications.portfolioUrlHelperText')}</p>
           </div>

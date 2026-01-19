@@ -5,8 +5,8 @@ import { Job } from '../services/jobsService';
 import { useI18n } from '../contexts/I18nContext';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from './ui/Toast';
-import { shareContent } from '../utils/shareUtils';
 import { TranslateWrapper } from './ui/TranslateWrapper';
+import { shareContent } from '../utils/shareUtils';
 
 interface JobCardProps {
   job: Job;
@@ -47,35 +47,50 @@ export function JobCard({ job, isSaved, onSave, matchScore: _matchScore, isDashb
   const logoColor = React.useMemo(() => {
     const colors = ['bg-blue-50 text-blue-600', 'bg-purple-50 text-purple-600', 'bg-pink-50 text-pink-600', 'bg-orange-50 text-orange-600', 'bg-emerald-50 text-emerald-600', 'bg-indigo-50 text-indigo-600'];
     const seed = job.company_name || job.poster_id || 'C';
-    const index = seed.charCodeAt(0) % colors.length;
+    const index = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
     return colors[index];
   }, [job.company_name, job.poster_id]);
 
   const logoText = job.company_name ? job.company_name.substring(0, 1).toUpperCase() : (job.poster_id ? job.poster_id.substring(0, 1).toUpperCase() : 'C');
   const postedDate = job.published_at ? formatDistanceToNow(new Date(job.published_at), { addSuffix: true }) : t('common.recently');
+  
+  // Check for logo from joined data (Dashboard) or potentially job data
+  const companyLogo = (job as any).company_logo || (job as any).employer_logo;
 
   return (
     <Link to={`/jobs/${job.id}`} className="block h-full group/link">
-      <div className={`h-full bg-white border border-gray-100/80 hover:border-vibrant-purple/30 transition-all duration-200 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md flex ${isDashboard ? 'flex-col min-h-[160px]' : 'flex-row sm:flex-col gap-2 sm:gap-0 p-3 sm:p-6'} relative overflow-hidden`}>
+      <div className={`h-full bg-white border border-gray-200 hover:border-vibrant-purple/30 transition-all duration-200 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md flex ${isDashboard ? 'flex-col min-h-[160px]' : 'flex-row sm:flex-col gap-2 sm:gap-0 p-3 sm:p-6'} relative overflow-hidden`}>
         
         {/* Dashboard Media Card Style - Top Section */}
         {isDashboard ? (
-          <div className={`w-full aspect-[4/3] ${logoColor} flex items-center justify-center relative overflow-hidden group-hover/link:scale-[1.02] transition-transform duration-500`}>
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-xl font-black shadow-inner">
-               {logoText}
+          <div className={`p-4 pb-2`}>
+            {/* Minimal Dashboard Header */}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex-shrink-0">
+                  {companyLogo ? (
+                    <img src={companyLogo} alt={job.company_name} className="w-8 h-8 rounded-lg object-cover shadow-sm border border-gray-100" />
+                  ) : (
+                    <div className={`w-8 h-8 ${logoColor} rounded-lg flex items-center justify-center text-xs font-black shadow-sm`}>
+                      {logoText}
+                    </div>
+                  )}
+              </div>
+               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide truncate max-w-[120px]">{job.company_name || 'Company'}</span>
             </div>
-             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover/link:opacity-100 transition-opacity" />
           </div>
         ) : (
           <div className="flex-shrink-0">
-               <div className={`w-10 h-10 sm:w-12 sm:h-12 ${logoColor} rounded-lg sm:rounded-xl flex items-center justify-center text-[10px] sm:text-xs font-black shadow-sm`}>
-                 {logoText}
-               </div>
+               {companyLogo ? (
+                 <img src={companyLogo} alt={job.company_name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl object-cover shadow-sm border border-gray-100" />
+               ) : (
+                 <div className={`w-10 h-10 sm:w-12 sm:h-12 ${logoColor} rounded-lg sm:rounded-xl flex items-center justify-center text-[10px] sm:text-xs font-black shadow-sm`}>
+                   {logoText}
+                 </div>
+               )}
           </div>
         )}
 
-        <div className={`flex-grow min-w-0 flex flex-col ${isDashboard ? 'p-3' : 'justify-center'}`}>
+        <div className={`flex-grow min-w-0 flex flex-col ${isDashboard ? 'px-4 pb-4 pt-0' : 'justify-center'}`}>
             {/* Title & Stats */}
             <div className="flex justify-between items-start">
                <div className="min-w-0 w-full">

@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase';
-import { messagingService } from './messagingService';
 
 export type VisaType = 'work_z' | 'student_x' | 'family_q' | 'family_s' | 'business_m' | 'other';
 export type VisaStatus = 'draft' | 'submitted' | 'in_review' | 'documents_requested' | 'approved' | 'rejected';
@@ -153,25 +152,32 @@ export const visaService = {
         notes: 'Application submitted by user'
       });
 
-    // Create conversation with admin using messagingService
-    try {
-      const { conversationId } = await messagingService.createConversationWithMessage({
-        otherUserId: '00000000-0000-0000-0000-000000000000', // Admin system ID
-        contextType: 'visa',
-        contextId: id,
-        relatedItemTitle: `Visa: ${data.visa_type}`,
-        initialMessage: `Visa application (${data.visa_type}) has been submitted and is awaiting review.`
-      });
+    // Create conversation with admin
+    const { data: conversation } = await supabase
+      .from('conversations')
+      .insert({
+        participant1_id: user.id,
+        participant2_id: '00000000-0000-0000-0000-000000000000',
+        last_message: 'Visa application submitted',
+        last_message_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-      if (conversationId) {
-        await supabase
-          .from('visa_applications')
-          .update({ conversation_id: conversationId })
-          .eq('id', id);
-      }
-    } catch (err) {
-      console.error('Failed to create conversation for visa application:', err);
-      // Don't fail the whole submission if chat creation fails
+    if (conversation) {
+      await supabase
+        .from('visa_applications')
+        .update({ conversation_id: conversation.id })
+        .eq('id', id);
+
+      await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversation.id,
+          sender_id: user.id,
+          content: `Visa application (${data.visa_type}) has been submitted and is awaiting review.`,
+          is_system: true
+        });
     }
 
     return data;
@@ -267,7 +273,24 @@ export const visaService = {
   async updateApplicationStatus(id: string, status: VisaStatus, notes?: string): Promise<VisaApplication> {
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Update application
+    // Attempt to use RPC if available to bypass RLS recursion
+    try {
+        const { data: rpcData, error: rpcError } = await supabase.rpc('admin_update_visa_status', {
+            application_id: id,
+            new_status: status,
+            admin_notes: notes || null,
+            admin_id: user?.id
+        });
+
+        if (!rpcError && rpcData) {
+             return rpcData;
+        }
+        // If RPC fails (e.g. doesn't exist), fall back to standard update
+    } catch (e) {
+        console.warn('RPC admin_update_visa_status failed, falling back to direct update', e);
+    }
+
+    // Standard Update (Fallback)
     const { data, error } = await supabase
       .from('visa_applications')
       .update({ 
@@ -297,6 +320,26 @@ export const visaService = {
     if (historyError) {
       console.error('Create history error:', historyError);
       // Don't throw, as status update succeeded
+    }
+
+    // Send system message
+    try {
+       const { data: app } = await supabase.from('visa_applications').select('conversation_id, visa_type').eq('id', id).single();
+       if (app?.conversation_id) {
+          const systemMsg = JSON.stringify({
+             key: 'system.visaStatusUpdate',
+             params: { status: status.replace('_', ' ') }
+          });
+          await supabase.from('messages').insert({
+            conversation_id: app.conversation_id,
+            sender_id: user?.id,
+            content: `TRANSLATE:${systemMsg}`,
+            is_system: true,
+            message_type: 'system'
+          });
+       }
+    } catch (msgError) {
+       console.error('Failed to send system message:', msgError);
     }
 
     return data;

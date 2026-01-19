@@ -34,6 +34,8 @@ const mockStorage: Record<string, any[]> = {
       first_name: 'Demo',
       last_name: 'User',
       onboarding_completed: true,
+      interested_modules: [],
+      primary_interest: 'job',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -240,5 +242,29 @@ export const mockSupabase = {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           getPublicUrl: (_path: string) => ({ data: { publicUrl: 'https://via.placeholder.com/150' } }),
       })
-  }
+  },
+  rpc: async (functionName: string, _params?: any) => {
+      console.log(`[MockRPC] Calling ${functionName}`);
+      switch (functionName) {
+          case 'get_unread_count':
+              return { data: 0, error: null };
+          case 'check_is_admin':
+              return { data: true, error: null }; // Simulate admin for easier testing
+          case 'mark_notification_read':
+          case 'mark_all_notifications_read':
+              return { data: null, error: null };
+          case 'has_role':
+              return { data: true, error: null };
+          default:
+              return { data: null, error: null };
+      }
+  },
+  channel: (_name: string) => ({
+      on: (_event: string, _config: any, _callback: any) => ({
+          subscribe: () => ({ unsubscribe: () => {} })
+      }),
+      subscribe: () => ({ unsubscribe: () => {} }),
+      unsubscribe: () => {}
+  }),
+  removeChannel: (_channel: any) => {}
 };

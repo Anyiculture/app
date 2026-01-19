@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import App from './App';
 import { LandingPage } from './pages/LandingPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -75,7 +75,7 @@ import { HostFamilyProfilePage } from './pages/HostFamilyProfilePage';
 import { SettingsLayout } from './pages/settings/SettingsLayout';
 import { SettingsDashboardPage } from './pages/settings/SettingsDashboardPage';
 import { GeneralSettingsPage } from './pages/settings/GeneralSettingsPage';
-import { InterestsSettingsPage } from './pages/settings/InterestsSettingsPage';
+import { ProfilePreviewPage } from './pages/settings/ProfilePreviewPage';
 import { AuPairSettingsPage } from './pages/settings/AuPairSettingsPage';
 import { HostFamilySettingsPage } from './pages/settings/HostFamilySettingsPage';
 import { EmployerSettingsPage } from './pages/settings/EmployerSettingsPage';
@@ -168,7 +168,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <SettingsDashboardPage /> },
           { path: 'general', element: <GeneralSettingsPage /> },
-          { path: 'interests', element: <InterestsSettingsPage /> },
+          { path: 'preview', element: <ProfilePreviewPage /> },
           { path: 'security', element: <SecuritySettingsPage /> },
           { path: 'notifications', element: <NotificationSettings /> },
           { path: 'billing', element: <BillingSettingsPage /> },
@@ -180,7 +180,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'profile',
-        element: <SettingsDashboardPage />,
+        element: <Navigate to="/settings" replace />,
         errorElement: <ErrorBoundary />,
       },
       {
