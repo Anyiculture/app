@@ -4,8 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { messagingService, Conversation, Message, Attachment, Meeting } from '../services/messagingService';
 import { adminService } from '../services/adminService';
-import { Send, MessageSquare, ArrowLeft, Search, Paperclip, Calendar, X, FileText, Check, Clock, ShieldCheck, Video, MapPin } from 'lucide-react';
+import { Send, MessageSquare, ArrowLeft, Search, Paperclip, Calendar, X, FileText, Check, Clock, ShieldCheck, Video, MapPin, Trash2 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { presenceService, UserPresence } from '../services/presenceService';
 
 export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -40,6 +42,11 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
     platform: 'Zoom',
     location: ''
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingConversation, setDeletingConversation] = useState(false);
+  
+  // Presence tracking
+  const [otherUserPresence, setOtherUserPresence] = useState<UserPresence | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,10 +58,15 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
     if (user) {
       loadConversations();
       checkAdminStatus();
+      // Initialize presence tracking
+      presenceService.initialize();
     } else {
       setLoading(false);
     }
-    return () => { mountedRef.current = false; };
+    return () => { 
+      mountedRef.current = false;
+      presenceService.cleanup();
+    };
   }, [user]);
 
   const checkAdminStatus = async () => {
@@ -95,6 +107,32 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
 
     return () => { subscription.unsubscribe(); };
   }, [selectedConversationId, user]);
+
+  // Get selected conversation
+  const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+
+  // Presence Subscription
+  useEffect(() => {
+    if (!selectedConversation || !user) return;
+    
+    const otherUserId = selectedConversation.other_user.id;
+    
+    // Load initial presence
+    presenceService.getUserPresence(otherUserId).then((presence) => {
+      if (mountedRef.current && presence) {
+        setOtherUserPresence(presence);
+      }
+    });
+    
+    // Subscribe to presence changes
+    const subscription = presenceService.subscribeToPresence(otherUserId, (presence) => {
+      if (mountedRef.current) {
+        setOtherUserPresence(presence);
+      }
+    });
+    
+    return () => { subscription.unsubscribe(); };
+  }, [selectedConversation, user]);
 
   // Sidebar Resizing Logic
   useEffect(() => {
@@ -172,6 +210,27 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
       }
     } catch (err) {
       console.error('Failed to load messages:', err);
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!selectedConversationId) return;
+
+    try {
+      setDeletingConversation(true);
+      await messagingService.deleteConversation(selectedConversationId);
+      // Remove from list locally
+      setConversations(prev => prev.filter(c => c.id !== selectedConversationId));
+      setFilteredConversations(prev => prev.filter(c => c.id !== selectedConversationId));
+      setSelectedConversationId(null);
+      setSearchParams({});
+      setShowMobileChat(false);
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+      alert('Failed to delete conversation');
+    } finally {
+      setDeletingConversation(false);
     }
   };
 
@@ -267,9 +326,26 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
     }
   };
 
+  // Format last seen time
+  const formatLastSeen = (lastSeenAt: string): string => {
+    const now = new Date();
+    const lastSeen = new Date(lastSeenAt);
+    const diffMs = now.getTime() - lastSeen.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return t('messaging.justNow');
+    if (diffMins < 60) return t('messaging.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('messaging.hoursAgo', { count: diffHours });
+    if (diffDays === 1) return t('messaging.yesterday');
+    if (diffDays < 7) return t('messaging.daysAgo', { count: diffDays });
+    return format(lastSeen, 'MMM d');
+  };
 
 
-  const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+
+
 
   // UI Components
   const MessageBubble = ({ msg, isOwn }: { msg: Message; isOwn: boolean }) => {
@@ -516,7 +592,11 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
                     <h2 className="font-black text-gray-900 text-sm md:text-lg tracking-tight truncate uppercase">
                       {selectedConversation.other_user.full_name || selectedConversation.other_user.email}
                     </h2>
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)] shrink-0"></span>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      otherUserPresence?.is_online 
+                        ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' 
+                        : 'bg-gray-300'
+                    }`}></span>
                   </div>
                   {selectedConversation.related_item_title && (
                     <span className="text-[10px] font-black text-gray-400 flex items-center gap-1.5 uppercase tracking-widest mt-0.5 truncate">
@@ -531,10 +611,28 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
               <div className="flex items-center gap-2 md:gap-3 shrink-0">
                 <div className="hidden sm:flex flex-col items-end mr-2">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('common.status')}</span>
-                  <span className="text-xs font-bold text-gray-900">{t('messaging.onlineNow')}</span>
+                  <span className={`text-xs font-bold ${
+                    otherUserPresence?.is_online ? 'text-green-600' : 'text-gray-500'
+                  }`}>
+                    {otherUserPresence?.is_online 
+                      ? t('messaging.onlineNow') 
+                      : otherUserPresence?.last_seen_at 
+                        ? formatLastSeen(otherUserPresence.last_seen_at)
+                        : t('messaging.offline')
+                    }
+                  </span>
                 </div>
-                <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer">
-                  <Search size={16} className="md:size-5" />
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setShowDeleteModal(true)}
+                    className="w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
+                    title={t('common.delete')}
+                  >
+                    <Trash2 size={16} className="md:size-5" />
+                  </button>
+                  <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer">
+                    <Search size={16} className="md:size-5" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -820,6 +918,19 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConversation}
+        title={t('messaging.deleteConfirmTitle')}
+        message={t('messaging.deleteConfirmMessage')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        type="danger"
+        isLoading={deletingConversation}
+      />
     </div>
   );
 }
