@@ -140,6 +140,8 @@ export default function AIContentCreator() {
         contentType: formData.contentType,
         category: formData.category,
         programType: formData.programType,
+        jobType: formData.job_type,
+        eventType: formData.event_type,
         preferences: {
           language: language as 'en' | 'zh',
           tone: 'professional',

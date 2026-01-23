@@ -17,6 +17,7 @@ import { CommunityAdminPanel } from '../components/admin/CommunityAdminPanel';
 import { PaymentsAdminPanel } from '../components/admin/PaymentsAdminPanel';
 import { MessagingAdminPanel } from '../components/admin/MessagingAdminPanel';
 import AIContentCreator from '../components/admin/content/AIContentCreator';
+import { LockScreen } from '../components/admin/ui/LockScreen';
 
 export function AdminPortalPage() {
   const { user, signOut } = useAuth();
@@ -25,6 +26,7 @@ export function AdminPortalPage() {
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
   
   // Get active tab from URL or default to 'overview'
   const activeTab = searchParams.get('tab') || 'overview';
@@ -41,6 +43,15 @@ export function AdminPortalPage() {
 
     try {
       setLoading(true);
+      
+      // Check for Admin PIN lock
+      const hasPin = user.user_metadata?.admin_pin;
+      const isUnlocked = sessionStorage.getItem('admin_unlocked') === 'true';
+      
+      if (hasPin && !isUnlocked) {
+        setIsLocked(true);
+      }
+
       const hasAccess = await adminService.checkIsAdmin();
       
       if (!hasAccess) {
@@ -59,6 +70,11 @@ export function AdminPortalPage() {
     }
   };
 
+  const handleUnlock = () => {
+    sessionStorage.setItem('admin_unlocked', 'true');
+    setIsLocked(false);
+  };
+
   const handleTabChange = (tab: string) => {
     setSearchParams({ tab });
   };
@@ -74,6 +90,10 @@ export function AdminPortalPage() {
         <Loading />
       </div>
     );
+  }
+
+  if (isLocked) {
+    return <LockScreen onUnlock={handleUnlock} />;
   }
 
   if (!stats) return null;

@@ -4,14 +4,16 @@ export interface AIAnalysisRequest {
   url?: string;
   text?: string;
   image?: string;
-  type: 'job' | 'event' | 'marketplace' | 'education' | 'post' | 'au-pair';
+  type: 'job' | 'event' | 'marketplace' | 'education' | 'post' | 'au-pair' | 'jobs' | 'events';
   instructions?: string;
 }
 
 export interface GenerateContentParams {
-  contentType: 'marketplace' | 'education';
+  contentType: 'marketplace' | 'education' | 'jobs' | 'events';
   category?: string;
   programType?: string;
+  jobType?: string;
+  eventType?: string;
   preferences?: {
     tone?: string;
     length?: 'short' | 'medium' | 'long';

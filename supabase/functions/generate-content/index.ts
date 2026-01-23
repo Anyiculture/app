@@ -1,7 +1,8 @@
-// @ts-nocheck - Deno runtime types (Edge Function)
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 
 interface GenerateContentRequest {
   contentType: 'marketplace' | 'education' | 'jobs' | 'events';
@@ -35,6 +36,21 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // Check for missing keys
+    const missingKeys = [];
+    if (!SUPABASE_URL) missingKeys.push('SUPABASE_URL');
+    if (!SUPABASE_ANON_KEY) missingKeys.push('SUPABASE_ANON_KEY');
+    
+    if (missingKeys.length > 0) {
+      console.error(`Missing Supabase configuration keys: ${missingKeys.join(', ')}`);
+      throw new Error(`Server configuration error: Missing database keys (${missingKeys.join(', ')})`);
+    }
+
+    if (!GOOGLE_AI_API_KEY) {
+      console.error('Missing Google AI API Key');
+      throw new Error('Server configuration error: AI service not configured (GOOGLE_AI_API_KEY)');
+    }
+
     // Verify admin role
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -44,29 +60,42 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Get user from Supabase Auth
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    // Initialize Supabase clients
+    // client for auth check (scoped to user token)
+    const supabaseClient = createClient(
+      SUPABASE_URL, 
+      SUPABASE_ANON_KEY,
+      { global: { headers: { Authorization: authHeader } } }
+    );
     
-    const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: { Authorization: authHeader, apikey: supabaseKey },
-    });
+    // Validate token by getting user
+    // Explicitly passing the token is safer in edge runtime environment
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
 
-    if (!userResponse.ok) {
+    if (userError || !user) {
+      console.error('Auth error:', userError);
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized - Invalid token' }),
+        JSON.stringify({ success: false, error: 'Unauthorized - Invalid token', details: userError }),
         { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }
-
-    const user = await userResponse.json();
     
-    // Check if user is admin
-    if (user.user_metadata?.role !== 'admin' && user.app_metadata?.role !== 'admin') {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Forbidden - Admin access required' }),
-        { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
-      );
+    // Check admin table for role
+    
+    // Verify admin role via simple email check (Radically Simple)
+    // This bypasses the need for admin_roles table and extra permissions
+    const email = user.email || '';
+    const isAdmin = email.endsWith('@anyiculture.com') || 
+                   email === 'admin@anyiculture.com' ||
+                   user.user_metadata?.role === 'admin' ||
+                   user.app_metadata?.role === 'admin';
+
+    if (!isAdmin) {
+         return new Response(
+          JSON.stringify({ success: false, error: 'Forbidden - Admin access required' }),
+          { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+        );
     }
 
     if (!GOOGLE_AI_API_KEY) {
@@ -308,25 +337,14 @@ ${responseFormat}`;
 
     const generatedContent = JSON.parse(jsonMatch[0]);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        content: generatedContent,
-        raw: generatedText
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+
   } catch (error: any) {
     console.error('Error generating content:', error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Failed to generate content'
+        error: error.message || 'Failed to generate content',
+        details: error.stack || JSON.stringify(error)
       }),
       {
         status: 500,

@@ -5,7 +5,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { auPairService } from '../services/auPairService';
 import { validators, validateField } from '../utils/formValidation';
 import { COUNTRIES } from '../constants/countries';
-import { ChevronLeft, AlertCircle, CheckCircle, ArrowRight, Trash2 } from 'lucide-react';
+import { ChevronLeft, AlertCircle, CheckCircle, ArrowRight, Trash2, Save } from 'lucide-react';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Textarea } from './ui/Textarea';
@@ -109,17 +109,19 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
   }, []);
 
   useEffect(() => {
-    if (isAdmin) return;
-
     const savedData = localStorage.getItem('au_pair_onboarding_draft');
     if (savedData) {
       try {
-        setFormData(prev => ({ ...prev, ...JSON.parse(savedData) }));
+        const parsed = JSON.parse(savedData);
+        // If editing/viewing, we prefer the fetched data, but for creation, drafts are king
+        if (mode === 'create') {
+          setFormData(prev => ({ ...prev, ...parsed }));
+        }
       } catch (e) {
         console.error('Failed to load draft:', e);
       }
     }
-  }, [isAdmin]);
+  }, [mode]);
 
   // Fetch existing data for Edit/View mode
   useEffect(() => {
@@ -192,6 +194,12 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
   useEffect(() => {
     localStorage.setItem('au_pair_onboarding_draft', JSON.stringify(formData));
   }, [formData]);
+
+  const saveAsDraft = () => {
+    localStorage.setItem('au_pair_onboarding_draft', JSON.stringify(formData));
+    setShowSaveConfirm(true);
+    setTimeout(() => setShowSaveConfirm(false), 3000);
+  };
 
   const updateField = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -523,13 +531,13 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     { id: 'single_parent', label: t('auPair.onboarding.preferences.familyType.single_parent') }
   ];
   const OPTION_CATEGORIES = {
-    "hobbies": "auPair.onboarding.options.hobbies",
-    "traits": "auPair.onboarding.options.traits",
-    "workStyle": "auPair.onboarding.options.workStyle",
-    "ageComfort": "auPair.onboarding.options.ageComfort",
-    "skills": "auPair.onboarding.options.skills",
-    "rules": "auPair.onboarding.options.rules",
-    "familyType": "auPair.onboarding.options.familyType",
+    "hobbies": "auPair.onboarding.basic.hobbies",
+    "traits": "auPair.onboarding.strengths.traits",
+    "workStyle": "auPair.onboarding.strengths.workStyle",
+    "ageComfort": "auPair.onboarding.skills.ageComfort",
+    "skills": "auPair.onboarding.skills.options",
+    "rules": "auPair.onboarding.rules.options",
+    "familyType": "auPair.onboarding.preferences.familyType",
     "languages": "auPair.onboarding.languages"
   } as const;
 
@@ -1143,16 +1151,42 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
            ) : (
              <>
                {(!isEditing && step > 1) ? (
-                 <motion.button 
-                   whileHover={{ x: -3 }}
-                   whileTap={{ scale: 0.95 }}
-                   onClick={handleBack} 
-                   className="flex items-center gap-3 px-8 py-4 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-all shadow-sm hover:shadow-md"
-                 >
-                   <ChevronLeft size={16} />
-                   {t('common.back')}
-                 </motion.button>
-               ) : <div />}
+                 <div className="flex gap-4">
+                   <motion.button 
+                     whileHover={{ x: -3 }}
+                     whileTap={{ scale: 0.95 }}
+                     onClick={handleBack} 
+                     className="flex items-center gap-3 px-8 py-4 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-all shadow-sm hover:shadow-md"
+                   >
+                     <ChevronLeft size={16} />
+                     {t('common.back')}
+                   </motion.button>
+                   {!isAdmin && (
+                     <motion.button 
+                       whileHover={{ scale: 1.05 }}
+                       whileTap={{ scale: 0.95 }}
+                       onClick={saveAsDraft} 
+                       className="flex items-center gap-3 px-6 py-4 bg-gray-50 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all shadow-sm"
+                       title="Save progress for later"
+                     >
+                       <Save size={16} />
+                       {t('common.save')}
+                     </motion.button>
+                   )}
+                 </div>
+               ) : (
+                 !isAdmin && step > 1 ? (
+                   <motion.button 
+                     whileHover={{ scale: 1.05 }}
+                     whileTap={{ scale: 0.95 }}
+                     onClick={saveAsDraft} 
+                     className="flex items-center gap-3 px-6 py-4 bg-gray-50 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all shadow-sm"
+                   >
+                     <Save size={16} />
+                     {t('common.save')}
+                   </motion.button>
+                 ) : <div />
+               )}
 
                {(!isEditing && step < totalSteps) ? (
                  <motion.button 

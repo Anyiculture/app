@@ -631,7 +631,7 @@ export const auPairService = {
         created_by: 'admin',
         owner_admin_id: user.id,
         owner_user_id: null,
-        user_id: user.id, // Temporary: use admin's ID as placeholder
+        user_id: null, // Allow multiple orphan listings for the same admin
         updated_at: new Date().toISOString()
       })
       .select()
@@ -656,7 +656,7 @@ export const auPairService = {
         created_by: 'admin',
         owner_admin_id: user.id,
         owner_user_id: null,
-        user_id: user.id, // Temporary: use admin's ID as placeholder
+        user_id: null, // Allow multiple orphan listings for the same admin
         updated_at: new Date().toISOString()
       })
       .select()
