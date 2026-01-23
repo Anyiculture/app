@@ -424,6 +424,7 @@
     },
     "common": {
       "unlock": "Unlock",
+      "restore": "Restore",
       "totalCount": "Total Count: {{count}}",
       "delete": "Delete",
       "deletionCancelled": "Deletion Cancelled",
