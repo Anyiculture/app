@@ -94,6 +94,7 @@ const EVENT_TYPES = [
 
 export default function AIContentCreator() {
   const { t, language } = useI18n();
+  const [inputMode, setInputMode] = useState<'url' | 'manual'>('url');
   const [formData, setFormData] = useState<AICreatorFormData>({
     contentType: 'marketplace',
   });
@@ -168,12 +169,15 @@ export default function AIContentCreator() {
     setError(null);
 
     try {
-      const prompt = `${formData.title}. ${formData.description?.substring(0, 200)}`;
+      // Premium ad-style prompting for ultra-realistic, high-quality images
+      const basePrompt = `${formData.title}. ${formData.description?.substring(0, 200)}`;
+      const enhancedPrompt = `Professional commercial photography, ${basePrompt}. Ultra-realistic, cinematic lighting, premium product photography, 8K resolution, shot on Sony A7R IV, shallow depth of field, perfect composition, high-end advertising aesthetic, magazine quality, professionally styled, studio lighting setup`;
+      
       const images = await aiService.generateImages({
-        prompt,
+        prompt: enhancedPrompt,
         count: 3,
         aspectRatio: '4:3',
-        style: 'professional',
+        style: 'photographic', // More realistic than 'professional'
       });
 
       setFormData((prev) => ({
@@ -319,33 +323,81 @@ export default function AIContentCreator() {
           <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
             <h2 className="text-2xl font-black text-gray-900">{t('admin.aiContent.configuration')}</h2>
 
-            {/* URL Scraper */}
-            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                <LinkIcon size={16} className="inline mr-2" />
-                {t('admin.aiContent.scrapeFromUrl')}
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  value={formData.sourceUrl || ''}
-                  onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
-                  placeholder={t('admin.aiContent.urlPlaceholder')}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleScrapeUrl}
-                  disabled={scraping || !formData.sourceUrl}
-                  variant="outline"
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                >
-                  {scraping ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent" />
-                  ) : (
-                    <Download size={20} />
-                  )}
-                </Button>
-              </div>
+            {/* Input Mode Toggle */}
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+              <button
+                onClick={() => setInputMode('url')}
+                className={`flex-1 py-2 px-4 rounded-md font-medium transition-all text-sm ${
+                  inputMode === 'url'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                🔗 URL Scraper
+              </button>
+              <button
+                onClick={() => setInputMode('manual')}
+                className={`flex-1 py-2 px-4 rounded-md font-medium transition-all text-sm ${
+                  inputMode === 'manual'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                ✍️ Manual Text
+              </button>
             </div>
+
+            {/* URL Scraper - Show only in URL mode */}
+            {inputMode === 'url' && (
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <LinkIcon size={16} className="inline mr-2" />
+                  {t('admin.aiContent.scrapeFromUrl')}
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.sourceUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
+                    placeholder={t('admin.aiContent.urlPlaceholder')}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleScrapeUrl}
+                    disabled={scraping || !formData.sourceUrl}
+                    variant="outline"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  >
+                    {scraping ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent" />
+                    ) : (
+                      <Download size={20} />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Manual Text Input - Show only in Manual mode */}
+            {inputMode === 'manual' && (
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 space-y-4">
+                <label className="block text-sm font-bold text-gray-700">
+                  ✍️ Enter Your Content Manually
+                </label>
+                <Input
+                  label="Title"
+                  value={formData.title || ''}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Enter a catchy title..."
+                />
+                <Textarea
+                  label="Description"
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Write a detailed description..."
+                  rows={6}
+                />
+              </div>
+            )}
 
             {/* Content Type Tabs */}
             <div className="grid grid-cols-2 gap-3">

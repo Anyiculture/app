@@ -55,7 +55,7 @@ export function AdminSidebar({ activeTab, onTabChange, onLogout, className }: Ad
   const navItems = [
     { id: 'overview', label: 'admin.sidebar.overview', icon: LayoutDashboard },
     { id: 'users', label: 'admin.sidebar.users', icon: Users },
-    { id: 'ai-creator', label: 'AI Ingestion', icon: Sparkles },
+    { id: 'ai-creator', label: 'admin.sidebar.aiCreator', icon: Sparkles },
     // { id: 'content', label: 'admin.sidebar.content', icon: Upload }, 
     { id: 'events', label: 'admin.sidebar.events', icon: Calendar },
     { id: 'marketplace', label: 'admin.sidebar.store', icon: ShoppingBag },

@@ -351,7 +351,7 @@ export function AuPairProfilePage() {
                                 className={`flex flex-col items-center justify-center text-center p-3 rounded-lg border leading-tight ${
                                     profile[item.key as keyof typeof profile] 
                                     ? 'bg-green-50 border-green-100 text-green-800' 
-                                    : 'bg-gray-50 border-gray-100 text-gray-400 opacity-60'
+                                    : 'bg-gray-50 border-gray-100 text-gray-500'
                                 }`}
                             >
                                 <ShieldCheck size={20} className="mb-2" />
