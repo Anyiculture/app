@@ -9,7 +9,8 @@ import {
   Calendar, 
   GraduationCap, 
   FileText,
-  MessageSquare
+  MessageSquare,
+  Heart
 } from 'lucide-react';
 
 interface OverviewPanelProps {
@@ -68,6 +69,18 @@ export function OverviewPanel({ stats }: OverviewPanelProps) {
           value={stats.activeConversations}
           icon={<MessageSquare size={20} />}
           gradient="from-cyan-500 to-blue-500"
+        />
+        <AdminStatCard
+          title={t('admin.totalAuPairs')}
+          value={stats.totalAuPairs}
+          icon={<Heart size={20} />}
+          gradient="from-purple-500 to-pink-500"
+        />
+        <AdminStatCard
+          title={t('admin.totalHostFamilies')}
+          value={stats.totalHostFamilies}
+          icon={<Users size={20} />}
+          gradient="from-green-500 to-emerald-500"
         />
       </div>
 

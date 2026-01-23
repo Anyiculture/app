@@ -66,7 +66,7 @@ export function GlobalLocationSelector({
     <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`}>
       {/* Country Selector */}
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700">{t('onboarding.country')}</label>
+        <label className="block text-sm font-medium text-gray-700">{t('common.location.country')}</label>
         <div className="relative">
           <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <select
@@ -78,7 +78,7 @@ export function GlobalLocationSelector({
             }}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
           >
-            <option value="">{t('onboarding.selectCountry')}</option>
+            <option value="">{t('common.location.selectCountry')}</option>
             {countries.map((c) => (
               <option key={c.isoCode} value={c.isoCode}>
                 {regionNames.of(c.isoCode)}
@@ -90,7 +90,7 @@ export function GlobalLocationSelector({
 
       {/* State/Province Selector */}
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700">{t('onboarding.province')}</label>
+        <label className="block text-sm font-medium text-gray-700">{t('common.location.province')}</label>
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <select
@@ -102,7 +102,7 @@ export function GlobalLocationSelector({
             disabled={!country}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white disabled:bg-gray-100 disabled:text-gray-400"
           >
-            <option value="">{t('onboarding.selectProvince')}</option>
+            <option value="">{t('common.location.selectProvince')}</option>
             {states.map((s) => (
               <option key={s.isoCode} value={s.isoCode}>
                 {s.name}
@@ -114,7 +114,7 @@ export function GlobalLocationSelector({
 
       {/* City Selector */}
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700">{t('onboarding.city')}</label>
+        <label className="block text-sm font-medium text-gray-700">{t('common.location.city')}</label>
         <div className="relative">
           <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <select
@@ -123,7 +123,7 @@ export function GlobalLocationSelector({
             disabled={!state}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white disabled:bg-gray-100 disabled:text-gray-400"
           >
-            <option value="">{t('onboarding.selectCity')}</option>
+            <option value="">{t('common.location.selectCity')}</option>
             {cities.map((c) => (
               <option key={c.name} value={c.name}>
                 {c.name}

@@ -53,6 +53,12 @@ export interface AuPairProfile {
   intro_video_url?: string;
   experience_videos: string[];
   profile_status: string;
+  
+  // Ownership fields
+  created_by: 'self' | 'admin';
+  owner_admin_id?: string;
+  owner_user_id?: string;
+  
   created_at: string;
   updated_at: string;
 }
@@ -117,6 +123,15 @@ export interface HostFamilyProfile {
   expectations?: string;
   specific_requirements?: string; // New (mapped from requirements?)
   profile_status: string;
+  
+  // Ownership fields
+  created_by: 'self' | 'admin';
+  owner_admin_id?: string;
+  owner_user_id?: string;
+  
+  start_date?: string;
+  end_date?: string;
+  
   created_at: string;
   updated_at: string;
 }
@@ -390,6 +405,9 @@ export const auPairService = {
       .upsert({
         ...profile,
         user_id: user.id,
+        created_by: 'self',
+        owner_user_id: user.id,
+        owner_admin_id: null,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' })
       .select()
@@ -446,6 +464,9 @@ export const auPairService = {
       .upsert({
         ...profile,
         user_id: user.id,
+        created_by: 'self',
+        owner_user_id: user.id,
+        owner_admin_id: null,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' })
       .select()
@@ -557,5 +578,185 @@ export const auPairService = {
 
     // 3. User remains free until admin approves the submission
     // The admin review process will trigger the upgrade via review_payment_submission RPC
+  },
+
+  // Admin-specific methods for managing admin-owned listings
+  
+  /**
+   * Validate ownership before allowing edit/delete operations
+   * @throws Error if ownership validation fails
+   */
+  async validateOwnership(
+    profileId: string,
+    profileType: 'au_pair' | 'family',
+    expectedOwnership: 'admin' | 'self',
+    userId: string
+  ): Promise<void> {
+    const tableName = profileType === 'au_pair' ? 'au_pair_profiles' : 'host_family_profiles';
+    
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('created_by, owner_admin_id, owner_user_id')
+      .eq('id', profileId)
+      .maybeSingle();
+
+    if (error || !data) {
+      throw new Error(`Failed to validate ownership: ${error?.message || 'Profile not found'}`);
+    }
+
+    // Check if ownership matches expected type
+    if (expectedOwnership === 'admin') {
+      if (data.created_by !== 'admin' || data.owner_admin_id !== userId) {
+        throw new Error('You can only edit admin-owned listings that you created');
+      }
+    } else if (expectedOwnership === 'self') {
+      if (data.created_by !== 'self' || data.owner_user_id !== userId) {
+        throw new Error('You can only edit your own self-owned listing');
+      }
+    }
+  },
+
+  async createAdminAuPairProfile(profile: Partial<AuPairProfile>): Promise<AuPairProfile> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+
+    // Admin creates profile without user_id, sets owner_admin_id
+    const { data, error } = await supabase
+      .from('au_pair_profiles')
+      .insert({
+        ...profile,
+        created_by: 'admin',
+        owner_admin_id: user.id,
+        owner_user_id: null,
+        user_id: user.id, // Temporary: use admin's ID as placeholder
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async createAdminHostFamilyProfile(profile: Partial<HostFamilyProfile>) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+
+    // Admin creates profile without user_id, sets owner_admin_id
+    const { data, error } = await supabase
+      .from('host_family_profiles')
+      .insert({
+        ...profile,
+        created_by: 'admin',
+        owner_admin_id: user.id,
+        owner_user_id: null,
+        user_id: user.id, // Temporary: use admin's ID as placeholder
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateAdminAuPairProfile(profileId: string, profile: Partial<AuPairProfile>): Promise<AuPairProfile> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Validate admin ownership before allowing update
+    await this.validateOwnership(profileId, 'au_pair', 'admin', user.id);
+
+    const { data, error } = await supabase
+      .from('au_pair_profiles')
+      .update({
+        ...profile,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', profileId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateAdminHostFamilyProfile(profileId: string, profile: Partial<HostFamilyProfile>): Promise<HostFamilyProfile> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Validate admin ownership before allowing update
+    await this.validateOwnership(profileId, 'family', 'admin', user.id);
+
+    const { data, error } = await supabase
+      .from('host_family_profiles')
+      .update({
+        ...profile,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', profileId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteAdminAuPairProfile(profileId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Validate admin ownership before allowing deletion
+    await this.validateOwnership(profileId, 'au_pair', 'admin', user.id);
+
+    const { error } = await supabase
+      .from('au_pair_profiles')
+      .update({ profile_status: 'deleted' })
+      .eq('id', profileId);
+
+    if (error) throw error;
+  },
+
+  async deleteAdminHostFamilyProfile(profileId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Validate admin ownership before allowing deletion
+    await this.validateOwnership(profileId, 'family', 'admin', user.id);
+
+    const { error } = await supabase
+      .from('host_family_profiles')
+      .update({ profile_status: 'deleted' })
+      .eq('id', profileId);
+
+    if (error) throw error;
+  },
+
+  async getAuPairProfileById(profileId: string): Promise<AuPairProfile | null> {
+    const { data, error } = await supabase
+      .from('au_pair_profiles')
+      .select('*')
+      .eq('id', profileId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getHostFamilyProfileById(profileId: string): Promise<HostFamilyProfile | null> {
+    const { data, error } = await supabase
+      .from('host_family_profiles')
+      .select('*')
+      .eq('id', profileId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
   }
 };

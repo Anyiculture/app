@@ -1,3 +1,4 @@
+// @ts-nocheck - Deno runtime types (Edge Function)
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const corsHeaders = {

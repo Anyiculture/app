@@ -63,12 +63,13 @@ export interface Message {
 }
 
 export interface CreateConversationParams {
-  otherUserId: string;
+  otherUserId?: string; // Made optional - will be resolved from profile if not provided
   contextType: 'job' | 'aupair' | 'visa' | 'event' | 'marketplace' | 'community' | 'lifestyle' | 'education' | 'support' | 'violation' | 'account';
   contextId?: string;
   relatedItemTitle?: string;
   initialMessage?: string;
   messageType?: 'user' | 'system';
+  profileType?: 'au_pair' | 'family'; // Used with contextType 'aupair' to resolve recipient
 }
 
 export const messagingService = {
@@ -126,6 +127,41 @@ export const messagingService = {
   },
 
   /**
+   * Resolve the recipient user ID for a profile based on ownership
+   * For admin-owned profiles, returns the owning admin ID
+   * For self-owned profiles, returns the owning user ID
+   */
+  async resolveRecipientForProfile(profileType: 'au_pair' | 'family', profileId: string): Promise<string | null> {
+    try {
+      const tableName = profileType === 'au_pair' ? 'au_pair_profiles' : 'host_family_profiles';
+      
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('created_by, owner_admin_id, owner_user_id')
+        .eq('id', profileId)
+        .maybeSingle();
+
+      if (error || !data) {
+        console.error(`Failed to resolve recipient for ${profileType} profile ${profileId}:`, error);
+        return null;
+      }
+
+      // Return the appropriate owner based on created_by
+      if (data.created_by === 'admin' && data.owner_admin_id) {
+        return data.owner_admin_id;
+      } else if (data.created_by === 'self' && data.owner_user_id) {
+        return data.owner_user_id;
+      }
+
+      console.warn(`Profile ${profileId} has invalid ownership data:`, data);
+      return null;
+    } catch (error) {
+      console.error('Failed to resolve recipient:', error);
+      return null;
+    }
+  },
+
+  /**
    * Get messages for a conversation
    */
   async getMessages(conversationId: string): Promise<Message[]> {
@@ -174,7 +210,20 @@ export const messagingService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { otherUserId, contextType, contextId, relatedItemTitle, initialMessage } = params;
+    let { otherUserId, contextType, contextId, relatedItemTitle, initialMessage, profileType } = params;
+
+    // Resolve recipient if dealing with aupair profiles and no otherUserId provided
+    if (contextType === 'aupair' && !otherUserId && contextId && profileType) {
+      const resolvedUserId = await this.resolveRecipientForProfile(profileType, contextId);
+      if (!resolvedUserId) {
+        throw new Error(`Failed to resolve recipient for ${profileType} profile ${contextId}`);
+      }
+      otherUserId = resolvedUserId;
+    }
+
+    if (!otherUserId) {
+      throw new Error('otherUserId is required or must be resolvable from profile');
+    }
 
     // First, check if conversation already exists
     const existingConvId = await this.findExistingConversation(user.id, otherUserId, contextType);
@@ -501,5 +550,21 @@ export const messagingService = {
     } catch (error) {
       console.error('Failed to mark messages as read:', error);
     }
+  },
+
+  /**
+   * Delete (archive) a conversation
+   */
+  async deleteConversation(conversationId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('conversation_participants')
+      .update({ is_archived: true })
+      .eq('conversation_id', conversationId)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
   },
 };

@@ -459,13 +459,13 @@ export function LocationCascade({
   return (
     <div className="space-y-4">
       <Select
-        label={t('onboarding.country')}
+        label={t('common.location.country')}
         value={country}
         onChange={(e) => onCountryChange(e.target.value)}
         required={required}
         disabled={disabled}
       >
-        <option value="">{t('onboarding.selectCountry')}</option>
+        <option value="">{t('common.location.selectCountry')}</option>
         {COUNTRIES.map((c) => (
           <option key={c.value} value={c.value}>
             {language === 'zh' ? c.label_zh : c.label_en}
@@ -476,13 +476,13 @@ export function LocationCascade({
       {/* Only show province selector if country has provinces */}
       {hasProvinces && !hasDirectCities && (
         <Select
-          label={t('onboarding.province')}
+          label={t('common.location.province')}
           value={province}
           onChange={(e) => onProvinceChange(e.target.value)}
           disabled={!country || availableProvinces.length === 0 || disabled}
           required={required}
         >
-          <option value="">{t('onboarding.selectProvince')}</option>
+          <option value="">{t('common.location.selectProvince')}</option>
           {availableProvinces.map((p) => (
             <option key={p.value} value={p.value}>
               {language === 'zh' ? p.label_zh : p.label_en}
@@ -495,19 +495,19 @@ export function LocationCascade({
          {availableCities.length > 0 ? (
            <>
              <Select
-                label={t('onboarding.city')}
+                label={t('common.location.city')}
                 value={availableCities.includes(city) ? city : (showCustomCity || (city && !availableCities.includes(city)) ? 'Other' : '')}
                 onChange={(e) => handleCityChange(e.target.value)}
                 disabled={!country || disabled}
                 required={required}
             >
-                <option value="">{t('onboarding.selectCity')}</option>
+                <option value="">{t('common.location.selectCity')}</option>
                 {availableCities.map((c) => (
                 <option key={c} value={c}>
                     {c}
                 </option>
                 ))}
-                <option value="Other">{t('onboarding.otherCity')}</option>
+                <option value="Other">{t('common.location.otherCity')}</option>
             </Select>
             
             {((city && !availableCities.includes(city)) || showCustomCity) && (
@@ -515,7 +515,7 @@ export function LocationCascade({
                   type="text"
                   value={city}
                   onChange={(e) => onCityChange(e.target.value)}
-                  placeholder={t('onboarding.enterCityName')}
+                  placeholder={t('common.location.enterCityName')}
                   className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm h-10 px-3 border disabled:bg-gray-100 disabled:text-gray-500"
                   required={required}
                   disabled={disabled}
@@ -527,13 +527,13 @@ export function LocationCascade({
            country && (
              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('onboarding.city')} {required && '*'}
+                    {t('common.location.city')} {required && '*'}
                 </label>
                 <input 
                   type="text"
                   value={city}
                   onChange={(e) => onCityChange(e.target.value)}
-                  placeholder={t('onboarding.enterCityName')}
+                  placeholder={t('common.location.enterCityName')}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm h-10 px-3 border disabled:bg-gray-100 disabled:text-gray-500"
                   required={required}
                   disabled={disabled}

@@ -47,6 +47,8 @@ export interface AdminStats {
   pendingEducationInterests: number;
   pendingVisaApplications: number;
   activeConversations: number;
+  totalAuPairs: number;
+  totalHostFamilies: number;
 }
 
 export const adminService = {
@@ -218,6 +220,8 @@ export const adminService = {
           pendingEducationInterests: 0,
           pendingVisaApplications: 0,
           activeConversations: 0,
+          totalAuPairs: 0,
+          totalHostFamilies: 0,
         };
       }
 
@@ -232,6 +236,8 @@ export const adminService = {
         pendingEducationInterests: statsData.pendingEducationInterests ?? statsData.pending_education_interests ?? 0,
         pendingVisaApplications: statsData.pendingVisaApplications ?? statsData.pending_visa_apps ?? 0,
         activeConversations: statsData.activeConversations ?? statsData.active_conversations ?? 0,
+        totalAuPairs: statsData.totalAuPairs ?? statsData.au_pair_count ?? 0,
+        totalHostFamilies: statsData.totalHostFamilies ?? statsData.host_family_count ?? 0,
       };
     } catch (err) {
       console.error('Error in getAdminStats, attempting fallback:', err);
@@ -256,7 +262,9 @@ export const adminService = {
         supabase.from('job_applications').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('education_interests').select('*', { count: 'exact', head: true }).eq('status', 'submitted'),
         supabase.from('visa_applications').select('*', { count: 'exact', head: true }).eq('status', 'submitted'),
-        supabase.from('conversations').select('*', { count: 'exact', head: true })
+        supabase.from('conversations').select('*', { count: 'exact', head: true }),
+        supabase.from('au_pair_profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('host_family_profiles').select('*', { count: 'exact', head: true })
       ]);
 
       const getCount = (result: PromiseSettledResult<any>, label: string) => {
@@ -282,6 +290,8 @@ export const adminService = {
         pendingEducationInterests: getCount(results[6], 'edu_interests'),
         pendingVisaApplications: getCount(results[7], 'visa_apps'),
         activeConversations: getCount(results[8], 'conversations'),
+        totalAuPairs: getCount(results[9], 'au_pairs'),
+        totalHostFamilies: getCount(results[10], 'host_families'),
       };
 
       console.log('Manual fallback stats completed:', stats);
@@ -298,6 +308,8 @@ export const adminService = {
         pendingEducationInterests: 0,
         pendingVisaApplications: 0,
         activeConversations: 0,
+        totalAuPairs: 0,
+        totalHostFamilies: 0,
       };
     }
   },

@@ -7,6 +7,12 @@
       "viewAll": "查看所有通知"
     }
   },
+  "status": {
+    "active": "活跃",
+    "inactive": "不活跃",
+    "closed": "已关闭",
+    "pending": "待审核"
+  },
   "common": {
     "account": "账户",
     "select": "选择",
@@ -246,6 +252,8 @@
     "educationPrograms": "教育项目",
     "pendingVisa": "待处理签证",
     "activeConversations": "活跃对话",
+    "totalAuPairs": "互惠生总数",
+    "totalHostFamilies": "寄宿家庭总数",
     "recentActivity": "近期活动",
     "actions": {
       "ban": "封禁",
@@ -567,7 +575,56 @@
     "pendingJobApplications": "待审核职位申请",
     "pendingEducationInterests": "待审核教育兴趣",
     "activityLog": "活动日志",
-    "activityLogSubtitle": "最近系统活动"
+    "activityLogSubtitle": "最近系统活动",
+    "aiContent": {
+      "title": "AI 内容创建器",
+      "subtitle": "通过AI抓取URL或生成专业列表",
+      "configuration": "配置",
+      "scrapeFromUrl": "从URL抓取（可选）",
+      "urlPlaceholder": "https://example.com/listing",
+      "scrapeButton": "抓取",
+      "marketplace": "商城",
+      "education": "教育",
+      "jobs": "职位",
+      "events": "活动",
+      "category": "分类",
+      "selectCategory": "选择分类",
+      "programType": "项目类型",
+      "selectProgramType": "选择项目类型",
+      "jobType": "职位类型",
+      "selectJobType": "选择职位类型",
+      "eventType": "活动类型",
+      "selectEventType": "选择活动类型",
+      "generateWithAI": "使用AI生成",
+      "generating": "生成中...",
+      "contentEditable": "内容（可编辑）",
+      "title": "标题",
+      "description": "描述",
+      "generateImages": "生成匹配图片",
+      "generatingImages": "生成图片中...",
+      "images": "图片",
+      "livePreview": "实时预览",
+      "previewPlaceholder": "抓取URL或生成内容以查看预览",
+      "clearForm": "清空表单",
+      "publishToPlatform": "发布到平台",
+      "errors": {
+        "enterUrl": "请输入要抓取的URL",
+        "generateContentFirst": "生成图片前请先生成文本内容",
+        "scrapeFailed": "抓取URL失败",
+        "generateFailed": "生成内容失败",
+        "generateImagesFailed": "生成图片失败",
+        "publishFailed": "发布失败"
+      },
+      "success": {
+        "scraped": "从URL成功抓取了 {{count}} 张图片和文本内容！",
+        "generated": "内容生成成功！请查看并根据需要编辑。",
+        "imagesGenerated": "图片已生成！您现在可以发布或重新生成。",
+        "marketplacePublished": "商城列表发布成功！",
+        "educationPublished": "教育项目发布成功！",
+        "jobPublished": "职位发布成功！",
+        "eventPublished": "活动发布成功！"
+      }
+    }
   },
   "remotePreference": {
     "any": "不限",
@@ -1120,6 +1177,7 @@
       "cityPlaceholder": "例如：北京",
       "institutionWebsite": "网站",
       "institutionWebsitePlaceholder": "https://...",
+      "programImages": "项目图片",
       "institutionLogo": "Logo URL",
       "institutionLogoPlaceholder": "https://...",
       "contactEmail": "联系邮箱",
@@ -1235,6 +1293,15 @@
       "allDates": "所有日期",
       "allLocations": "所有地点",
       "clear": "清除",
+      "cultural": "文化",
+      "professional": "职业",
+      "social": "社交",
+      "family": "家庭",
+      "anyTime": "任何时间",
+      "today": "今天",
+      "thisWeek": "本周",
+      "thisMonth": "本月",
+      "weekend": "周末",
       "categories": {
         "networking": "社交",
         "workshop": "研讨会",
@@ -1895,11 +1962,20 @@
     "applicationError": "申请提交失败",
     "alreadyApplied": "您已申请过此职位"
   },
+
   "settings": {
     "title": "账户设置",
     "description": "管理您的账户设置和偏好",
     "general": "基本信息",
     "accountSecurity": "账户安全",
+    "security": {
+      "desc": "管理您的密码和安全偏好",
+      "passwordDesc": "更改密码以保持账户安全",
+      "2fa": "双重认证",
+      "2faDesc": "为您的账户添加额外的安全层",
+      "deleteAccount": "删除账户",
+      "deleteDesc": "永久删除您的账户和所有数据"
+    },
     "notifications": {
       "label": "通知",
       "title": "通知偏好",
@@ -1950,6 +2026,7 @@
       "currentPlan": "当前计划",
       "freePlan": "免费计划",
       "premiumPlan": "高级计划",
+      "upgradePlan": "升级计划",
       "active": "活跃",
       "upgrade": "升级计划",
       "features": {
@@ -1962,9 +2039,15 @@
     },
     "roles": {
       "auPair": "互惠生",
+      "auPairDesc": "管理您的互惠生资料和设置",
+      "editAuPair": "编辑互惠生资料",
       "hostFamily": "寄宿家庭",
       "company": "雇主",
       "jobSeeker": "求职者"
+    },
+    "auPair": {
+      "updateDesc": "更新您的互惠生资料信息和偏好",
+      "viewDesc": "预览您的资料如何显示给寄宿家庭"
     }
   },
   "dashboard": {
@@ -4145,6 +4228,7 @@
     "goHome": "返回首页",
     "signIn": "登录",
     "editProfile": "编辑资料",
+    "viewProfile": "查看资料",
     "message": "发送消息",
     "joined": "加入于",
     "activity": {

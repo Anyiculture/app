@@ -16,6 +16,7 @@ import { JobsAdminPanel } from '../components/admin/jobs/JobsAdminPanel';
 import { CommunityAdminPanel } from '../components/admin/CommunityAdminPanel';
 import { PaymentsAdminPanel } from '../components/admin/PaymentsAdminPanel';
 import { MessagingAdminPanel } from '../components/admin/MessagingAdminPanel';
+import AIContentCreator from '../components/admin/content/AIContentCreator';
 
 export function AdminPortalPage() {
   const { user, signOut } = useAuth();
@@ -83,6 +84,8 @@ export function AdminPortalPage() {
         return <OverviewPanel stats={stats} />;
       case 'users':
         return <UsersAdminPanel />;
+      case 'ai-creator':
+        return <AIContentCreator />;
       case 'jobs':
         return <JobsAdminPanel />;
       case 'marketplace':

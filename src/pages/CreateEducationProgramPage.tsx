@@ -12,6 +12,7 @@ import { ArrowLeft, Plus, X } from 'lucide-react';
 import { LocationCascade } from '../components/ui/LocationCascade';
 import { LANGUAGES } from '../constants/languages';
 import { DOCUMENT_TYPES } from '../constants/educationDocuments';
+import { ImageUpload } from '../components/ui/ImageUpload';
 
 export function CreateEducationProgramPage() {
   const { id } = useParams<{ id: string }>();
@@ -367,13 +368,15 @@ export function CreateEducationProgramPage() {
           onChange={(e) => updateField('institution_website', e.target.value)}
           placeholder={t('education.create.institutionWebsitePlaceholder')}
         />
-        <Input
-         label={t('education.create.institutionLogo')}
-          type="url"
-          value={formData.institution_logo}
-          onChange={(e) => updateField('institution_logo', e.target.value)}
-          placeholder={t('education.create.institutionLogoPlaceholder')}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t('education.create.programImages')}</label>
+          <ImageUpload
+            value={formData.images || []}
+            onChange={(urls) => updateField('images', urls)}
+            maxImages={5}
+            bucketName="education-images"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

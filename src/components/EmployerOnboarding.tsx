@@ -19,6 +19,7 @@ interface EmployerOnboardingProps {
   onComplete?: () => void;
   mode?: 'create' | 'edit' | 'view';
   initialData?: any;
+  adminMode?: boolean;
 }
 
 export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'create', initialData }: EmployerOnboardingProps) {

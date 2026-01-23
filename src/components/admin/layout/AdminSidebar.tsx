@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
+  Sparkles,
   Calendar, 
   ShoppingBag, 
   CreditCard, 
@@ -43,17 +44,18 @@ export function AdminSidebar({ activeTab, onTabChange, onLogout, className }: Ad
         setVisibleModules(modules.filter((m: any) => m.enabled).map((m: any) => m.id));
       } catch (e) {
         // Fallback to all if error
-        setVisibleModules(['visa', 'jobs', 'education', 'marketplace', 'events', 'community', 'au-pair']);
+        setVisibleModules(['visa', 'jobs', 'education', 'marketplace', 'events', 'community', 'au-pair', 'ai-creator']);
       }
     } else {
       // Default all visible
-      setVisibleModules(['visa', 'jobs', 'education', 'marketplace', 'events', 'community', 'au-pair']);
+      setVisibleModules(['visa', 'jobs', 'education', 'marketplace', 'events', 'community', 'au-pair', 'ai-creator']);
     }
   };
 
   const navItems = [
     { id: 'overview', label: 'admin.sidebar.overview', icon: LayoutDashboard },
     { id: 'users', label: 'admin.sidebar.users', icon: Users },
+    { id: 'ai-creator', label: 'AI Ingestion', icon: Sparkles },
     // { id: 'content', label: 'admin.sidebar.content', icon: Upload }, 
     { id: 'events', label: 'admin.sidebar.events', icon: Calendar },
     { id: 'marketplace', label: 'admin.sidebar.store', icon: ShoppingBag },

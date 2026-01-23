@@ -500,8 +500,8 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input 
-                    label={t('auPair.onboarding.familyName')}
-                    placeholder={t('auPair.onboarding.familyNamePlaceholder')}
+                    label={t('hostFamily.familyName')}
+                    placeholder={t('hostFamily.familyNamePlaceholder') || t('auPair.onboarding.familyNamePlaceholder')}
                     value={formData.family_name} 
                     onChange={(e) => updateField('family_name', e.target.value)} 
                     error={errors.family_name}

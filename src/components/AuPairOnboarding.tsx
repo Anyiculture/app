@@ -27,6 +27,7 @@ interface AuPairOnboardingProps {
   onComplete?: () => void;
   mode?: 'create' | 'edit' | 'view';
   initialData?: any;
+  adminMode?: boolean; // Admin creating/editing listing without user account
 }
 
 interface Language {
@@ -34,7 +35,7 @@ interface Language {
   proficiency: string;
 }
 
-export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialData }: AuPairOnboardingProps) {
+export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialData, adminMode = false }: AuPairOnboardingProps) {
   const isEditing = mode === 'edit' || mode === 'view';
   const isViewOnly = mode === 'view';
   const { t, language } = useI18n();
@@ -44,7 +45,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
-  const totalSteps = 9;
+  const totalSteps = 10;
   const [isAdmin, setIsAdmin] = useState(false);
   const [formData, setFormData] = useState({
     // Step 1: Basic Info
@@ -69,6 +70,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     childcare_skills: [] as string[],
     childcare_experience_desc: '',
     education_level: '',
+    field_of_study: '',
     childcare_experience_years: 0,
     // Step 4: Rules & Values (Section C)
     acceptable_house_rules: [] as string[],
@@ -127,17 +129,25 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     }
 
     async function loadExistingProfile() {
-      if (!userId || mode === 'create') return;
+      if (!userId && !initialData?.profileId) return;
+      if (mode === 'create') return;
       
       try {
-        const { data, error } = await supabase
-          .from('au_pair_profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
+        let data;
+        if (initialData?.profileId && adminMode) {
+          // Admin editing mode: load by profile ID
+          data = await auPairService.getAuPairProfileById(initialData.profileId);
+        } else if (userId) {
+          // Normal user editing: load by user ID
+          const response = await supabase
+            .from('au_pair_profiles')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (response.error) throw response.error;
+          data = response.data;
+        }
 
-        if (error) throw error;
-        
         if (data) {
           setFormData(prev => ({
             ...prev,
@@ -244,21 +254,26 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
           check('childcare_experience_desc', validators.required("Please describe your experience"), formData.childcare_experience_desc);
           break;
 
-        case 4: // Rules
+        case 4: // Education
+          check('education_level', validators.required(), formData.education_level);
+          check('field_of_study', validators.required(), formData.field_of_study);
+          break;
+
+        case 5: // Rules
           // Optional
           break;
 
-        case 5: // Preferences
+        case 6: // Preferences
           check('preferred_family_type', validators.minSelection(1), formData.preferred_family_type);
           check('accommodation_preference', validators.required(), formData.accommodation_preference);
           break;
 
-        case 6: // Availability
+        case 7: // Availability
           check('availability_start_date', validators.required(), formData.availability_start_date);
           check('duration_months', validators.required(), formData.duration_months);
           break;
 
-        case 7: // Languages
+        case 8: // Languages
           if (formData.languages.length === 0) {
              newErrors['languages'] = "Please add at least one language";
              isValid = false;
@@ -271,7 +286,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
           }
           break;
 
-        case 8: // Media
+        case 9: // Media
           // Optional
           break;
       }
@@ -315,13 +330,9 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     setLoading(true);
     try {
       const fullName = `${formData.first_name} ${formData.middle_name ? formData.middle_name + ' ' : ''}${formData.last_name}`.trim();
-      // Construct display name ensuring it exists (fallback if needed)
       const displayName = `${formData.first_name} ${formData.last_name ? formData.last_name.charAt(0) + '.' : ''}`.trim() || 'Au Pair';
 
-
-
-      await auPairService.createAuPairProfile({
-        // Basic Info
+      const profileData = {
         first_name: formData.first_name,
         middle_name: formData.middle_name,
         last_name: formData.last_name,
@@ -331,60 +342,54 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
         nationality: [formData.nationality_country, formData.nationality_city].filter(Boolean).join(', '),
         current_country: formData.current_country,
         current_city: formData.current_city,
-
-        // Strengths
         personality_traits: formData.personality_traits,
         work_style: formData.work_style,
-
-        // Childcare Skills
         child_age_comfort: formData.experience_age_groups,
         skills: formData.childcare_skills,
         skills_examples: formData.childcare_experience_desc,
         education_level: formData.education_level,
         childcare_experience_years: formData.childcare_experience_years,
-
-        // Rules & Values
         rules_comfort: formData.acceptable_house_rules,
-
-        // Preferences
         preferred_family_type: formData.preferred_family_type,
         deal_breakers: formData.deal_breakers,
         preferred_countries: formData.preferred_countries,
-        preferred_cities: [], // Not collected in form
+        preferred_cities: [],
         live_in_preference: formData.accommodation_preference,
         smoker: formData.smoker,
-
-        // Availability
         available_from: formData.availability_start_date,
         duration_months: formData.duration_months,
-
-        // Languages
         languages: formData.languages,
-
-        // Extra fields that have UI
         bio: `${formData.childcare_experience_desc}\n\nHobbies: ${formData.hobbies.join(', ')}`.trim(),
         has_tattoos: formData.has_tattoos,
-
-        // Required defaults
         previous_au_pair: false,
         profile_photos: formData.profile_photos || [],
         experience_videos: formData.experience_videos || [],
         profile_status: 'active'
-      });
+      };
 
-
-      await auPairService.completeOnboarding({
-        full_name: fullName,
-        current_city: formData.current_city
-      });
-
-
-      localStorage.removeItem('au_pair_onboarding_draft');
-
-
-      setTimeout(() => {
+      if (adminMode) {
+        // Admin creating/editing listing
+        if (initialData?.profileId) {
+          // Edit existing admin-owned listing
+          await auPairService.updateAdminAuPairProfile(initialData.profileId, profileData);
+        } else {
+          // Create new admin-owned listing
+          await auPairService.createAdminAuPairProfile(profileData);
+        }
+        localStorage.removeItem('au_pair_onboarding_draft');
         if (onComplete) onComplete();
-      }, 1500);
+      } else {
+        // Normal user flow: create user account and profile
+        await auPairService.createAuPairProfile(profileData);
+        await auPairService.completeOnboarding({
+          full_name: fullName,
+          current_city: formData.current_city
+        });
+        localStorage.removeItem('au_pair_onboarding_draft');
+        setTimeout(() => {
+          if (onComplete) onComplete();
+        }, 1500);
+      }
 
     } catch (error: any) {
       console.error('[AuPairOnboarding] Failed to save profile:', error);
@@ -400,107 +405,107 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
   }));
 
   const languageOptions = [
-    { id: 'English', label: t('auPair.onboarding.options.languages.english') || 'English' },
-    { id: 'Chinese (Mandarin)', label: t('auPair.onboarding.options.languages.mandarin') || 'Chinese (Mandarin)' },
-    { id: 'Chinese (Cantonese)', label: t('auPair.onboarding.options.languages.cantonese') || 'Chinese (Cantonese)' },
-    { id: 'Spanish', label: t('auPair.onboarding.options.languages.spanish') || 'Spanish' },
-    { id: 'French', label: t('auPair.onboarding.options.languages.french') || 'French' },
-    { id: 'German', label: t('auPair.onboarding.options.languages.german') || 'German' },
-    { id: 'Japanese', label: t('auPair.onboarding.options.languages.japanese') || 'Japanese' },
-    { id: 'Korean', label: t('auPair.onboarding.options.languages.korean') || 'Korean' },
-    { id: 'Russian', label: t('auPair.onboarding.options.languages.russian') || 'Russian' },
-    { id: 'Italian', label: t('auPair.onboarding.options.languages.italian') || 'Italian' },
-    { id: 'Portuguese', label: t('auPair.onboarding.options.languages.portuguese') || 'Portuguese' }
+    { id: 'English', label: t('auPair.onboarding.languages.english') || 'English' },
+    { id: 'Chinese (Mandarin)', label: t('auPair.onboarding.languages.mandarin') || 'Chinese (Mandarin)' },
+    { id: 'Chinese (Cantonese)', label: t('auPair.onboarding.languages.cantonese') || 'Chinese (Cantonese)' },
+    { id: 'Spanish', label: t('auPair.onboarding.languages.spanish') || 'Spanish' },
+    { id: 'French', label: t('auPair.onboarding.languages.french') || 'French' },
+    { id: 'German', label: t('auPair.onboarding.languages.german') || 'German' },
+    { id: 'Japanese', label: t('auPair.onboarding.languages.japanese') || 'Japanese' },
+    { id: 'Korean', label: t('auPair.onboarding.languages.korean') || 'Korean' },
+    { id: 'Russian', label: t('auPair.onboarding.languages.russian') || 'Russian' },
+    { id: 'Italian', label: t('auPair.onboarding.languages.italian') || 'Italian' },
+    { id: 'Portuguese', label: t('auPair.onboarding.languages.portuguese') || 'Portuguese' }
   ];
 
   const hobbiesOptions = [
-    { id: 'reading', label: t('auPair.onboarding.options.hobbies.reading') },
-    { id: 'cooking', label: t('auPair.onboarding.options.hobbies.cooking') },
-    { id: 'travel', label: t('auPair.onboarding.options.hobbies.travel') },
-    { id: 'music', label: t('auPair.onboarding.options.hobbies.music') },
-    { id: 'sports', label: t('auPair.onboarding.options.hobbies.sports') },
-    { id: 'photography', label: t('auPair.onboarding.options.hobbies.photography') },
-    { id: 'arts_crafts', label: t('auPair.onboarding.options.hobbies.arts_crafts') },
-    { id: 'hiking', label: t('auPair.onboarding.options.hobbies.hiking') },
-    { id: 'swimming', label: t('auPair.onboarding.options.hobbies.swimming') },
-    { id: 'gardening', label: t('auPair.onboarding.options.hobbies.gardening') },
-    { id: 'dancing', label: t('auPair.onboarding.options.hobbies.dancing') },
-    { id: 'writing', label: t('auPair.onboarding.options.hobbies.writing') },
-    { id: 'volunteering', label: t('auPair.onboarding.options.hobbies.volunteering') },
-    { id: 'yoga', label: t('auPair.onboarding.options.hobbies.yoga') },
-    { id: 'gaming', label: t('auPair.onboarding.options.hobbies.gaming') }
+    { id: 'reading', label: t('auPair.onboarding.basic.hobbies.reading') },
+    { id: 'cooking', label: t('auPair.onboarding.basic.hobbies.cooking') },
+    { id: 'travel', label: t('auPair.onboarding.basic.hobbies.travel') },
+    { id: 'music', label: t('auPair.onboarding.basic.hobbies.music') },
+    { id: 'sports', label: t('auPair.onboarding.basic.hobbies.sports') },
+    { id: 'photography', label: t('auPair.onboarding.basic.hobbies.photography') },
+    { id: 'arts_crafts', label: t('auPair.onboarding.basic.hobbies.arts_crafts') },
+    { id: 'hiking', label: t('auPair.onboarding.basic.hobbies.hiking') },
+    { id: 'swimming', label: t('auPair.onboarding.basic.hobbies.swimming') },
+    { id: 'gardening', label: t('auPair.onboarding.basic.hobbies.gardening') },
+    { id: 'dancing', label: t('auPair.onboarding.basic.hobbies.dancing') },
+    { id: 'writing', label: t('auPair.onboarding.basic.hobbies.writing') },
+    { id: 'volunteering', label: t('auPair.onboarding.basic.hobbies.volunteering') },
+    { id: 'yoga', label: t('auPair.onboarding.basic.hobbies.yoga') },
+    { id: 'gaming', label: t('auPair.onboarding.basic.hobbies.gaming') }
   ].sort((a,b) => a.label.localeCompare(b.label));
 
   const personalityOptions = [
-    { id: 'energetic', label: t('auPair.onboarding.options.traits.energetic') },
-    { id: 'playful', label: t('auPair.onboarding.options.traits.playful') },
-    { id: 'calm', label: t('auPair.onboarding.options.traits.calm') },
-    { id: 'patient', label: t('auPair.onboarding.options.traits.patient') },
-    { id: 'organized', label: t('auPair.onboarding.options.traits.organized') },
-    { id: 'tidy', label: t('auPair.onboarding.options.traits.tidy') },
-    { id: 'creative', label: t('auPair.onboarding.options.traits.creative') },
-    { id: 'artistic', label: t('auPair.onboarding.options.traits.artistic') },
-    { id: 'nurturing', label: t('auPair.onboarding.options.traits.nurturing') },
-    { id: 'warm', label: t('auPair.onboarding.options.traits.warm') },
-    { id: 'independent', label: t('auPair.onboarding.options.traits.independent') },
-    { id: 'flexible', label: t('auPair.onboarding.options.traits.flexible') },
-    { id: 'adaptable', label: t('auPair.onboarding.options.traits.adaptable') },
-    { id: 'responsible', label: t('auPair.onboarding.options.traits.responsible') },
-    { id: 'serious', label: t('auPair.onboarding.options.traits.serious') },
-    { id: 'outgoing', label: t('auPair.onboarding.options.traits.outgoing') },
-    { id: 'introverted', label: t('auPair.onboarding.options.traits.introverted') },
-    { id: 'outdoorsy', label: t('auPair.onboarding.options.traits.outdoorsy') },
-    { id: 'empathetic', label: t('auPair.onboarding.options.traits.empathetic') },
-    { id: 'reliable', label: t('auPair.onboarding.options.traits.reliable') },
-    { id: 'honest', label: t('auPair.onboarding.options.traits.honest') },
-    { id: 'enthusiastic', label: t('auPair.onboarding.options.traits.enthusiastic') },
-    { id: 'proactive', label: t('auPair.onboarding.options.traits.proactive') },
+    { id: 'energetic', label: t('auPair.onboarding.strengths.traits.energetic') },
+    { id: 'playful', label: t('auPair.onboarding.strengths.traits.playful') },
+    { id: 'calm', label: t('auPair.onboarding.strengths.traits.calm') },
+    { id: 'patient', label: t('auPair.onboarding.strengths.traits.patient') },
+    { id: 'organized', label: t('auPair.onboarding.strengths.traits.organized') },
+    { id: 'tidy', label: t('auPair.onboarding.strengths.traits.tidy') },
+    { id: 'creative', label: t('auPair.onboarding.strengths.traits.creative') },
+    { id: 'artistic', label: t('auPair.onboarding.strengths.traits.artistic') },
+    { id: 'nurturing', label: t('auPair.onboarding.strengths.traits.nurturing') },
+    { id: 'warm', label: t('auPair.onboarding.strengths.traits.warm') },
+    { id: 'independent', label: t('auPair.onboarding.strengths.traits.independent') },
+    { id: 'flexible', label: t('auPair.onboarding.strengths.traits.flexible') },
+    { id: 'adaptable', label: t('auPair.onboarding.strengths.traits.adaptable') },
+    { id: 'responsible', label: t('auPair.onboarding.strengths.traits.responsible') },
+    { id: 'serious', label: t('auPair.onboarding.strengths.traits.serious') },
+    { id: 'outgoing', label: t('auPair.onboarding.strengths.traits.outgoing') },
+    { id: 'introverted', label: t('auPair.onboarding.strengths.traits.introverted') },
+    { id: 'outdoorsy', label: t('auPair.onboarding.strengths.traits.outdoorsy') },
+    { id: 'empathetic', label: t('auPair.onboarding.strengths.traits.empathetic') },
+    { id: 'reliable', label: t('auPair.onboarding.strengths.traits.reliable') },
+    { id: 'honest', label: t('auPair.onboarding.strengths.traits.honest') },
+    { id: 'enthusiastic', label: t('auPair.onboarding.strengths.traits.enthusiastic') },
+    { id: 'proactive', label: t('auPair.onboarding.strengths.traits.proactive') },
   ].sort((a,b) => a.label.localeCompare(b.label));
 
   const workStyleOptions = [
-    { id: 'initiative', label: t('auPair.onboarding.options.workStyle.initiative') },
-    { id: 'direction', label: t('auPair.onboarding.options.workStyle.direction') },
-    { id: 'collaborative', label: t('auPair.onboarding.options.workStyle.collaborative') },
-    { id: 'autonomous', label: t('auPair.onboarding.options.workStyle.autonomous') },
-    { id: 'structured', label: t('auPair.onboarding.options.workStyle.structured') },
-    { id: 'flexible', label: t('auPair.onboarding.options.workStyle.flexible') },
-    { id: 'communicative', label: t('auPair.onboarding.options.workStyle.communicative') },
-    { id: 'observer', label: t('auPair.onboarding.options.workStyle.observer') }
+    { id: 'initiative', label: t('auPair.onboarding.strengths.workStyle.initiative') },
+    { id: 'direction', label: t('auPair.onboarding.strengths.workStyle.direction') },
+    { id: 'collaborative', label: t('auPair.onboarding.strengths.workStyle.collaborative') },
+    { id: 'autonomous', label: t('auPair.onboarding.strengths.workStyle.autonomous') },
+    { id: 'structured', label: t('auPair.onboarding.strengths.workStyle.structured') },
+    { id: 'flexible', label: t('auPair.onboarding.strengths.workStyle.flexible') },
+    { id: 'communicative', label: t('auPair.onboarding.strengths.workStyle.communicative') },
+    { id: 'observer', label: t('auPair.onboarding.strengths.workStyle.observer') }
   ];
 
   const ageComfortOptions = [
-    { id: 'infants', label: t('auPair.onboarding.options.ageComfort.infants') },
-    { id: 'toddlers', label: t('auPair.onboarding.options.ageComfort.toddlers') },
-    { id: 'preschool', label: t('auPair.onboarding.options.ageComfort.preschool') },
-    { id: 'school_age', label: t('auPair.onboarding.options.ageComfort.school_age') },
-    { id: 'teenagers', label: t('auPair.onboarding.options.ageComfort.teenagers') }
+    { id: 'infants', label: t('auPair.onboarding.skills.ageComfort.infants') },
+    { id: 'toddlers', label: t('auPair.onboarding.skills.ageComfort.toddlers') },
+    { id: 'preschool', label: t('auPair.onboarding.skills.ageComfort.preschool') },
+    { id: 'school_age', label: t('auPair.onboarding.skills.ageComfort.school_age') },
+    { id: 'teenagers', label: t('auPair.onboarding.skills.ageComfort.teenagers') }
   ];
 
   const skillsOptions = [
-    { id: 'cooking', label: t('auPair.onboarding.options.skills.cooking') },
-    { id: 'driving', label: t('auPair.onboarding.options.skills.driving') },
-    { id: 'swimming', label: t('auPair.onboarding.options.skills.swimming') },
-    { id: 'tutoring', label: t('auPair.onboarding.options.skills.tutoring') },
-    { id: 'first_aid', label: t('auPair.onboarding.options.skills.first_aid') },
-    { id: 'sports', label: t('auPair.onboarding.options.skills.sports') },
-    { id: 'arts', label: t('auPair.onboarding.options.skills.arts') },
-    { id: 'music', label: t('auPair.onboarding.options.skills.music') },
-    { id: 'pets', label: t('auPair.onboarding.options.skills.pets') },
-    { id: 'special_needs', label: t('auPair.onboarding.options.skills.special_needs') },
-    { id: 'infant_care', label: t('auPair.onboarding.options.skills.infant_care') },
-    { id: 'language_teaching', label: t('auPair.onboarding.options.skills.language_teaching') },
-    { id: 'housekeeping', label: t('auPair.onboarding.options.skills.housekeeping') },
-    { id: 'gardening', label: t('auPair.onboarding.options.skills.gardening') },
-    { id: 'elderly_care', label: t('auPair.onboarding.options.skills.elderly_care') }
+    { id: 'cooking', label: t('auPair.onboarding.skills.options.cooking') },
+    { id: 'driving', label: t('auPair.onboarding.skills.options.driving') },
+    { id: 'swimming', label: t('auPair.onboarding.skills.options.swimming') },
+    { id: 'tutoring', label: t('auPair.onboarding.skills.options.tutoring') },
+    { id: 'first_aid', label: t('auPair.onboarding.skills.options.first_aid') },
+    { id: 'sports', label: t('auPair.onboarding.skills.options.sports') },
+    { id: 'arts', label: t('auPair.onboarding.skills.options.arts') },
+    { id: 'music', label: t('auPair.onboarding.skills.options.music') },
+    { id: 'pets', label: t('auPair.onboarding.skills.options.pets') },
+    { id: 'special_needs', label: t('auPair.onboarding.skills.options.special_needs') },
+    { id: 'infant_care', label: t('auPair.onboarding.skills.options.infant_care') },
+    { id: 'language_teaching', label: t('auPair.onboarding.skills.options.language_teaching') },
+    { id: 'housekeeping', label: t('auPair.onboarding.skills.options.housekeeping') },
+    { id: 'gardening', label: t('auPair.onboarding.skills.options.gardening') },
+    { id: 'elderly_care', label: t('auPair.onboarding.skills.options.elderly_care') }
   ];
 
   const rulesComfortOptions = [
-    { id: 'curfew', label: t('auPair.onboarding.options.rules.curfew') },
-    { id: 'no_guests', label: t('auPair.onboarding.options.rules.no_guests') },
-    { id: 'screen_limit', label: t('auPair.onboarding.options.rules.screen_limit') },
-    { id: 'cleaning', label: t('auPair.onboarding.options.rules.cleaning') },
-    { id: 'pet_care', label: t('auPair.onboarding.options.rules.pet_care') },
-    { id: 'vegan', label: t('auPair.onboarding.options.rules.vegan') }
+    { id: 'curfew', label: t('auPair.onboarding.rules.options.curfew') },
+    { id: 'no_guests', label: t('auPair.onboarding.rules.options.no_guests') },
+    { id: 'screen_limit', label: t('auPair.onboarding.rules.options.screen_limit') },
+    { id: 'cleaning', label: t('auPair.onboarding.rules.options.cleaning') },
+    { id: 'pet_care', label: t('auPair.onboarding.rules.options.pet_care') },
+    { id: 'vegan', label: t('auPair.onboarding.rules.options.vegan') }
   ];
 
   const traitsOptions = personalityOptions;
@@ -510,12 +515,12 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
   const rulesOptions = rulesComfortOptions;
   
   const familyTypeOptions = [
-    { id: 'active', label: t('auPair.onboarding.options.familyType.active') },
-    { id: 'intellectual', label: t('auPair.onboarding.options.familyType.intellectual') },
-    { id: 'travel', label: t('auPair.onboarding.options.familyType.travel') },
-    { id: 'homebody', label: t('auPair.onboarding.options.familyType.homebody') },
-    { id: 'large', label: t('auPair.onboarding.options.familyType.large') },
-    { id: 'single_parent', label: t('auPair.onboarding.options.familyType.single_parent') }
+    { id: 'active', label: t('auPair.onboarding.preferences.familyType.active') },
+    { id: 'intellectual', label: t('auPair.onboarding.preferences.familyType.intellectual') },
+    { id: 'travel', label: t('auPair.onboarding.preferences.familyType.travel') },
+    { id: 'homebody', label: t('auPair.onboarding.preferences.familyType.homebody') },
+    { id: 'large', label: t('auPair.onboarding.preferences.familyType.large') },
+    { id: 'single_parent', label: t('auPair.onboarding.preferences.familyType.single_parent') }
   ];
   const OPTION_CATEGORIES = {
     "hobbies": "auPair.onboarding.options.hobbies",
@@ -524,7 +529,8 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     "ageComfort": "auPair.onboarding.options.ageComfort",
     "skills": "auPair.onboarding.options.skills",
     "rules": "auPair.onboarding.options.rules",
-    "familyType": "auPair.onboarding.options.familyType"
+    "familyType": "auPair.onboarding.options.familyType",
+    "languages": "auPair.onboarding.languages"
   } as const;
 
 
@@ -539,27 +545,28 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
 
   const renderSectionTitle = (currentStep: number) => {
     switch(currentStep) {
-      case 1: return t('auPair.onboarding.steps.basic');
-      case 2: return t('auPair.onboarding.steps.strengths');
-      case 3: return t('auPair.onboarding.steps.skills');
-      case 4: return t('auPair.onboarding.steps.rules');
-      case 5: return t('auPair.onboarding.steps.preferences');
-      case 6: return t('auPair.onboarding.steps.availability');
-      case 7: return t('auPair.onboarding.steps.languages');
-      case 8: return t('auPair.onboarding.steps.media') || "Photos & Video";
-      default: return t('auPair.onboarding.steps.review');
+      case 1: return t('auPair.onboarding.basic.title') || "Basic Info";
+      case 2: return t('auPair.onboarding.strengths.title') || "Strengths & Personality";
+      case 3: return t('auPair.onboarding.skills.title') || "Childcare Skills";
+      case 4: return t('auPair.onboarding.education.title') || "Education";
+      case 5: return t('auPair.onboarding.rules.title') || "House Rules";
+      case 6: return t('auPair.onboarding.preferences.title') || "Preferences";
+      case 7: return t('auPair.onboarding.availability.title') || "Availability";
+      case 8: return t('auPair.onboarding.languages.title') || "Languages";
+      case 9: return t('auPair.onboarding.media.title') || "Photos & Video";
+      default: return t('auPair.onboarding.review.title') || "Review Profile";
     }
   };
 
   return (
     <>
-    <div className={`relative ${isEditing ? '' : 'min-h-[80vh] flex items-center justify-center py-20 px-6'}`}>
+    <div className={`relative ${isEditing ? 'flex items-center justify-center py-12' : 'min-h-[80vh] flex items-center justify-center py-20 px-6'}`}>
       {!isEditing && <BackgroundBlobs />}
       
       <motion.div 
         initial={isEditing ? {} : { opacity: 0, y: 30 }}
         animate={isEditing ? {} : { opacity: 1, y: 0 }}
-        className={`w-full max-w-4xl relative z-10 ${isEditing ? '' : 'mx-auto'}`}
+        className={`w-full max-w-4xl relative z-10 mx-auto`}
       >
         <GlassCard className={`overflow-hidden border-white/60 bg-white/80 backdrop-blur-3xl shadow-2xl ${isEditing ? 'rounded-[2rem] border-none shadow-none bg-transparent backdrop-blur-none' : 'rounded-[3rem]'}`}>
           
@@ -651,7 +658,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                 )}
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <Input 
-                      label={t('auPair.onboarding.step1.firstName')} 
+                      label={t('auPair.onboarding.basic.firstName')} 
                       value={formData.first_name} 
                       onChange={(e) => updateField('first_name', e.target.value)}
                       error={errors.first_name}
@@ -659,7 +666,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                       disabled={isViewOnly}
                     />
                     <Input 
-                      label={t('auPair.onboarding.step1.lastName')} 
+                      label={t('auPair.onboarding.basic.lastName')} 
                       value={formData.last_name} 
                       onChange={(e) => updateField('last_name', e.target.value)}
                       error={errors.last_name}
@@ -667,7 +674,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                       disabled={isViewOnly}
                     />
                      <Input 
-                      label={`${t('auPair.onboarding.step1.middleName')} (${t('auPair.onboarding.step1.optional')})`}
+                      label={`${t('auPair.onboarding.basic.middleName')} (${t('auPair.onboarding.basic.optional')})`}
                       value={formData.middle_name || ''} 
                       onChange={(e) => updateField('middle_name', e.target.value)}
                       disabled={isViewOnly}
@@ -675,7 +682,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                  </div>
 
                  <div className="bg-pink-50/50 p-4 rounded-lg border border-pink-100">
-                    <p className="text-sm text-pink-800 font-medium mb-2">{t('auPair.onboarding.step1.displayNameLabel')}</p>
+                    <p className="text-sm text-pink-800 font-medium mb-2">{t('auPair.onboarding.basic.displayNameLabel')}</p>
                     <p className="text-lg font-bold text-gray-900">
                       {formData.first_name || '...'} {formData.last_name?.charAt(0)}
                     </p>
@@ -683,7 +690,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Input 
-                      label={t('auPair.onboarding.step1.age')} 
+                      label={t('auPair.onboarding.basic.age')} 
                       type="number"
                       min="18"
                       max="35"
@@ -695,11 +702,11 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                     />
                     
                      <SingleSelectField 
-                        label={t('auPair.onboarding.step1.gender')}
+                        label={t('auPair.onboarding.basic.gender')}
                         options={[
-                          { id: 'female', label: t('auPair.onboarding.step1.female') },
-                          { id: 'male', label: t('auPair.onboarding.step1.male') },
-                          { id: 'non-binary', label: t('auPair.onboarding.step1.nonBinary') }
+                          { id: 'female', label: t('auPair.onboarding.basic.female') },
+                          { id: 'male', label: t('auPair.onboarding.basic.male') },
+                          { id: 'non-binary', label: t('auPair.onboarding.basic.nonBinary') }
                         ]}
                         value={formData.gender}
                         onChange={(val) => updateField('gender', val)}
@@ -710,10 +717,10 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                  </div>
 
                  <div className="border-t border-gray-100 pt-6">
-                   <h3 className="text-sm font-semibold text-gray-900 mb-4">{t('auPair.onboarding.step1.nationalityLocation')}</h3>
+                   <h3 className="text-sm font-semibold text-gray-900 mb-4">{t('auPair.onboarding.basic.nationalityLocation')}</h3>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        <Select
-                          label={t('auPair.onboarding.step1.nationality')}
+                          label={t('auPair.onboarding.basic.nationality')}
                           options={[
                             { value: '', label: t('common.selectNationality') || 'Select nationality' },
                             ...nationalityOptions.map(opt => ({ value: opt.id, label: opt.label }))
@@ -726,7 +733,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                        />
 
                        <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('auPair.onboarding.step1.currentLocation')}</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('auPair.onboarding.basic.currentLocation')}</label>
                         <LocationCascade 
                           country={formData.current_country}
                           province={formData.current_province}
@@ -767,26 +774,26 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                   </h3>
                 )}
                   <MultiSelectField
-                    label={t('auPair.onboarding.step2.traitsLabel')}
-                    description={t('auPair.onboarding.step2.traitsDesc')}
+                    label={t('auPair.onboarding.strengths.traitsLabel')}
+                    description={t('auPair.onboarding.strengths.traitsDesc')}
                     options={getTranslatedOptions('traits', traitsOptions)}
                     value={formData.personality_traits}
                     onChange={(val) => updateField('personality_traits', val)}
                     maxSelection={5}
                     variant="grid"
-                    placeholder={t('auPair.onboarding.step2.traitsPlaceholder')}
+                    placeholder={t('auPair.onboarding.strengths.traitsPlaceholder')}
                     error={errors.personality_traits}
                     disabled={isViewOnly}
                   />
 
                   <MultiSelectField 
-                     label={t('auPair.onboarding.step2.workStyleLabel')}
-                     description={t('auPair.onboarding.step2.workStyleDesc')}
+                     label={t('auPair.onboarding.strengths.workStyleLabel')}
+                     description={t('auPair.onboarding.strengths.workStyleDesc')}
                      options={getTranslatedOptions('workStyle', workStyleOptions)}
                      value={formData.work_style}
                      onChange={(val) => updateField('work_style', val)}
                      variant="grid"
-                     placeholder={t('auPair.onboarding.step2.workStylePlaceholder')}
+                     placeholder={t('auPair.onboarding.strengths.workStylePlaceholder')}
                      error={errors.work_style}
                      disabled={isViewOnly}
                   />
@@ -802,7 +809,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                   </h3>
                 )}
                  <MultiSelectField
-                    label={t('auPair.onboarding.step3.ageComfortLabel')}
+                    label={t('auPair.onboarding.skills.ageComfortLabel')}
                     options={getTranslatedOptions('ageComfort', ageComfortOptions)}
                     value={formData.experience_age_groups}
                     onChange={(val) => updateField('experience_age_groups', val)}
@@ -812,7 +819,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                   />
 
                   <MultiSelectField
-                    label={t('auPair.onboarding.step3.skillsLabel')}
+                    label={t('auPair.onboarding.skills.skillsLabel')}
                     options={getTranslatedOptions('skills', skillsOptions)}
                     value={formData.childcare_skills}
                     onChange={(val) => updateField('childcare_skills', val)}
@@ -822,8 +829,8 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                   />
 
                   <Textarea 
-                     label={t('auPair.onboarding.step3.experienceLabel')}
-                     placeholder={t('auPair.onboarding.step3.experiencePlaceholder')}
+                     label={t('auPair.onboarding.skills.experienceLabel')}
+                     placeholder={t('auPair.onboarding.skills.experiencePlaceholder')}
                      value={formData.childcare_experience_desc}
                      onChange={(e) => updateField('childcare_experience_desc', e.target.value)}
                      rows={5}
@@ -833,7 +840,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
               </div>
             )}
 
-            {/* Step 4: Rules */}
+            {/* Step 4: Education */}
             {(isEditing || step === 4) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
                 {isEditing && (
@@ -841,9 +848,45 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                     {renderSectionTitle(4)}
                   </h3>
                 )}
+                 <SingleSelectField 
+                    label={t('auPair.onboarding.education.level') || 'Education Level'}
+                    options={[
+                      { id: 'high_school', label: t('auPair.onboarding.education.highSchool') || 'High School' },
+                      { id: 'associate', label: t('auPair.onboarding.education.associate') || 'Associate Degree' },
+                      { id: 'bachelor', label: t('auPair.onboarding.education.bachelor') || "Bachelor's Degree" },
+                      { id: 'master', label: t('auPair.onboarding.education.master') || "Master's Degree" },
+                      { id: 'phd', label: t('auPair.onboarding.education.phd') || 'PhD' }
+                    ]}
+                    value={formData.education_level}
+                    onChange={(val) => updateField('education_level', val)}
+                    layout="column"
+                    error={errors.education_level}
+                    disabled={isViewOnly}
+                 />
+
+                 <Input 
+                   label={t('auPair.onboarding.education.fieldOfStudy') || 'Field of Study'}
+                   placeholder={t('auPair.onboarding.education.fieldPlaceholder') || 'e.g. Psychology, Education'}
+                   value={formData.field_of_study || ''}
+                   onChange={(e) => updateField('field_of_study', e.target.value)}
+                   required
+                   error={errors.field_of_study}
+                   disabled={isViewOnly}
+                 />
+              </div>
+            )}
+
+            {/* Step 5: Rules */}
+            {(isEditing || step === 5) && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+                {isEditing && (
+                  <h3 className="text-lg font-bold text-gray-900 pb-2 border-b border-gray-100">
+                    {renderSectionTitle(5)}
+                  </h3>
+                )}
                   <MultiSelectField
-                    label={t('auPair.onboarding.step4.rulesLabel')}
-                    description={t('auPair.onboarding.step4.rulesDesc')}
+                    label={t('auPair.onboarding.rules.label')}
+                    description={t('auPair.onboarding.rules.desc')}
                     options={getTranslatedOptions('rules', rulesOptions)}
                     value={formData.acceptable_house_rules}
                     onChange={(val) => updateField('acceptable_house_rules', val)}
@@ -853,16 +896,16 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
               </div>
             )}
 
-            {/* Step 5: Preferences */}
-            {(isEditing || step === 5) && (
+            {/* Step 6: Preferences */}
+            {(isEditing || step === 6) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
                 {isEditing && (
                   <h3 className="text-lg font-bold text-gray-900 pb-2 border-b border-gray-100">
-                    {renderSectionTitle(5)}
+                    {renderSectionTitle(6)}
                   </h3>
                 )}
                  <SingleSelectField
-                    label={t('auPair.onboarding.step5.familyTypeLabel')}
+                    label={t('auPair.onboarding.preferences.familyTypeLabel')}
                     options={getTranslatedOptions('familyType', familyTypeOptions)}
                     value={formData.preferred_family_type ? formData.preferred_family_type[0] : ''}
                     onChange={(val) => updateField('preferred_family_type', [val])}
@@ -881,11 +924,11 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                  />
 
                  <SingleSelectField
-                    label={t('auPair.onboarding.step5.accommodationLabel')}
+                    label={t('auPair.onboarding.preferences.accommodationLabel')}
                     options={[
-                      { id: 'live-in', label: t('auPair.onboarding.step5.liveIn') },
-                      { id: 'live-out', label: t('auPair.onboarding.step5.liveOut') },
-                      { id: 'either', label: t('auPair.onboarding.step5.either') }
+                      { id: 'live-in', label: t('auPair.onboarding.preferences.liveIn') },
+                      { id: 'live-out', label: t('auPair.onboarding.preferences.liveOut') },
+                      { id: 'either', label: t('auPair.onboarding.preferences.either') }
                     ]}
                     value={formData.accommodation_preference}
                     onChange={(val) => updateField('accommodation_preference', val)}
@@ -896,17 +939,17 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
               </div>
             )}
 
-            {/* Step 6: Availability */}
-            {(isEditing || step === 6) && (
+            {/* Step 7: Availability */}
+            {(isEditing || step === 7) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
                 {isEditing && (
                   <h3 className="text-lg font-bold text-gray-900 pb-2 border-b border-gray-100">
-                    {renderSectionTitle(6)}
+                    {renderSectionTitle(7)}
                   </h3>
                 )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      <Input 
-                       label={t('auPair.onboarding.step6.availableFrom')}
+                       label={t('auPair.onboarding.availability.availableFrom')}
                        type="date"
                        min={new Date().toISOString().split('T')[0]}
                        value={formData.availability_start_date}
@@ -916,7 +959,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                        disabled={isViewOnly}
                      />
                      <Input 
-                       label={t('auPair.onboarding.step6.duration')}
+                       label={t('auPair.onboarding.availability.duration')}
                        type="number"
                        min="1"
                        max="24"
@@ -930,21 +973,21 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
               </div>
             )}
 
-            {/* Step 7: Languages */}
-            {(isEditing || step === 7) && (
+            {/* Step 8: Languages */}
+            {(isEditing || step === 8) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
                 {isEditing && (
                   <h3 className="text-lg font-bold text-gray-900 pb-2 border-b border-gray-100">
-                    {renderSectionTitle(7)}
+                    {renderSectionTitle(8)}
                   </h3>
                 )}
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">{t('auPair.onboarding.step7.title')}</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">{t('auPair.onboarding.languages.title')}</h3>
                   
                   {formData.languages.map((_, index) => (
                     <div key={index} className="flex gap-4 items-start bg-gray-50 p-4 rounded-xl">
                       <div className="flex-1 space-y-4">
                          <SingleSelectField 
-                          label={t('auPair.onboarding.step7.languageLabel')}
+                          label={t('auPair.onboarding.languages.languageLabel')}
                           options={languageOptions}
                           value={formData.languages[index].language}
                           onChange={(val) => updateLanguage(index, 'language', val)}
@@ -975,21 +1018,21 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
 
                   {!isViewOnly && (
                     <Button onClick={addLanguage} variant="outline" className="w-full border-dashed">
-                      + {t('auPair.onboarding.step7.addLanguage')}
+                      + {t('auPair.onboarding.languages.addLanguage')}
                     </Button>
                   )}
               </div>
             )}
 
-            {/* Step 8: Media */}
-            {(isEditing || step === 8) && (
+            {/* Step 9: Media */}
+            {(isEditing || step === 9) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
                 {isEditing && (
                   <h3 className="text-lg font-bold text-gray-900 pb-2 border-b border-gray-100">
-                    {renderSectionTitle(8)}
+                    {renderSectionTitle(9)}
                   </h3>
                 )}
-                 <h3 className="text-xl font-bold text-gray-900 mb-4">{t('auPair.onboarding.steps.media')}</h3>
+                 <h3 className="text-xl font-bold text-gray-900 mb-4">{t('auPair.onboarding.media.title')}</h3>
                  <p className="text-gray-500 mb-6">{t('auPair.onboarding.media.photosDesc')}</p>
 
                  {/* Profile Photos */}
@@ -1020,7 +1063,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                       maxSizeMB={50} // 50MB
                       acceptedTypes=".mp4,.mov,.webm"
                       bucketName="au-pair-videos"
-                      label={t('auPair.onboarding.field.uploadVideo') || "Upload Video"}
+                      label={t('auPair.onboarding.media.uploadVideo') || "Upload Video"}
                       disabled={isViewOnly}
                     />
                     <p className="text-xs text-gray-500">
@@ -1033,8 +1076,8 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
             {/* Step 9: Review */}
             {(!isEditing && step === 9) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
-                 <h3 className="text-xl font-bold text-gray-900 mb-4">{t('auPair.onboarding.step9.title') || "Review Profile"}</h3>
-                 <p className="text-gray-500 mb-6">{t('auPair.onboarding.step9.desc') || "Please review your information before submitting."}</p>
+                 <h3 className="text-xl font-bold text-gray-900 mb-4">{t('auPair.onboarding.review.title') || "Review Profile"}</h3>
+                 <p className="text-gray-500 mb-6">{t('auPair.onboarding.review.desc') || "Please review your information before submitting."}</p>
 
                  <div className="space-y-4">
                     {/* Basic Info */}

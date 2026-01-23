@@ -32,6 +32,12 @@
       "familyPhotos": "Family Photos"
     }
   },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "closed": "Closed",
+    "pending": "Pending"
+  },
   "common": {
     "account": "Account",
     "accommodation": "Accommodation",
@@ -58,6 +64,7 @@
     "candidate": "Candidate",
     "change": "Change",
     "children": "Children",
+    "enable": "Enable",
     "city": "City",
     "clear": "Clear",
     "clearAllFilters": "Clear All Filters",
@@ -103,7 +110,7 @@
     },
     "edit": "Edit",
     "editProfile": "Edit Profile",
-    "enable": "Enable",
+
     "error": "Error",
     "everywhere": "Everywhere",
     "experience": "Experience",
@@ -891,7 +898,56 @@
     "applicationUpdated": "Application updated successfully",
     "conversationFailed": "Failed to start conversation",
     "statusUpdateFailed": "Failed to update status",
-    "activityLogSubtitle": "Recent system activities"
+    "activityLogSubtitle": "Recent system activities",
+    "aiContent": {
+      "title": "AI Content Creator",
+      "subtitle": "Scrape URLs or generate professional listings with AI",
+      "configuration": "Configuration",
+      "scrapeFromUrl": "Scrape from URL (Optional)",
+      "urlPlaceholder": "https://example.com/listing",
+      "scrapeButton": "Scrape",
+      "marketplace": "Marketplace",
+      "education": "Education",
+      "jobs": "Jobs",
+      "events": "Events",
+      "category": "Category",
+      "selectCategory": "Select Category",
+      "programType": "Program Type",
+      "selectProgramType": "Select Program Type",
+      "jobType": "Job Type",
+      "selectJobType": "Select Job Type",
+      "eventType": "Event Type",
+      "selectEventType": "Select Event Type",
+      "generateWithAI": "Generate with AI",
+      "generating": "Generating...",
+      "contentEditable": "Content (Editable)",
+      "title": "Title",
+      "description": "Description",
+      "generateImages": "Generate Matching Images",
+      "generatingImages": "Generating Images...",
+      "images": "Images",
+      "livePreview": "Live Preview",
+      "previewPlaceholder": "Scrape URL or generate content to see preview",
+      "clearForm": "Clear Form",
+      "publishToPlatform": "Publish to Platform",
+      "errors": {
+        "enterUrl": "Please enter a URL to scrape",
+        "generateContentFirst": "Generate text content first before creating images",
+        "scrapeFailed": "Failed to scrape URL",
+        "generateFailed": "Failed to generate content",
+        "generateImagesFailed": "Failed to generate images",
+        "publishFailed": "Failed to publish"
+      },
+      "success": {
+        "scraped": "Scraped {{count}} images and text content from URL!",
+        "generated": "Content generated successfully! Review and edit as needed.",
+        "imagesGenerated": "Images generated! You can now publish or regenerate.",
+        "marketplacePublished": "Marketplace listing published successfully!",
+        "educationPublished": "Education program published successfully!",
+        "jobPublished": "Job listing published successfully!",
+        "eventPublished": "Event published successfully!"
+      }
+    }
   },
   "remotePreference": {
     "any": "Any",
@@ -1399,7 +1455,7 @@
       "required": "*",
       "programTitleEnPlaceholder": "e.g., Intensive Mandarin Course",
       "programTitleZh": "Program Title (Chinese)",
-      "programTitleZhPlaceholder": "e.g., å¼ºåŒ–æ±‰è¯­è¯¾ç¨‹",
+      "programTitleZhPlaceholder": "e.g., 强化汉语课程",
       "descriptionEn": "Description (English)",
       "descriptionEnPlaceholder": "Describe the program curriculum, goals, etc.",
       "descriptionZh": "Description (Chinese)",
@@ -1439,6 +1495,7 @@
       "cityPlaceholder": "e.g., Beijing",
       "institutionWebsite": "Website",
       "institutionWebsitePlaceholder": "https://...",
+      "programImages": "Program Images",
       "institutionLogo": "Logo URL",
       "institutionLogoPlaceholder": "https://...",
       "contactEmail": "Contact Email",
@@ -2385,6 +2442,7 @@
     "recommendedEvents": "Recommended Events",
     "recommendedItems": "Recommended Items"
   },
+
   "settings": {
     "title": "Account Settings",
     "description": "Manage your account settings and preferences",
@@ -2452,9 +2510,15 @@
     },
     "roles": {
       "auPair": "Au Pair",
+      "auPairDesc": "Manage your Au Pair profile and settings",
+      "editAuPair": "Edit Au Pair Profile",
       "hostFamily": "Host Family",
       "company": "Employer",
       "jobSeeker": "Job Seeker"
+    },
+    "auPair": {
+      "updateDesc": "Update your Au Pair profile information and preferences",
+      "viewDesc": "Preview how your profile appears to host families"
     }
   },
   "profilePage": {
@@ -2463,6 +2527,7 @@
     "goHome": "Go Home",
     "signIn": "Sign In",
     "editProfile": "Edit Profile",
+    "viewProfile": "View Profile",
     "message": "Message",
     "joined": "Joined",
     "activity": {

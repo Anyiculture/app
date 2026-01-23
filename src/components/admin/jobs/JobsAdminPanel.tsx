@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../../../contexts/I18nContext';
 import { adminService } from '../../../services/adminService';
 import { AdminPageHeader } from '../ui/AdminPageHeader';
@@ -11,6 +12,7 @@ import { Input } from '../../ui/Input';
 import { useToast } from '../../ui/Toast';
 
 export function JobsAdminPanel() {
+  const navigate = useNavigate();
   const { t } = useI18n();
   const { showToast } = useToast();
   const [jobs, setJobs] = useState<any[]>([]);
@@ -162,17 +164,35 @@ export function JobsAdminPanel() {
         title={t('admin.jobs.title') || 'Job Listings'} 
         description={t('admin.jobs.description') || 'Manage job postings and applications.'}
       >
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <Input
-            placeholder={t('admin.jobs.searchPlaceholder') || "Search jobs..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64"
-          />
-          <Button type="submit" variant="secondary" size="sm">
-            <Search size={16} />
+      <div className="flex items-center gap-3">
+          <Button
+            onClick={() => navigate('/jobs/onboarding/employer')}
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Briefcase size={16} className="mr-2" />
+            {t('admin.jobs.createCompany') || 'Create Company Profile'}
           </Button>
-        </form>
+          <Button
+            onClick={() => navigate('/jobs/post')}
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Briefcase size={16} className="mr-2" />
+            {t('admin.jobs.createJobProfile') || 'Create Job Profile'}
+          </Button>
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <Input
+              placeholder={t('admin.jobs.searchPlaceholder') || "Search jobs..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64"
+            />
+            <Button type="submit" variant="secondary" size="sm">
+              <Search size={16} />
+            </Button>
+          </form>
+        </div>
       </AdminPageHeader>
 
       <AdminTable
