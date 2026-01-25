@@ -609,6 +609,7 @@
       "clearForm": "清空表单",
       "publishToPlatform": "发布到平台",
       "errors": {
+        "titleAndDescriptionRequired": "发布前需要填写标题和描述。",
         "enterUrl": "请输入要抓取的URL",
         "generateContentFirst": "生成图片前请先生成文本内容",
         "scrapeFailed": "抓取URL失败",

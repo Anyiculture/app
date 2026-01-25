@@ -14,6 +14,7 @@ export interface GenerateContentParams {
   programType?: string;
   jobType?: string;
   eventType?: string;
+  sourceText?: string; // Added for parsing user input
   preferences?: {
     tone?: string;
     length?: 'short' | 'medium' | 'long';
@@ -69,14 +70,37 @@ export const aiService = {
   },
 
   async generateImages(params: GenerateImagesParams): Promise<GeneratedImage[]> {
-    const { data, error } = await supabase.functions.invoke('generate-images', {
-      body: params,
-    });
+    try {
+      if (!window.puter) {
+        throw new Error('Puter.js not loaded');
+      }
 
-    if (error) throw error;
-    if (!data.success) throw new Error(data.error || 'Failed to generate images');
+      // Default to DALL-E 3 HD for best quality as requested
+      const model = 'dall-e-3';
+      const quality = 'hd';
+      
+      const images: GeneratedImage[] = [];
+      const count = params.count || 1;
 
-    return data.images;
+      // Generate images sequentially
+      for (let i = 0; i < count; i++) {
+        const imageElement = await window.puter.ai.txt2img(params.prompt, { model, quality });
+        
+        // The imageElement returned is an HTMLImageElement with a src blob/url
+        if (imageElement && imageElement.src) {
+          images.push({
+            url: imageElement.src,
+            description: params.prompt, // Puter doesn't return a description, use prompt
+            prompt: params.prompt
+          });
+        }
+      }
+
+      return images;
+    } catch (error: any) {
+      console.error('Puter.js Generation Error:', error);
+      throw new Error(error.message || 'Failed to generate images with Puter.js');
+    }
   },
 
   async generateListingWithImages(params: GenerateContentParams): Promise<{

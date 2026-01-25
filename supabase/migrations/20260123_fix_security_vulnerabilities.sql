@@ -68,8 +68,21 @@ BEGIN
 END;
 $$;
 
--- 4. is_admin already has SET search_path = public (confirmed in 20260115_fix_admin_roles_recursion.sql)
--- No change needed
+-- 4. Fix is_admin - needs pg_temp added to search_path
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM admin_roles
+    WHERE user_id = auth.uid()
+    AND is_active = true
+    AND role IN ('super_admin', 'admin')
+  );
+$$;
 
 -- 5. Fix get_user_conversations
 DROP FUNCTION IF EXISTS public.get_user_conversations(uuid);
@@ -78,7 +91,6 @@ RETURNS TABLE (
     conversation_id uuid,
     context_type text,
     context_id uuid,
-    context_title text,
     last_message_content text,
     last_message_at timestamptz,
     unread_count bigint,
@@ -95,7 +107,6 @@ AS $$
         c.id as conversation_id,
         c.context_type,
         c.context_id,
-        c.context_title,
         m.content as last_message_content,
         m.created_at as last_message_at,
         (
@@ -105,7 +116,7 @@ AS $$
             AND m2.sender_id != user_id_param
             AND m2.read = false
         ) as unread_count,
-        other_p.user_id as other_user_id,
+        other_p.id as other_user_id,
         other_p.display_name as other_user_name,
         other_p.avatar_url as other_user_avatar,
         COALESCE(
@@ -268,7 +279,8 @@ END;
 $$;
 
 -- 8. Fix is_admin_internal
-DROP FUNCTION IF EXISTS public.is_admin_internal();
+-- Note: Not using DROP here because many RLS policies depend on this function
+-- CREATE OR REPLACE is sufficient when only adding search_path
 CREATE OR REPLACE FUNCTION public.is_admin_internal()
 RETURNS boolean
 LANGUAGE sql
@@ -402,12 +414,13 @@ CREATE OR REPLACE FUNCTION public.get_admin_education_interests()
 RETURNS TABLE (
     id uuid,
     user_id uuid,
-    program_id uuid,
     status text,
     created_at timestamptz,
     user_email text,
     user_name text,
-    program_name text
+    full_name text,
+    email text,
+    phone text
 )
 LANGUAGE sql
 SECURITY DEFINER
@@ -416,16 +429,16 @@ AS $$
     SELECT 
         ei.id,
         ei.user_id,
-        ei.program_id,
         ei.status,
         ei.created_at,
         u.email as user_email,
         p.display_name as user_name,
-        ep.name as program_name
+        ei.full_name,
+        ei.email,
+        ei.phone
     FROM education_interests ei
     LEFT JOIN auth.users u ON ei.user_id = u.id
     LEFT JOIN profiles p ON ei.user_id = p.id
-    LEFT JOIN education_programs ep ON ei.program_id = ep.id
     ORDER BY ei.created_at DESC;
 $$;
 

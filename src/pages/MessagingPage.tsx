@@ -203,6 +203,7 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
 
   const loadMessages = async (id: string) => {
     try {
+      if (!id || id === 'undefined') return;
       const data = await messagingService.getMessages(id);
       if (mountedRef.current) {
         setMessages(data);
@@ -533,7 +534,7 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
                       <img src={conv.other_user.avatar_url} alt="" className="w-12 h-12 md:w-14 md:h-14 rounded-[16px] md:rounded-[20px] object-cover ring-2 ring-white shadow-sm" />
                     ) : (
                       <div className="w-12 h-12 md:w-14 md:h-14 rounded-[16px] md:rounded-[20px] bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center text-white font-semibold text-lg md:text-xl shadow-sm">
-                        {(conv.other_user.full_name || conv.other_user.email).charAt(0).toUpperCase()}
+                        {(conv.other_user.full_name || conv.other_user.email || '?').charAt(0).toUpperCase()}
                       </div>
                     )}
                     {conv.other_user.full_name && (
@@ -549,7 +550,7 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
                         {conv.other_user.full_name || conv.other_user.email}
                       </h3>
                       <span className="text-[10px] md:text-[11px] text-gray-400 font-medium ml-2 shrink-0">
-                        {formatDistanceToNow(new Date(conv.last_message?.created_at || conv.updated_at), { addSuffix: false })}
+                        {formatDistanceToNow(new Date(conv.last_message?.created_at || conv.updated_at || new Date()), { addSuffix: false })}
                       </span>
                     </div>
                     

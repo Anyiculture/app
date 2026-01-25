@@ -936,6 +936,7 @@
       "clearForm": "Clear Form",
       "publishToPlatform": "Publish to Platform",
       "errors": {
+        "titleAndDescriptionRequired": "Title and description are required for publishing.",
         "enterUrl": "Please enter a URL to scrape",
         "generateContentFirst": "Generate text content first before creating images",
         "scrapeFailed": "Failed to scrape URL",

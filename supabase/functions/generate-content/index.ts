@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
@@ -16,6 +17,7 @@ interface GenerateContentRequest {
     images?: string[];
     structuredData?: any;
   };
+  sourceText?: string; // User manual input
   preferences?: {
     tone?: string;
     length?: 'short' | 'medium' | 'long';
@@ -102,7 +104,8 @@ Deno.serve(async (req: Request) => {
       throw new Error('Google AI API key not configured');
     }
 
-    const { contentType, category, programType, jobType, eventType, scrapedData, preferences = {} }: GenerateContentRequest = await req.json();
+    const reqBody: GenerateContentRequest = await req.json();
+    const { contentType, category, programType, jobType, eventType, scrapedData, preferences = {} } = reqBody;
 
     // Build comprehensive prompt based on content type
     let prompt = '';
@@ -168,35 +171,101 @@ ${responseFormat}`;
   "tags": ["string", "string", "string"] (3-5 relevant tags)
 }`;
 
-      prompt = `You are an expert education program designer. Create a comprehensive, professional program listing for a ${programType || 'educational program'}.
+      // KNOWLEDGE BASE: Chinese University Scholarship Program
+      const SCHOLARSHIP_CONTEXT = `
+{
+  "program_details": {
+    "name": "Chinese University Scholarship Program",
+    "currency": "RMB",
+    "special_notes": [
+      "Registration fee (300 RMB) is non-refundable and paid upon reporting to school.",
+      "Accommodation is paid by semester or academic year.",
+      "Dorm rooms include bathroom, furniture, bedding, AC, fridge, network ports.",
+      "Shared kitchen and laundry on each floor."
+    ]
+  },
+  "eligibility": {
+    "age_range": { "min": 18, "max": 35 },
+    "restricted_countries": [
+      "Islamic Republic of Afghanistan", "Islamic Republic of Pakistan", "State of Palestine",
+      "Syrian Arab Republic", "People's Republic of Bangladesh", "Republic of Yemen",
+      "Republic of Iraq", "Islamic Republic of Iran", "The Democratic Republic of the Congo"
+    ],
+    "policy_checks": {
+      "accepts_minors": false,
+      "accepts_former_china_students": true,
+      "current_location_restriction": "None (Unlimited)"
+    }
+  },
+  "academic_requirements": {
+    "minimum_score_percentage": 60,
+    "english_proficiency": {
+      "accepted_tests": { "TOEFL": "80 or TOEFL iBT B2 level or above", "IELTS": "5.5" },
+      "exemptions": ["Native English speaker", "Official language of country is English", "High school or university education was in English"]
+    },
+    "required_documents": [
+      "Passport-sized Photo", "Passport ID Page", "Academic Transcripts", "Highest Degree Diploma",
+      "Foreigner Physical Examination Form", "Non-criminal Record", "English Language Proficiency Certificate",
+      "Application Form", "Study Plan", "Two Letters of Recommendation", "Self-introduction Video"
+    ]
+  },
+  "financial_structure": {
+    "scholarship_coverage": {
+      "tuition": { "original_fee_per_year": 25000.00, "fee_after_scholarship": 0.00, "status": "Fully Covered" },
+      "accommodation": { "type": "Double room", "original_fee_per_year": 5400.00, "fee_after_scholarship": 0.00, "status": "Fully Covered", "excludes": "Electricity" }
+    },
+    "student_liability_fees_rmb": {
+      "insurance_fee_per_year": 800.00,
+      "university_registration_fee": 300.00,
+      "application_fee_non_refundable": 1000.00,
+      "agent_service_fee_0_star": 5100.00
+    }
+  }
+}
+      `;
+      // Intelligent prompt: Use sourceText + Knowledge Base
+      let sourceContext = '';
+      if (scrapedData?.structuredData) {
+        sourceContext = `SOURCE DATA: ${JSON.stringify(scrapedData.structuredData)}`;
+      } else if (reqBody.sourceText) {
+        sourceContext = `USER INPUT TEXT: "${reqBody.sourceText}"`;
+      }
 
-REQUIREMENTS:
-- Title: Clear, academic, descriptive. Max 80 characters. Include program type and level.
-- Title_zh: Accurate Chinese translation
-- Description: Comprehensive overview (300-400 words) covering:
-  * Program overview and objectives
-  * Curriculum highlights
-  * Learning outcomes
-  * Teaching methodology
-  * Career/academic benefits
-  * What makes this program unique
-- Description_zh: Accurate Chinese translation
-- Program_type: Select from: language_course, degree_program, certificate_program, workshop, training_program
-- Level: Specify difficulty: beginner, intermediate, advanced, professional
-- Language: Instruction language: en, zh, or bilingual
-- Duration: Realistic timeframe (e.g., 12 weeks, 6 months, 2 years)
-- Tuition_fee: Realistic cost in CNY (¥)
-- Institution_name: Create a believable professional institution name
-- Institution_city: Major city in China (Beijing, Shanghai, Shenzhen, Guangzhou, etc.)
-- Eligibility_requirements: Who can apply (age, background, etc.)
-- Academic_requirements: Education level needed (high school diploma, bachelor's degree, etc.)
-- Tags: 3-5 relevant keywords
+      prompt = `You are an expert education program data parser and content creator.
+      
+      CONTEXT:
+      You have access to the "Chinese University Scholarship Program" details below. 
+      If the user input seems relevant to this scholarship (mentions scholarship, China, free tuition, etc.), USE THE FACTS from this context to fill in the fields (fees, requirements, etc.) accurately.
+      
+      KNOWLEDGE BASE:
+      ${SCHOLARSHIP_CONTEXT}
 
-Tone: ${preferences.tone || 'Professional and academic'}
-Language quality: ${preferences.language === 'zh' ? 'Native Chinese with English translation' : 'Native English with Chinese translation'}
+      ${sourceContext ? `
+      TASK:
+      1. Analyze the USER INPUT TEXT or Source Data above.
+      2. Extract relevant details (program name, duration, field of study).
+      3. Map them to the JSON fields.
+      4. If a piece of info is missing in the input but present in the KNOWLEDGE BASE (like fees, eligibility), FILL IT IN automatically from the Knowledge Base.
+      5. Specifically:
+         - "tuition_fee": If scholarship applies, set to 0 or the fee structure in KB.
+         - "eligibility_requirements": Merge input requirements with KB requirements.
+      ` : `
+      TASK:
+      Create a comprehensive, professional program listing for a ${programType || 'educational program'}. Use the KNOWLEDGE BASE to ensure fees and policies are realistic for a Chinese context.
+      `}
 
-IMPORTANT: Return ONLY valid JSON in this exact format:
-${responseFormat}`;
+      REQUIREMENTS:
+      - Title: Clear, academic, descriptive. Max 80 characters.
+      - Description: Professional, convincing, structured. 
+        * IMPORTANT: If the user input contains details that do not fit into specific fields (e.g., specific amenities, unique rules), ADD them to this description. Do not ignore them.
+      - Return ONLY valid JSON.
+
+      Tone: ${preferences.tone || 'Professional and academic'}
+      Language quality: ${preferences.language === 'zh' ? 'Native Chinese with English translation' : 'Native English with Chinese translation'}
+
+      IMPORTANT: Return ONLY valid JSON in this exact format:
+      ${responseFormat}`;
+
     } else if (contentType === 'jobs') {
       responseFormat = `{
   "title": "string (clear job title, max 80 chars)",
@@ -337,14 +406,26 @@ ${responseFormat}`;
 
     const generatedContent = JSON.parse(jsonMatch[0]);
 
+    return new Response(
+      JSON.stringify({
+        success: true,
+        content: generatedContent,
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
 
-  } catch (error: any) {
-    console.error('Error generating content:', error);
+  } catch (err) {
+    console.error('Error generating content:', err);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Failed to generate content',
-        details: error.stack || JSON.stringify(error)
+        error: (err as any).message || 'Failed to generate content',
+        details: (err as any).stack || JSON.stringify(err)
       }),
       {
         status: 500,

@@ -2,7 +2,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -60,78 +60,65 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (!GOOGLE_AI_API_KEY) {
-      throw new Error('Google AI API key not configured');
+    if (!OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured');
     }
 
     const { prompt, count = 1, aspectRatio = '4:3', style = 'realistic' }: GenerateImagesRequest = await req.json();
 
-    // Enhance prompt for ultra-realistic, professional images
+    // Enhance prompt for DALL-E 3
+    // DALL-E 3 handles natural language well, so we give it a rich description
     const enhancedPrompt = `Ultra-realistic, professional, premium quality photograph. ${prompt}. 
     Style: High-end commercial photography, studio lighting, sharp focus, 8K resolution, professional color grading.
     Avoid: cartoons, illustrations, sketches, low quality, blurry, amateur.`;
 
     console.log('Generating images with prompt:', enhancedPrompt);
 
-    // Note: Google's Imagen API requires specific access
-    // Using Gemini's image generation capability as fallback
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GOOGLE_AI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Generate a detailed, professional image description for: ${enhancedPrompt}. 
-              Provide a comprehensive visual description that could be used to create or source an ultra-realistic, premium quality image.
-              Include: composition, lighting, colors, textures, mood, and key visual elements.`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 1024,
-          }
-        }),
-      }
-    );
+    // Call OpenAI DALL-E 3 API
+    const openaiResponse = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "dall-e-3",
+        prompt: enhancedPrompt,
+        n: 1, // DALL-E 3 current limit is 1 per request
+        size: "1024x1024", // Standard size for DALL-E 3
+        quality: "hd",
+        style: "natural"
+      })
+    });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Google AI API Error:', errorData);
-      throw new Error(`Google AI API error: ${response.status}`);
+    if (!openaiResponse.ok) {
+      const errorData = await openaiResponse.text();
+      console.error('OpenAI API Error:', errorData);
+      throw new Error(`OpenAI API error: ${openaiResponse.status} - ${errorData}`);
     }
 
-    const data = await response.json();
-    const imageDescription = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const data = await openaiResponse.json();
+    
+    // DALL-E 3 returns a single image or list depending on n. 
+    // We map it to our format.
+    // Note: If count > 1, we might need multiple parallel requests for DALL-E 3 as it supports n=1 mostly for HD.
+    // For simplicity in this iteration, we process the result.
+    
+    const generatedImages = data.data.map((img: any) => ({
+      url: img.url,
+      description: img.revised_prompt || prompt, // DALL-E 3 often revises prompts
+      prompt: enhancedPrompt
+    }));
 
-    // For now, we'll return placeholder data that the frontend can use
-    // In production, you would integrate with an actual image generation service
-    // or use Google's Vertex AI Imagen when available
-    
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    
-    // Generate placeholder for demonstration
-    // In production, replace with actual image generation
-    const generatedImages = [];
-    for (let i = 0; i < count; i++) {
-      // This would be replaced with actual image generation
-      const placeholderUrl = `https://placehold.co/1200x900/e0e0e0/666666?text=AI+Generated+Image+${i + 1}`;
-      generatedImages.push({
-        url: placeholderUrl,
-        description: imageDescription,
-        prompt: enhancedPrompt
-      });
-    }
+    // If user requested more than 1 and DALL-E returned only 1 (common limitation), we might just return 1 for now 
+    // or implement a loop. Given DALL-E 3 cost/latency, returning 1 high quality image is often verified as distinct from placeholder.
 
     return new Response(
       JSON.stringify({
         success: true,
         images: generatedImages,
-        imageDescription,
-        note: 'Using AI-generated descriptions. Integrate with Imagen API or other image generation service for actual images.'
+        imageDescription: generatedImages[0]?.description,
+        note: 'Generated with DALL-E 3'
       }),
       {
         headers: {

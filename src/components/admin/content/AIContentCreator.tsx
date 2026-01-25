@@ -10,8 +10,7 @@ import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { Textarea } from '../../ui/Textarea';
 import { Select } from '../../ui/Select';
-import { ImageUpload } from '../../ui/ImageUpload';
-import { MARKETPLACE_CATEGORIES, CONDITION_OPTIONS } from '../../../constants/marketplaceCategories';
+import { MARKETPLACE_CATEGORIES } from '../../../constants/marketplaceCategories';
 
 type ContentType = 'marketplace' | 'education' | 'jobs' | 'events';
 
@@ -143,6 +142,8 @@ export default function AIContentCreator() {
         programType: formData.programType,
         jobType: formData.job_type,
         eventType: formData.event_type,
+        // Pass user input as source text for extraction/parsing
+        sourceText: inputMode === 'manual' ? formData.description : undefined,
         preferences: {
           language: language as 'en' | 'zh',
           tone: 'professional',
@@ -177,7 +178,7 @@ export default function AIContentCreator() {
         prompt: enhancedPrompt,
         count: 3,
         aspectRatio: '4:3',
-        style: 'photographic', // More realistic than 'professional'
+        style: 'premium', // Premium ad quality
       });
 
       setFormData((prev) => ({
@@ -195,20 +196,27 @@ export default function AIContentCreator() {
 
   const handlePublish = async () => {
     try {
+      if (!formData.title || !formData.description) {
+        setError(t('admin.aiContent.errors.titleAndDescriptionRequired'));
+        return;
+      }
+
       if (formData.contentType === 'marketplace') {
+        const category = formData.category || MARKETPLACE_CATEGORIES[0]?.id || 'other';
+        
         await marketplaceService.createItem({
-          title: formData.title!,
+          title: formData.title,
           title_zh: formData.title_zh,
-          description: formData.description!,
+          description: formData.description,
           description_zh: formData.description_zh,
-          category: formData.category!,
+          category: category,
           price: formData.suggested_price || 0,
           condition: formData.condition || 'good',
-          brand: formData.brand,
-          model: formData.model,
-          color: formData.color,
-          size: formData.size,
-          material: formData.material,
+          brand: formData.brand || 'N/A',
+          model: formData.model || 'N/A',
+          color: formData.color || 'N/A',
+          size: formData.size || 'N/A',
+          material: formData.material || 'N/A',
           images: formData.images || [],
           location_province: 'Beijing',
           location_city: 'Beijing',
@@ -216,69 +224,71 @@ export default function AIContentCreator() {
         });
         setSuccess(t('admin.aiContent.success.marketplacePublished'));
       } else if (formData.contentType === 'education') {
+        const pType = formData.programType || formData.program_type || PROGRAM_TYPES[0]?.value || 'other';
+        
         await educationService.createProgram({
-          title: formData.title!,
+          title: formData.title,
           title_zh: formData.title_zh,
-          description: formData.description!,
+          description: formData.description,
           description_zh: formData.description_zh,
-          program_type: formData.program_type || '',
-          type: formData.program_type || '',
+          program_type: pType,
+          type: pType,
           level: formData.level || 'beginner',
           language: formData.language || 'en',
-          duration_value: formData.duration_value,
-          duration_unit: formData.duration_unit,
-          tuition_fee: formData.tuition_fee,
-          institution_name: formData.institution_name,
-          institution_city: formData.institution_city,
-          eligibility_requirements: formData.eligibility_requirements,
-          academic_requirements: formData.academic_requirements,
+          duration_value: formData.duration_value || 1,
+          duration_unit: formData.duration_unit || 'month',
+          tuition_fee: formData.tuition_fee || 0,
+          institution_name: formData.institution_name || 'AnYiculture Academy',
+          institution_city: formData.institution_city || 'Beijing',
+          eligibility_requirements: formData.eligibility_requirements || 'N/A',
+          academic_requirements: formData.academic_requirements || 'N/A',
           images: formData.images || [],
-          tags: formData.tags,
+          tags: formData.tags || [],
         });
         setSuccess(t('admin.aiContent.success.educationPublished'));
       } else if (formData.contentType === 'jobs') {
         await jobsService.createJob({
           poster_id: '', // Will be set by service
-          title: formData.title!,
-          company_name: formData.company_name,
-          description: formData.description!,
+          title: formData.title,
+          company_name: formData.company_name || 'AnYiculture Partner',
+          description: formData.description,
           image_urls: formData.images,
-          job_type: formData.job_type as any,
+          job_type: (formData.job_type || 'full_time') as any,
           location: formData.location || formData.location_city || 'Beijing, China',
-          location_city: formData.location_city,
-          salary_min: formData.salary_min,
-          salary_max: formData.salary_max,
+          location_city: formData.location_city || 'Beijing',
+          salary_min: formData.salary_min || 0,
+          salary_max: formData.salary_max || 0,
           salary_currency: 'CNY',
           application_deadline: formData.application_deadline,
-          remote_type: formData.remote_type as any,
-          experience_level: formData.experience_level as any,
-          education_required: formData.education_required,
+          remote_type: (formData.remote_type || 'on_site') as any,
+          experience_level: (formData.experience_level || 'entry') as any,
+          education_required: formData.education_required || 'N/A',
           skills_required: formData.skills_required || [],
           benefits: formData.benefits || [],
           status: 'active',
           featured: false,
-          views_count: 0,
-          applications_count: 0,
         });
         setSuccess(t('admin.aiContent.success.jobPublished'));
       } else if (formData.contentType === 'events') {
+        const category = formData.category || 'networking';
+        
         await eventsService.createEvent({
-          title: formData.title!,
+          title: formData.title,
           title_zh: formData.title_zh,
-          description: formData.description!,
+          description: formData.description,
           description_zh: formData.description_zh,
-          category: formData.category || 'networking',
-          event_type: formData.event_type as any,
+          category: category,
+          event_type: (formData.event_type || 'in_person') as any,
           start_date: formData.start_date || new Date().toISOString(),
-          location_city: formData.location_city,
-          location_venue: formData.location_venue,
+          location_city: formData.location_city || 'Beijing',
+          location_venue: formData.location_venue || 'AnYiculture Hub',
           online_link: formData.online_link,
           image_urls: formData.images,
-          capacity: formData.capacity,
-          price: formData.price,
+          capacity: formData.capacity || 50,
+          price: formData.price || 0,
           registration_deadline: formData.registration_deadline,
-          tags: formData.tags,
-          requirements: formData.requirements,
+          tags: formData.tags || [],
+          requirements: formData.requirements || 'N/A',
         });
         setSuccess(t('admin.aiContent.success.eventPublished'));
       }
@@ -286,6 +296,7 @@ export default function AIContentCreator() {
       // Reset form
       setFormData({ contentType: formData.contentType });
     } catch (err: any) {
+      console.error('Publishing error:', err);
       setError(err.message || t('admin.aiContent.errors.publishFailed'));
     }
   };
