@@ -308,7 +308,7 @@ export default function AIContentCreator() {
         <div className="mb-8">
           <h1 className="text-4xl font-black text-gray-900 mb-2 flex items-center gap-3">
             <Wand2 className="text-purple-600" size={40} />
-            {t('admin.aiContent.title')}
+            {t('admin.aiContent.headerTitle')}
           </h1>
           <p className="text-gray-600">{t('admin.aiContent.subtitle')}</p>
         </div>
@@ -540,7 +540,7 @@ export default function AIContentCreator() {
                 <h3 className="font-bold text-gray-900">{t('admin.aiContent.contentEditable')}</h3>
 
                 <Input
-                  label={t('admin.aiContent.title')}
+                  label={t('admin.aiContent.fieldTitle')}
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />

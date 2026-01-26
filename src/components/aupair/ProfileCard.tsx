@@ -2,7 +2,6 @@
 import React from 'react';
 import { Heart, MapPin, Users, Star, Briefcase, ArrowRight } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
-import { GlassCard } from '../ui/GlassCard';
 import { motion } from 'framer-motion';
 
 interface ProfileCardProps {
@@ -42,7 +41,7 @@ export function ProfileCard({ profile, userRole, isFavorited, onToggleFavorite, 
       'from-indigo-400 via-blue-500 to-sky-500'
     ];
     const seed = displayName || profile.id || 'User';
-    const index = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % gradients.length;
+    const index = seed.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % gradients.length;
     return gradients[index];
   }, [displayName, profile.id]);
 

@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
-import { GraduationCap, Clock, Star, BookOpen, Share2 } from 'lucide-react';
+import { GraduationCap, Clock, Star, Share2 } from 'lucide-react';
 import { EducationResource } from '../../services/educationService';
 import { useI18n } from '../../contexts/I18nContext';
 import { useToast } from '../ui/Toast';
 import { TranslateWrapper } from '../ui/TranslateWrapper';
 import { shareContent } from '../../utils/shareUtils';
-import { translateProgramType, translateDeliveryMode, translateEducationLevel } from '../../utils/educationTranslations';
+import { translateProgramType, translateDeliveryMode } from '../../utils/educationTranslations';
 import { motion } from 'framer-motion';
 
 interface EducationCardProps {

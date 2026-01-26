@@ -510,6 +510,9 @@
         "posted": "Posted"
       },
       "title": "Education Programs",
+      "confirmDeleteTitle": "Delete Program?",
+      "confirmDeleteMessage": "Are you sure you want to delete this program? This action cannot be undone.",
+      "deleteSuccess": "Program deleted successfully",
       "description": "Manage education programs and applications",
       "searchPlaceholder": "Search programs...",
       "noApplications": "No education applications found",
@@ -906,7 +909,8 @@
     "statusUpdateFailed": "Failed to update status",
     "activityLogSubtitle": "Recent system activities",
     "aiContent": {
-      "title": "Title",
+      "headerTitle": "AI Content Creator",
+      "fieldTitle": "Title",
       "subtitle": "Scrape URLs or generate professional listings with AI",
       "configuration": "Configuration",
       "scrapeFromUrl": "Scrape from URL (Optional)",

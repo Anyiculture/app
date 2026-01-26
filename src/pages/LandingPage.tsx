@@ -446,7 +446,7 @@ export function LandingPage() {
                {/* Bottom Row: 3 Items (Visa, Au Pair, Community) - Wider Cards */}
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    {/* Visa */}
-                  <Link to={modules[4].link} className="col-span-1 h-72">
+                  <Link to={modules[4].link} className="col-span-1 h-80">
                       <motion.div variants={item} className="h-full w-full">
                          < GlowingCard 
                             title={modules[4].title}
@@ -459,7 +459,7 @@ export function LandingPage() {
                   </Link>
                   
                    {/* Au Pair */}
-                  <Link to={modules[5].link} className="col-span-1 h-72">
+                  <Link to={modules[5].link} className="col-span-1 h-80">
                       <motion.div variants={item} className="h-full w-full">
                          <GlowingCard 
                             title={modules[5].title}
@@ -472,7 +472,7 @@ export function LandingPage() {
                   </Link>
 
                   {/* Community */}
-                  <Link to="/community" className="col-span-1 h-72">
+                  <Link to="/community" className="col-span-1 h-80">
                      <motion.div variants={item} className="h-full w-full">
                         <GlowingCard
                            title={t('nav.community')}

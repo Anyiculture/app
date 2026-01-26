@@ -578,7 +578,7 @@
     "activityLog": "活动日志",
     "activityLogSubtitle": "最近系统活动",
     "aiContent": {
-      "title": "AI 内容创建器",
+      "headerTitle": "AI 内容创建器",
       "subtitle": "通过AI抓取URL或生成专业列表",
       "configuration": "配置",
       "scrapeFromUrl": "从URL抓取（可选）",
@@ -599,7 +599,7 @@
       "generateWithAI": "使用AI生成",
       "generating": "生成中...",
       "contentEditable": "内容（可编辑）",
-      "title": "标题",
+      "fieldTitle": "标题",
       "description": "描述",
       "generateImages": "生成匹配图片",
       "generatingImages": "生成图片中...",

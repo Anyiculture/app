@@ -5,7 +5,6 @@ import { Event } from '../../services/eventsService';
 import { useI18n } from '../../contexts/I18nContext';
 import { useToast } from '../ui/Toast';
 import { shareContent } from '../../utils/shareUtils';
-import { GlassCard } from '../ui/GlassCard';
 import { motion } from 'framer-motion';
 
 interface EventCardProps {

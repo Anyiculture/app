@@ -287,7 +287,7 @@ export function DashboardPage() {
             </SectionContainer>
           )}
 
-          {isHostFamily && (
+          {(isHostFamily || isAdmin) && (
             <SectionContainer 
               id="aupair-candidates"
               title={t('dashboard.verifiedAuPairs')} 
@@ -604,7 +604,7 @@ function CommunityShelfContent() {
            className="w-[40vw] sm:w-[220px] md:w-[260px] flex-none snap-start"
         >
           <Link to={`/community/${post.id}`} className="block h-full group">
-            <GlassCard className="h-48 sm:h-56 flex flex-col justify-between hover:border-vibrant-purple transition-colors p-3 sm:p-5">
+            <GlassCard className="h-32 sm:h-40 flex flex-col justify-between hover:border-vibrant-purple transition-colors p-3 sm:p-5">
               <div>
                 <div className="flex items-center gap-1.5 mb-2 sm:mb-4">
                   <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-vibrant-purple/10 flex items-center justify-center text-vibrant-purple">
@@ -705,7 +705,13 @@ function HostFamiliesShelfContent() {
   return (
     <>
       {families.slice(0, window.innerWidth < 640 ? 3 : 6).map((family, i) => (
-        <motion.div key={family.id} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: i * 0.05 }}>
+        <motion.div 
+          key={family.id} 
+          initial={{ opacity: 0 }} 
+          whileInView={{ opacity: 1 }} 
+          transition={{ delay: i * 0.05 }}
+          className="w-[40vw] sm:w-[220px] md:w-[260px] flex-none snap-start"
+        >
           <ProfileCard profile={family} userRole="au_pair" isFavorited={false} onToggleFavorite={() => {}} onView={() => {}} isDashboard={true} />
         </motion.div>
       ))}
@@ -734,7 +740,13 @@ function AuPairCandidatesShelfContent() {
   return (
     <>
       {candidates.slice(0, window.innerWidth < 640 ? 3 : 6).map((candidate, i) => (
-        <motion.div key={candidate.id} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: i * 0.05 }}>
+        <motion.div 
+          key={candidate.id} 
+          initial={{ opacity: 0 }} 
+          whileInView={{ opacity: 1 }} 
+          transition={{ delay: i * 0.05 }}
+          className="w-[40vw] sm:w-[220px] md:w-[260px] flex-none snap-start"
+        >
           <ProfileCard profile={candidate} userRole="host_family" isFavorited={false} onToggleFavorite={() => {}} onView={() => {}} isDashboard={true} />
         </motion.div>
       ))}

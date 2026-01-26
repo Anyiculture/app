@@ -3,7 +3,6 @@ import { Heart, MapPin, ShoppingBag } from 'lucide-react';
 import { MarketplaceItem } from '../../services/marketplaceService';
 import { useI18n } from '../../contexts/I18nContext';
 import { getCategoryById, CONDITION_OPTIONS } from '../../constants/marketplaceCategories';
-import { GlassCard } from '../ui/GlassCard';
 import { motion } from 'framer-motion';
 
 interface MarketplaceCardProps {

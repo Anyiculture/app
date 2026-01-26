@@ -256,15 +256,15 @@ export const adminService = {
       const results = await Promise.allSettled([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('jobs').select('*', { count: 'exact', head: true }).neq('status', 'archived').neq('status', 'draft'),
-        supabase.from('marketplace_items').select('*', { count: 'exact', head: true }).in('status', ['active', 'pending', 'sold']),
+        supabase.from('marketplace_items').select('*', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),
         supabase.from('education_resources').select('*', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('job_applications').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('education_interests').select('*', { count: 'exact', head: true }).eq('status', 'submitted'),
         supabase.from('visa_applications').select('*', { count: 'exact', head: true }).eq('status', 'submitted'),
-        supabase.from('conversations').select('*', { count: 'exact', head: true }),
-        supabase.from('au_pair_profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('host_family_profiles').select('*', { count: 'exact', head: true })
+        supabase.from('conversations').select('*', { count: 'exact', head: true }).neq('is_blocked', true),
+        supabase.from('au_pair_profiles').select('*', { count: 'exact', head: true }).eq('profile_status', 'active'),
+        supabase.from('host_family_profiles').select('*', { count: 'exact', head: true }).eq('profile_status', 'active')
       ]);
 
       const getCount = (result: PromiseSettledResult<any>, label: string) => {
