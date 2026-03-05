@@ -19,14 +19,28 @@ export function AuPairPaymentPage() {
   const [error, setError] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [submissionStatus, setSubmissionStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
       // Redirect to login if not authenticated, passing the current path to return to after login
       navigate('/signin?redirect=/au-pair/payment');
+    } else if (user) {
+      checkSubmissionStatus();
     }
   }, [user, authLoading, navigate]);
+
+  const checkSubmissionStatus = async () => {
+    try {
+      const submission = await auPairService.getLatestPaymentSubmission();
+      if (submission) {
+        setSubmissionStatus(submission.status);
+      }
+    } catch (err) {
+      console.error('Error checking submission status:', err);
+    }
+  };
 
   if (authLoading) {
     return <Loading />;
@@ -167,13 +181,25 @@ export function AuPairPaymentPage() {
                     </ol>
                 </div>
 
-                <Button
-                  onClick={() => setShowUploadModal(true)}
-                  className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
-                >
-                  <CheckCircle size={18} />
-                  {t('paymentWechat.payment.iHavePaid')}
-                </Button>
+                {submissionStatus === 'pending' ? (
+                  <div className="w-full p-4 bg-yellow-50 border border-yellow-200 rounded-xl mb-4">
+                    <div className="flex items-center justify-center gap-2 text-yellow-700 font-bold mb-1">
+                      <Sparkles size={18} />
+                      <p className="uppercase tracking-widest text-sm">{t('auPair.payment.pendingTitle') || 'Under Review'}</p>
+                    </div>
+                    <p className="text-xs text-yellow-600">
+                      {t('auPair.payment.pendingDesc') || 'Admin is verifying your proof. Typically takes 2-4 hours.'}
+                    </p>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => setShowUploadModal(true)}
+                    className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle size={18} />
+                    {submissionStatus === 'rejected' ? t('paymentWechat.payment.reuploadProof') : t('paymentWechat.payment.iHavePaid')}
+                  </Button>
+                )}
               </div>
 
             </GlassCard>

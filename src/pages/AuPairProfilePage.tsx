@@ -15,7 +15,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { Loading } from '../components/ui/Loading';
 import { Button } from '../components/ui/Button';
-import { AuPairProfile } from '../services/auPairService';
+import { AuPairProfile, auPairService, UserSubscriptionStatus } from '../services/auPairService';
+import { Lock } from 'lucide-react';
 import { messagingService } from '../services/messagingService';
 import { adminService } from '../services/adminService';
 import { COUNTRIES } from '../components/ui/LocationCascade';
@@ -28,6 +29,7 @@ export function AuPairProfilePage() {
   const [profile, setProfile] = useState<AuPairProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<UserSubscriptionStatus | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -41,6 +43,12 @@ export function AuPairProfilePage() {
       // Check Admin
       const adminStatus = await adminService.checkIsAdmin();
       setIsAdmin(adminStatus);
+      
+      // Check User Subscription
+      if (user) {
+        const status = await auPairService.getUserSubscriptionStatus();
+        setSubscriptionStatus(status);
+      }
     } catch (error) {
       console.error('Error checking admin status:', error);
     }
@@ -73,6 +81,26 @@ export function AuPairProfilePage() {
     if (!profile) return;
 
     try {
+      const { allowed, reason } = await auPairService.canSendMessage();
+      
+      if (!allowed) {
+        if (reason === 'not_premium') {
+          // Check if they already submitted proof
+          const submission = await auPairService.getLatestPaymentSubmission();
+          if (submission && submission.status === 'pending') {
+            alert(t('auPair.payment.pendingApproval') || 'Your payment proof is under review. Please wait for admin approval.');
+            return;
+          }
+          // Otherwise redirect to payment
+          navigate('/au-pair/payment');
+          return;
+        } else if (reason === 'onboarding_incomplete') {
+          alert(t('auPair.profile.completeOnboardingPrompt') || 'Please complete your onboarding to contact users.');
+          navigate('/onboarding');
+          return;
+        }
+      }
+
       const conversationId = await messagingService.getOrCreateConversation(
         profile.user_id,
         'aupair',
@@ -183,9 +211,13 @@ export function AuPairProfilePage() {
                  {isAdmin && profile.user_id === 'admin' ? null : (
                     <Button 
                       onClick={handleContact}
-                      className="bg-pink-600 text-white hover:bg-pink-700"
+                      className={`${subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin ? 'bg-pink-600 hover:bg-pink-700' : 'bg-gray-600 hover:bg-gray-700'} text-white flex items-center gap-2`}
                     >
-                      <MessageCircle size={16} className="mr-2" />
+                      {subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin ? (
+                        <MessageCircle size={16} />
+                      ) : (
+                        <Lock size={16} />
+                      )}
                       {t('auPair.profile.unlockContact')}
                     </Button>
                  )}

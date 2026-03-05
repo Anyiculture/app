@@ -58,14 +58,13 @@ Run all relevant checks:
 
 ### 8. Deployment & Reporting
 - Commit with a detailed "Why" and "How".
-- Push to remote and trigger CI/CD if available.
+- **Universal Remote Push**: Always push committed changes to the GitHub remote repository (`origin main` or the current active branch). Verification of a successful push is mandatory.
+- **CI/CD Integration**: Trigger and monitor CI/CD pipelines if configured.
 - **Monitor**: Check health metrics post-deployment.
-- **Report**: Provide a simple summary for the user:
-    - **What was broken?**
-    - **Why did it happen?**
-    - **What was changed?**
-    - **How was it verified?**
-    - **Current System Health Status.**
+- **Report**: Provide a concise, point-form summary for the user using the following format:
+    - **Changes Implemented**: (Bullet points of what was fixed/added)
+    - **User Experience**: (Specific description of what the user will see and how it functions when they visit the website)
+    - **System Health**: (Current status post-verification)
 
 ## Security & Ethics
 - **No Secret Exposure**: Never leak API keys or credentials.

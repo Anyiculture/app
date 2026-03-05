@@ -527,9 +527,41 @@ export const auPairService = {
     return data;
   },
 
-  async canSendMessage(): Promise<{ allowed: boolean; reason?: string }> {
-    // Premium restriction removed - anyone can message
+  async canSendMessage(): Promise<{ allowed: boolean; reason?: 'not_premium' | 'onboarding_incomplete' | 'not_authenticated' }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { allowed: false, reason: 'not_authenticated' };
+
+    const status = await this.getUserSubscriptionStatus();
+    
+    if (!status.onboardingCompleted) {
+      return { allowed: false, reason: 'onboarding_incomplete' };
+    }
+
+    if (status.role === 'host_family' && status.subscriptionStatus !== 'premium') {
+      return { allowed: false, reason: 'not_premium' };
+    }
+
     return { allowed: true };
+  },
+
+  async getLatestPaymentSubmission() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from('payment_submissions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching latest payment submission:', error);
+      return null;
+    }
+
+    return data;
   },
 
   async submitPaymentProof(file: File, amount: number) {
