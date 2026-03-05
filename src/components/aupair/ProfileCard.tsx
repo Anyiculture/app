@@ -52,7 +52,7 @@ export function ProfileCard({ profile, userRole, isFavorited, onToggleFavorite, 
     if (profile.housing_type) badges.push(profile.housing_type);
   } else {
     if (profile.nationality) badges.push(profile.nationality);
-    if (profile.age) badges.push(`${profile.age} ${t('common.yearsOld') || 'y/o'}`);
+    if (profile.age) badges.push(`${profile.age} ${t('common.profile.yearsOld') || 'y/o'}`);
   }
 
   const handleFavoriteClick = (e: React.MouseEvent) => {

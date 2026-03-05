@@ -188,7 +188,10 @@
     "video": "视频",
     "uploaded": "已上传",
     "pleaseSpecify": "请注明...",
-    "profile": "个人资料",
+    "profile": {
+      "main": "个人资料",
+      "unlockContact": "升级以联系互惠生"
+    },
     "code": "代码",
     "type": "类型",
     "organizer": "组织者",
@@ -840,8 +843,8 @@
     "successTitle": "消息已发送！",
     "successMessage": "感谢您的联系。我们会尽快回复您。",
     "sendAnother": "发送另一条消息",
-    "emailValue": "Email Value",
-    "phoneValue": "Phone Value"
+    "emailValue": "anyiculture@gmail.com | info@anyi-culture.cn",
+    "phoneValue": "18502708627 | 027 8870 3160"
   },
   "careers": {
     "title": "加入我们的",
@@ -2028,7 +2031,7 @@
       "currentPlan": "当前计划",
       "freePlan": "免费计划",
       "premiumPlan": "高级计划",
-      "upgradePlan": "升级计划",
+      "upgradePlan": "订阅以联系互惠生",
       "active": "活跃",
       "upgrade": "升级计划",
       "features": {

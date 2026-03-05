@@ -11,12 +11,21 @@ export function Footer() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
           
-          {/* Brand & Copyright */}
-          <div className="flex items-center gap-4">
-            <span className="font-bold text-gray-900 text-sm">AnYiculture</span>
-            <span>&copy; {currentYear}</span>
-            <span className="hidden sm:inline text-gray-300">|</span>
-            <span className="hidden sm:inline">info@anyi-culture.cn</span>
+          {/* Brand & Contact Info */}
+          <div className="flex flex-col items-center md:items-start gap-2">
+            <div className="flex items-center gap-4">
+              <span className="font-bold text-gray-900 text-sm">AnYiculture</span>
+              <span>&copy; {currentYear}</span>
+            </div>
+            <div className="flex flex-col items-center md:items-start gap-1">
+              <span className="hidden sm:inline">{t('landing.footer.email')}: {t('contact.emailValue')}</span>
+              <span className="hidden sm:inline">{t('contact.phone')}: {t('contact.phoneValue')}</span>
+              <span className="hidden sm:inline">{t('landing.footer.address')}: {t('landing.footer.addressValue')}</span>
+              {/* Mobile version without hidden */}
+              <span className="sm:hidden text-center">{t('contact.emailValue')}</span>
+              <span className="sm:hidden text-center">{t('contact.phoneValue')}</span>
+              <span className="sm:hidden text-center">{t('landing.footer.addressValue')}</span>
+            </div>
           </div>
 
           {/* Minimal Links */}

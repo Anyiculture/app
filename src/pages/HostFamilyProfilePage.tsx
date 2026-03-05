@@ -115,7 +115,7 @@ export function HostFamilyProfilePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
         
         {/* Header Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
             <div className="relative h-[300px] sm:h-[400px] bg-gray-100 group">
                  {allPhotos.length > 0 ? (
                     <img
@@ -208,7 +208,7 @@ export function HostFamilyProfilePage() {
             <div className="lg:col-span-2 space-y-6">
                 
                 {/* About Section */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                      <h2 className="text-lg font-bold text-gray-900 mb-4">{t('hostFamily.profile.aboutFamily') || 'About the Family'}</h2>
                      <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
                         {profile.expectations || t('hostFamily.profile.bioNotProvided') || "No description provided."}
@@ -216,7 +216,7 @@ export function HostFamilyProfilePage() {
                 </div>
 
                 {/* Children Section */}
-                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                 <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                      <h2 className="text-lg font-bold text-gray-900 mb-6">{t('hostFamily.profile.theChildren') || 'The Children'}</h2>
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                         <div>
@@ -242,7 +242,7 @@ export function HostFamilyProfilePage() {
                  </div>
 
                  {/* Family Values */}
-                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                 <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                       <h2 className="text-lg font-bold text-gray-900 mb-6">{t('hostFamily.profile.familyValues') || 'Family Values'}</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {profile.parenting_styles && profile.parenting_styles.length > 0 && (
@@ -250,7 +250,7 @@ export function HostFamilyProfilePage() {
                                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">{t('hostFamily.profile.parentingStyle')}</span>
                                 <div className="flex flex-wrap gap-2">
                                     {profile.parenting_styles.map((style, i) => (
-                                        <span key={i} className="text-sm font-medium text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                                        <span key={i} className="text-sm font-medium text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-300">
                                             {t(`auPair.onboarding.options.parenting.${style.toLowerCase()}`) || style}
                                         </span>
                                     ))}
@@ -267,7 +267,7 @@ export function HostFamilyProfilePage() {
                  </div>
 
                  {/* The Role */}
-                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                 <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                       <h2 className="text-lg font-bold text-gray-900 mb-6">{t('hostFamily.profile.theRole') || 'The Role'}</h2>
                       <div className="space-y-6">
                           <div>
@@ -292,7 +292,7 @@ export function HostFamilyProfilePage() {
 
                  {/* Video Intro */}
                  {profile.family_video_url && (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                         <h2 className="text-lg font-bold text-gray-900 mb-4">{t('hostFamily.profile.videoIntroduction') || 'Video Intro'}</h2>
                         <div className="aspect-video rounded-lg overflow-hidden bg-black">
                             <video src={profile.family_video_url} controls className="w-full h-full object-contain" />
@@ -306,7 +306,7 @@ export function HostFamilyProfilePage() {
              <div className="space-y-6">
                 
                 {/* Quick Facts */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                     <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Sparkles size={16} />
                         {t('hostFamily.profile.quickFacts') || 'Quick Facts'}
@@ -328,14 +328,14 @@ export function HostFamilyProfilePage() {
                 </div>
 
                 {/* Languages */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                     <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Globe size={16} />
                         {t('hostFamily.profile.languages') || 'Languages'}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                          {profile.languages_spoken?.map((lang, i) => (
-                            <span key={i} className="px-2.5 py-1 bg-gray-50 text-gray-700 text-xs font-medium rounded border border-gray-200">
+                            <span key={i} className="px-2.5 py-1 bg-gray-50 text-gray-700 text-xs font-medium rounded border border-gray-300">
                                 {t(`auPair.onboarding.languages.${lang.toLowerCase()}`) || lang}
                             </span>
                         ))}
@@ -343,7 +343,7 @@ export function HostFamilyProfilePage() {
                 </div>
 
                 {/* Benefits */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                     <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Heart size={16} />
                         {t('hostFamily.profile.benefits') || 'Benefits'}

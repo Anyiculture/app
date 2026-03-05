@@ -61,6 +61,7 @@ export function CreateEventPage() {
       const event = await eventsService.createEvent({
         title: formData.title,
         description: formData.description,
+        event_date: formData.event_date,
         start_date: eventDateTime,
         location_address: formData.location, 
         location_city: 'Unknown', 

@@ -170,7 +170,7 @@ export const messagingService = {
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
-        .eq('is_deleted', false)
+        .or('is_deleted.is.null,is_deleted.eq.false')
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -278,6 +278,7 @@ export const messagingService = {
       sender_id: user.id,
       content: content || (attachments?.length ? 'Sent an attachment' : 'Sent a message'),
       message_type: messageType,
+      is_deleted: false,
       attachment_url: attachments?.[0]?.url || null,
       attachment_type: attachments?.[0]?.type || null,
       attachment_name: attachments?.[0]?.name || null,

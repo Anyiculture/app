@@ -172,7 +172,7 @@ export function AuPairPaymentPage() {
                   className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
                 >
                   <CheckCircle size={18} />
-                  {t('auPair.payment.iHavePaid')}
+                  {t('settings.billing.upgradePlan')}
                 </Button>
               </div>
 

@@ -57,7 +57,7 @@
     "backToEvents": "Back to Events",
     "backToJobs": "Back to Jobs",
     "brand": "AnYiculture",
-    "brandEmail": "info@anyi-culture.cn",
+    "brandEmail": "anyiculture@gmail.com | info@anyi-culture.cn",
     "brandLogoAlt": "AnYiculture Logo",
     "brandUpper": "ANYCULTURE",
     "cancel": "Cancel",
@@ -105,7 +105,7 @@
       "gender": "Gender",
       "nationality": "Nationality",
       "available": "Available",
-      "unlockContact": "Unlock Contact",
+      "unlockContact": "Upgrade to Contact",
       "main": "Profile"
     },
     "edit": "Edit",
@@ -1162,8 +1162,8 @@
     "successTitle": "Message Sent!",
     "successMessage": "Thank you for reaching out. We will get back to you shortly.",
     "sendAnother": "Send Another Message",
-    "emailValue": "Email Value",
-    "phoneValue": "Phone Value"
+    "emailValue": "anyiculture@gmail.com | info@anyi-culture.cn",
+    "phoneValue": "18502708627 | 027 8870 3160"
   },
   "careers": {
     "title": "Join Our",
@@ -2509,6 +2509,7 @@
       "premiumPlan": "Premium Plan",
       "active": "Active",
       "upgrade": "Upgrade Plan",
+      "upgradePlan": "Subscribe to Contact Au Pairs",
       "features": {
         "basicProfile": "Basic Profile",
         "limitedMessages": "Limited Messaging",

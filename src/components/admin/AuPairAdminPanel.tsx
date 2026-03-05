@@ -256,10 +256,10 @@ export function AuPairAdminPanel() {
                       </td>
                       <td className="px-6 py-4">
                         {profile.profile_photos?.[0] ? (
-                            <img src={profile.profile_photos[0]} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+                            <img src={profile.profile_photos[0]} alt="Profile" className="w-20 h-20 rounded-lg object-cover" />
                         ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
-                                <Eye size={16} />
+                            <div className="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400">
+                                <Eye size={24} />
                             </div>
                         )}
                       </td>
@@ -411,11 +411,11 @@ export function AuPairAdminPanel() {
                                     <img 
                                         src={profile.family_photos?.[0] || profile.home_photos?.[0]} 
                                         alt="Family" 
-                                        className="w-10 h-10 rounded-full object-cover" 
+                                        className="w-20 h-20 rounded-lg object-cover" 
                                     />
                                 ) : (
-                                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
-                                        <Eye size={16} />
+                                    <div className="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400">
+                                        <Eye size={24} />
                                     </div>
                                 )}
                             </td>

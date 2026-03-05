@@ -193,6 +193,14 @@ export function VisaAdminPanel() {
                       <Button size="sm" variant="outline" onClick={() => setSelectedApp(app)}>
                         <Eye size={14} className="mr-1" /> {t('admin.actions.view')}
                       </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleDelete(app.id)}
+                      >
+                         {t('admin.actions.delete')}
+                      </Button>
                     </td>
                   </tr>
                 ))

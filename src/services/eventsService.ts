@@ -129,6 +129,7 @@ export interface CreateEventData {
   description_zh?: string;
   category: string;
   event_type: 'in_person' | 'online' | 'hybrid';
+  event_date: string;
   start_date: string;
   end_date?: string;
   timezone?: string;
@@ -340,24 +341,30 @@ export const eventsService = {
 
     const finalData = { ...eventData };
 
-    // Handle Title Translation
-    if (!finalData.title_zh) {
-      if (translationService.hasChinese(finalData.title)) {
-        finalData.title_zh = finalData.title;
-        finalData.title = await translationService.translateText(finalData.title, 'en');
-      } else {
-        finalData.title_zh = await translationService.translateText(finalData.title, 'zh');
+    try {
+      // Handle Title Translation
+      if (!finalData.title_zh) {
+        if (translationService.hasChinese(finalData.title)) {
+          finalData.title_zh = finalData.title;
+          finalData.title = await translationService.translateText(finalData.title, 'en');
+        } else {
+          finalData.title_zh = await translationService.translateText(finalData.title, 'zh');
+        }
       }
-    }
 
-    // Handle Description Translation
-    if (!finalData.description_zh) {
-      if (translationService.hasChinese(finalData.description)) {
-        finalData.description_zh = finalData.description;
-        finalData.description = await translationService.translateText(finalData.description, 'en');
-      } else {
-        finalData.description_zh = await translationService.translateText(finalData.description, 'zh');
+      // Handle Description Translation
+      if (!finalData.description_zh) {
+        if (translationService.hasChinese(finalData.description)) {
+          finalData.description_zh = finalData.description;
+          finalData.description = await translationService.translateText(finalData.description, 'en');
+        } else {
+          finalData.description_zh = await translationService.translateText(finalData.description, 'zh');
+        }
       }
+    } catch (translationError) {
+      console.warn('Translation failed during event creation, continuing without translation:', translationError);
+      if (!finalData.title_zh) finalData.title_zh = finalData.title;
+      if (!finalData.description_zh) finalData.description_zh = finalData.description;
     }
 
     const { data, error } = await supabase

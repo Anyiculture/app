@@ -243,12 +243,20 @@ export const visaService = {
   },
 
   async deleteApplication(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('visa_applications')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.rpc('admin_delete_visa_application', {
+      target_application_id: id
+    });
 
-    if (error) throw error;
+    if (error) {
+      console.error('RPC admin_delete_visa_application failed:', error);
+      // Fallback to direct delete just in case RPC is missing (though migration should fix this)
+      const { error: deleteError } = await supabase
+        .from('visa_applications')
+        .delete()
+        .eq('id', id);
+        
+      if (deleteError) throw deleteError;
+    }
   },
 
   async getAllApplications(filters?: { status?: VisaStatus }): Promise<VisaApplication[]> {

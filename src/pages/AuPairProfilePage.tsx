@@ -151,9 +151,9 @@ export function AuPairProfilePage() {
           {t('common.back') || 'Back'}
         </Button>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-6">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-300">
                     {profile.profile_photos && profile.profile_photos.length > 0 ? (
                         <img 
                         src={profile.profile_photos[0]} 
@@ -191,7 +191,7 @@ export function AuPairProfilePage() {
                  {isAdmin && profile.user_id === 'admin' ? null : (
                   isHostFamily && !isPremium && !isAdmin ? (
                     <Button 
-                      onClick={() => navigate('/settings/billing')}
+                      onClick={() => navigate('/au-pair/payment')}
                       className="bg-gray-900 text-white hover:bg-gray-800"
                     >
                       <Lock size={16} className="mr-2" />
@@ -215,7 +215,7 @@ export function AuPairProfilePage() {
             <div className="space-y-6">
                 
                 {/* Personal Details Card */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                     <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <User size={16} />
                         {t('auPair.profile.personalDetails')}
@@ -237,7 +237,7 @@ export function AuPairProfilePage() {
                 </div>
 
                 {/* Education Card */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                     <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <GraduationCap size={16} />
                         {t('auPair.education') || 'Education'}
@@ -259,14 +259,14 @@ export function AuPairProfilePage() {
                 </div>
 
                 {/* Languages Card */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Globe size={16} />
                         {t('auPair.languages') || 'Languages'}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                         {getLanguages().map((lang, i) => (
-                            <span key={i} className="px-2.5 py-1 bg-gray-50 text-gray-700 text-xs font-medium rounded border border-gray-200">
+                            <span key={i} className="px-2.5 py-1 bg-gray-50 text-gray-700 text-xs font-medium rounded border border-gray-300">
                                 {lang}
                             </span>
                         ))}
@@ -274,7 +274,7 @@ export function AuPairProfilePage() {
                 </div>
 
                 {/* Skills Card */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <CheckCircle size={16} />
                         {t('auPair.onboarding.steps.skills') || 'Skills'}
@@ -294,7 +294,7 @@ export function AuPairProfilePage() {
             <div className="md:col-span-2 space-y-6">
                 
                 {/* About Me */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">{t('auPair.aboutMe')}</h3>
                     <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
                         {profile.bio || t('auPair.profile.bioNotProvided')}
@@ -303,7 +303,7 @@ export function AuPairProfilePage() {
 
                 {/* Experience */}
                  {profile.experience_description && (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                         <h3 className="text-lg font-bold text-gray-900 mb-4">{t('auPair.profile.experience')}</h3>
                         <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 italic border-l-4 border-gray-300">
                             "{profile.experience_description}"
@@ -312,7 +312,7 @@ export function AuPairProfilePage() {
                 )}
 
                 {/* Preferences */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-6">{t('auPair.preferences')}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
@@ -337,7 +337,7 @@ export function AuPairProfilePage() {
                 </div>
 
                 {/* Safety Badges */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">{t('auPair.profile.safety') || 'Safety & Expertise'}</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {[
