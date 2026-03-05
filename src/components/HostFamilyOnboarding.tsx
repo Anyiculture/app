@@ -7,7 +7,8 @@ import { supabase } from '../lib/supabase';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
-import { LocationCascade, COUNTRIES } from './ui/LocationCascade';
+import { LocationCascade } from './ui/LocationCascade';
+import { COUNTRIES } from '../constants/countries';
 import { Modal } from './ui/Modal';
 import { MultiSelectField } from './ui/MultiSelectField';
 import { SingleSelectField } from './ui/SingleSelectField';
@@ -419,8 +420,8 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
   ];
 
   const nationalityOptions = COUNTRIES.map(c => ({
-    id: c.value,
-    label: c.label_en
+    id: c.code,
+    label: language === 'zh' ? c.zh : c.en
   }));
 
   const benefitsOptions = [

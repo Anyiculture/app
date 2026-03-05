@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { auPairMatchingService, AuPairProfile } from '../services/auPairMatchingService';
-import { auPairService, UserSubscriptionStatus } from '../services/auPairService';
 import { adminService } from '../services/adminService';
 import { ProfileCard } from '../components/aupair/ProfileCard';
 import { Button } from '../components/ui/Button';
@@ -23,8 +22,6 @@ export function BrowseAuPairsPage() {
   const [savedProfiles, setSavedProfiles] = useState<string[]>([]);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<UserSubscriptionStatus | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     nationality: 'all',
@@ -67,20 +64,8 @@ export function BrowseAuPairsPage() {
     if (user) {
       loadAuPairs();
       loadSavedProfiles();
-      loadSubscriptionStatus();
     }
   }, [filters, user]);
-
-  const loadSubscriptionStatus = async () => {
-    try {
-      const status = await auPairService.getUserSubscriptionStatus();
-      setSubscriptionStatus(status);
-      const isUserAdmin = await adminService.checkIsAdmin();
-      setIsAdmin(isUserAdmin);
-    } catch (error) {
-      console.error('Error loading subscription status:', error);
-    }
-  };
 
   const loadAuPairs = async () => {
     try {
@@ -358,7 +343,7 @@ export function BrowseAuPairsPage() {
                            isFavorited={savedProfiles.includes(auPair.id)}
                            onToggleFavorite={handleToggleFavorite}
                            onView={handleViewProfile}
-                           isRestricted={!isAdmin && subscriptionStatus?.subscriptionStatus !== 'premium'}
+                           isRestricted={false}
                          />
                        </motion.div>
                      ))

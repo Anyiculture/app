@@ -8,7 +8,6 @@ import {
   CheckCircle,
   MessageCircle,
   User,
-  Lock,
   ShieldCheck
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -16,7 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { Loading } from '../components/ui/Loading';
 import { Button } from '../components/ui/Button';
-import { AuPairProfile, auPairService } from '../services/auPairService';
+import { AuPairProfile } from '../services/auPairService';
 import { messagingService } from '../services/messagingService';
 import { adminService } from '../services/adminService';
 import { COUNTRIES } from '../components/ui/LocationCascade';
@@ -28,8 +27,6 @@ export function AuPairProfilePage() {
   const { t, language } = useI18n();
   const [profile, setProfile] = useState<AuPairProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isPremium, setIsPremium] = useState(false);
-  const [isHostFamily, setIsHostFamily] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -44,13 +41,8 @@ export function AuPairProfilePage() {
       // Check Admin
       const adminStatus = await adminService.checkIsAdmin();
       setIsAdmin(adminStatus);
-      
-      // Check Subscription
-      const status = await auPairService.getUserSubscriptionStatus();
-      setIsHostFamily(status.role === 'host_family');
-      setIsPremium(status.subscriptionStatus === 'premium');
     } catch (error) {
-      console.error('Error checking subscription/admin status:', error);
+      console.error('Error checking admin status:', error);
     }
   };
 
@@ -189,23 +181,13 @@ export function AuPairProfilePage() {
             <div className="flex-shrink-0">
                  {/* Hide contact button if admin is viewing admin-created listing */}
                  {isAdmin && profile.user_id === 'admin' ? null : (
-                  isHostFamily && !isPremium && !isAdmin ? (
-                    <Button 
-                      onClick={() => navigate('/au-pair/payment')}
-                      className="bg-gray-900 text-white hover:bg-gray-800"
-                    >
-                      <Lock size={16} className="mr-2" />
-                      {t('auPair.profile.unlockContact')}
-                    </Button>
-                  ) : (
                     <Button 
                       onClick={handleContact}
                       className="bg-pink-600 text-white hover:bg-pink-700"
                     >
                       <MessageCircle size={16} className="mr-2" />
-                      {t('auPair.contactAuPair')}
+                      {t('auPair.profile.unlockContact')}
                     </Button>
-                  )
                  )}
             </div>
         </div>

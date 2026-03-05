@@ -190,7 +190,7 @@
     "pleaseSpecify": "请注明...",
     "profile": {
       "main": "个人资料",
-      "unlockContact": "升级以联系互惠生"
+      "unlockContact": "联系"
     },
     "code": "代码",
     "type": "类型",
@@ -417,7 +417,7 @@
         "deleteDesc": "永久删除您的账户和所有数据"
       },
       "billing": {
-        "upgradePlan": "升级计划"
+        "upgradePlan": "升级方案"
       },
       "passwordReset": "密码重置",
       "passwordResetDesc": "请求为您的管理员账户发送密码重置链接。",
@@ -3762,7 +3762,13 @@
         "korean": "韩语",
         "russian": "俄语",
         "italian": "意大利语",
-        "portuguese": "葡萄牙语"
+        "portuguese": "葡萄牙语",
+        "proficiency": {
+          "native": "母语",
+          "fluent": "流利",
+          "intermediate": "中级",
+          "beginner": "初级"
+        }
       }
     },
     "editProfile": "编辑资料",

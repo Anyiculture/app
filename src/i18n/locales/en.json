@@ -105,7 +105,7 @@
       "gender": "Gender",
       "nationality": "Nationality",
       "available": "Available",
-      "unlockContact": "Upgrade to Contact",
+      "unlockContact": "Contact",
       "main": "Profile"
     },
     "edit": "Edit",
@@ -1631,6 +1631,15 @@
       "allDates": "All Dates",
       "allLocations": "All Locations",
       "clear": "Clear",
+      "cultural": "Cultural",
+      "professional": "Professional",
+      "social": "Social",
+      "family": "Family",
+      "anyTime": "Any Time",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "weekend": "Weekend",
       "categories": {
         "networking": "Networking",
         "workshop": "Workshop",
@@ -4278,14 +4287,18 @@
         "korean": "Korean",
         "russian": "Russian",
         "italian": "Italian",
-        "portuguese": "Portuguese"
+        "portuguese": "Portuguese",
+        "proficiency": {
+          "native": "Native"
+        }
       },
       "step7": {
-        "proficiencyLabel": "Proficiency",
+      "proficiency": {
         "native": "Native",
         "fluent": "Fluent",
         "intermediate": "Intermediate",
         "beginner": "Beginner"
+      }
       },
       "step5": {
         "dietaryLabel": "Dietary Restrictions",
@@ -4516,6 +4529,38 @@
       "attendEvents": "Attend Events",
       "joinCommunity": "Join Community",
       "auPair": "Au Pair Program"
+    },
+    "paymentWechat": {
+      "payment": {
+        "title": "Premium Membership",
+        "subtitle": "Unlock all features and connect with more families",
+        "weChatPayOnly": "WeChat Pay Only",
+        "month": "mo",
+        "scanToSubscribe": "Scan the QR code below to subscribe",
+        "instructionsTitle": "Payment Instructions:",
+        "instruction1": "Open WeChat on your phone",
+        "instruction2": "Click '+' and select 'Scan'",
+        "instruction3": "Scan the QR code above",
+        "instruction4": "Complete the 100 CNY payment",
+        "instruction5": "Save a screenshot of the payment proof",
+        "instruction6": "Click 'I Have Paid' below",
+        "iHavePaid": "I Have Paid",
+        "uploadProofTitle": "Upload Payment Proof",
+        "uploadProofDesc": "Please upload the WeChat screenshot of your successful payment. This is required to activate your premium membership.",
+        "clickToChange": "Click to change",
+        "clickToUpload": "Click to upload image",
+        "formats": "JPG or PNG only",
+        "submitProof": "Submit Proof",
+        "viewFullProfiles": "View Full Profiles",
+        "viewFullProfilesDesc": "See complete family details and photos",
+        "unlimitedMessages": "Unlimited Messages",
+        "unlimitedMessagesDesc": "Contact as many families as you like",
+        "verifiedProfiles": "Verified Profiles",
+        "verifiedProfilesDesc": "Connect with verified host families",
+        "prioritySupport": "Priority Support",
+        "prioritySupportDesc": "Get help whenever you need it"
+      },
+      "paymentError": "Payment submission failed. Please try again."
     }
   }
 }

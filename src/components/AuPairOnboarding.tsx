@@ -1005,10 +1005,10 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                          <SingleSelectField 
                           label={t('auPair.onboarding.step7.proficiencyLabel')}
                           options={[
-                            { id: 'native', label: t('auPair.onboarding.step7.native') },
-                            { id: 'fluent', label: t('auPair.onboarding.step7.fluent') },
-                            { id: 'intermediate', label: t('auPair.onboarding.step7.intermediate') },
-                            { id: 'beginner', label: t('auPair.onboarding.step7.beginner') },
+                            { id: 'native', label: t('auPair.onboarding.options.languages.proficiency.native') },
+                            { id: 'fluent', label: t('auPair.onboarding.options.languages.proficiency.fluent') },
+                            { id: 'intermediate', label: t('auPair.onboarding.options.languages.proficiency.intermediate') },
+                            { id: 'beginner', label: t('auPair.onboarding.options.languages.proficiency.beginner') },
                           ]}
                           value={formData.languages[index].proficiency}
                           onChange={(val) => updateLanguage(index, 'proficiency', val)}
@@ -1097,8 +1097,8 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                        <div className="text-sm text-gray-600 grid grid-cols-2 gap-2">
                           <p><span className="font-medium">{t('common.name')}:</span> {formData.first_name} {formData.last_name}</p>
                           <p><span className="font-medium">{t('common.age')}:</span> {formData.age}</p>
-                          <p><span className="font-medium">{t('common.location')}:</span> {formData.current_city}, {formData.current_country}</p>
-                          <p><span className="font-medium">{t('common.nationality')}:</span> {formData.nationality}</p>
+                          <p><span className="font-medium">{t('common.location')}:</span> {formData.current_city}, {COUNTRIES.find(c => c.code === formData.current_country)?.[language === 'zh' ? 'zh' : 'en'] || formData.current_country}</p>
+                          <p><span className="font-medium">{t('common.nationality')}:</span> {COUNTRIES.find(c => c.code === formData.nationality)?.[language === 'zh' ? 'zh' : 'en'] || formData.nationality}</p>
                        </div>
                     </div>
 
@@ -1132,11 +1132,26 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                           <h4 className="font-semibold text-gray-900">{t('auPair.onboarding.steps.availability')}</h4>
                           <button onClick={() => jumpToStep(6)} className="text-xs font-medium text-pink-600 hover:text-pink-700 px-3 py-1 bg-pink-50 rounded-full">{t('common.edit')}</button>
                        </div>
-                       <div className="text-sm text-gray-600">
-                          <p><span className="font-medium">{t('common.startDate')}:</span> {formData.availability_start_date}</p>
-                          <p><span className="font-medium">{t('common.duration')}:</span> {formData.duration_months} months</p>
-                       </div>
-                    </div>
+                        <div className="text-sm text-gray-600">
+                           <p><span className="font-medium">{t('common.startDate')}:</span> {formData.availability_start_date}</p>
+                           <p><span className="font-medium">{t('common.duration')}:</span> {formData.duration_months} months</p>
+                        </div>
+                     </div>
+
+                     {/* Languages */}
+                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative group hover:border-pink-300 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
+                           <h4 className="font-semibold text-gray-900">{t('auPair.onboarding.steps.languages')}</h4>
+                           <button onClick={() => jumpToStep(8)} className="text-xs font-medium text-pink-600 hover:text-pink-700 px-3 py-1 bg-pink-50 rounded-full">{t('common.edit')}</button>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                           {formData.languages.map((lang, idx) => (
+                             <p key={idx}>
+                               <span className="font-medium">{t(`auPair.onboarding.options.languages.${lang.language.toLowerCase()}`)}:</span> {t(`auPair.onboarding.options.languages.proficiency.${lang.proficiency}`)}
+                             </p>
+                           ))}
+                        </div>
+                     </div>
                  </div>
               </div>
             )}

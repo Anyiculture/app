@@ -528,20 +528,7 @@ export const auPairService = {
   },
 
   async canSendMessage(): Promise<{ allowed: boolean; reason?: string }> {
-    const status = await this.getUserSubscriptionStatus();
-
-    if (status.role !== 'host_family') {
-      return { allowed: true };
-    }
-
-    if (status.subscriptionStatus === 'premium') {
-      return { allowed: true };
-    }
-
-    if (status.messageCount >= 1) {
-      return { allowed: false, reason: 'Message limit reached. Upgrade to premium for unlimited messaging.' };
-    }
-
+    // Premium restriction removed - anyone can message
     return { allowed: true };
   },
 

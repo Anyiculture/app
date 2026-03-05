@@ -156,14 +156,14 @@ export function AuPairPaymentPage() {
 
               <div className="space-y-4 w-full">
                 <div className="text-left bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <h4 className="font-bold text-gray-900 text-sm mb-2">{t('auPair.payment.instructionsTitle')}</h4>
+                    <h4 className="font-bold text-gray-900 text-sm mb-2">{t('paymentWechat.payment.instructionsTitle')}</h4>
                     <ol className="text-xs text-gray-600 space-y-1.5 list-decimal pl-4">
-                        <li>{t('auPair.payment.instruction1')}</li>
-                        <li>{t('auPair.payment.instruction2')}</li>
-                        <li>{t('auPair.payment.instruction3')}</li>
-                        <li>{t('auPair.payment.instruction4')}</li>
-                        <li>{t('auPair.payment.instruction5')}</li>
-                        <li>{t('auPair.payment.instruction6')}</li>
+                        <li>{t('paymentWechat.payment.instruction1')}</li>
+                        <li>{t('paymentWechat.payment.instruction2')}</li>
+                        <li>{t('paymentWechat.payment.instruction3')}</li>
+                        <li>{t('paymentWechat.payment.instruction4')}</li>
+                        <li>{t('paymentWechat.payment.instruction5')}</li>
+                        <li>{t('paymentWechat.payment.instruction6')}</li>
                     </ol>
                 </div>
 
@@ -172,7 +172,7 @@ export function AuPairPaymentPage() {
                   className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
                 >
                   <CheckCircle size={18} />
-                  {t('settings.billing.upgradePlan')}
+                  {t('paymentWechat.payment.iHavePaid')}
                 </Button>
               </div>
 
@@ -202,11 +202,11 @@ export function AuPairPaymentPage() {
       <Modal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
-        title={t('auPair.payment.uploadProofTitle')}
+        title={t('paymentWechat.payment.uploadProofTitle')}
       >
         <div className="space-y-6">
             <p className="text-sm text-gray-600">
-                {t('auPair.payment.uploadProofDesc')}
+                {t('paymentWechat.payment.uploadProofDesc')}
             </p>
 
             <div 
@@ -225,13 +225,13 @@ export function AuPairPaymentPage() {
                     <div className="flex flex-col items-center">
                         <CheckCircle className="w-10 h-10 text-green-500 mb-2" />
                         <p className="text-sm font-bold text-green-700">{selectedFile.name}</p>
-                        <p className="text-xs text-green-600 mt-1">{t('auPair.payment.clickToChange')}</p>
+                        <p className="text-xs text-green-600 mt-1">{t('paymentWechat.payment.clickToChange')}</p>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center">
                         <Upload className="w-10 h-10 text-gray-400 mb-2" />
-                        <p className="text-sm font-medium text-gray-700">{t('auPair.payment.clickToUpload')}</p>
-                        <p className="text-xs text-gray-400 mt-1">{t('auPair.payment.formats')}</p>
+                        <p className="text-sm font-medium text-gray-700">{t('paymentWechat.payment.clickToUpload')}</p>
+                        <p className="text-xs text-gray-400 mt-1">{t('paymentWechat.payment.formats')}</p>
                     </div>
                 )}
             </div>
