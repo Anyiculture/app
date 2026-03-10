@@ -139,8 +139,14 @@ export interface HostFamilyProfile {
 export interface UserSubscriptionStatus {
   role: 'host_family' | 'au_pair' | null;
   subscriptionStatus: 'free' | 'premium' | null;
+  subscriptionExpiresAt: string | null;
   messageCount: number;
   onboardingCompleted: boolean;
+  latestSubmission?: {
+    status: string;
+    id: string;
+    admin_notes?: string;
+  } | null;
 }
 
 export const auPairService = {
@@ -153,6 +159,7 @@ export const auPairService = {
         return {
           role: null,
           subscriptionStatus: null,
+          subscriptionExpiresAt: null,
           messageCount: 0,
           onboardingCompleted: false
         };
@@ -169,16 +176,70 @@ export const auPairService = {
         return {
           role: null,
           subscriptionStatus: null,
+          subscriptionExpiresAt: null,
           messageCount: 0,
           onboardingCompleted: false
         };
       }
 
+      // Check user_services as a fallback for role if au_pair_role is null
+      let role = profile?.au_pair_role;
+      if (!role) {
+        const { data: services } = await supabase
+          .from('user_services')
+          .select('role')
+          .eq('user_id', user.id);
+        
+        if (services?.some((s: { role: string }) => s.role === 'host_family')) {
+          role = 'host_family';
+        } else if (services?.some((s: { role: string }) => s.role === 'au_pair')) {
+          role = 'au_pair';
+        }
+      }
+
+      // Final fallback: check specific profile tables if role still null
+      if (!role) {
+        const { data: hf } = await supabase
+          .from('host_family_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (hf) {
+          role = 'host_family';
+        } else {
+          const { data: ap } = await supabase
+            .from('au_pair_profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          if (ap) role = 'au_pair';
+        }
+      }
+
+      const { data: latestSubmission } = await supabase
+        .from('payment_submissions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const { data: subscription } = await supabase
+        .from('au_pair_subscriptions')
+        .select('end_date, status')
+        .eq('user_id', user.id)
+        .order('end_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
       return {
-        role: profile?.au_pair_role || null,
-        subscriptionStatus: profile?.au_pair_subscription_status || null,
+        role: (role as 'host_family' | 'au_pair') || null,
+        subscriptionStatus: (profile?.au_pair_subscription_status as any) || (role === 'host_family' ? 'free' : null),
+        subscriptionExpiresAt: subscription?.status === 'active' ? (subscription?.end_date || null) : null,
         messageCount: profile?.au_pair_message_count || 0,
-        onboardingCompleted: profile?.au_pair_onboarding_completed || false
+        onboardingCompleted: profile?.au_pair_onboarding_completed || false,
+        latestSubmission
       };
     } catch (error) {
       console.error('getUserSubscriptionStatus failed:', error);
@@ -186,8 +247,10 @@ export const auPairService = {
       return {
         role: null,
         subscriptionStatus: null,
+        subscriptionExpiresAt: null,
         messageCount: 0,
-        onboardingCompleted: false
+        onboardingCompleted: false,
+        latestSubmission: null
       };
     }
   },
@@ -527,9 +590,17 @@ export const auPairService = {
     return data;
   },
 
-  async canSendMessage(): Promise<{ allowed: boolean; reason?: 'not_premium' | 'onboarding_incomplete' | 'not_authenticated' }> {
+  async canSendMessage(contextType?: string): Promise<{ 
+    allowed: boolean; 
+    reason?: 'not_premium' | 'onboarding_incomplete' | 'not_authenticated' | 'payment_pending' | 'payment_rejected' 
+  }> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { allowed: false, reason: 'not_authenticated' };
+
+    // Always allow messages to admin/support
+    if (contextType === 'support' || contextType === 'admin') {
+      return { allowed: true };
+    }
 
     const status = await this.getUserSubscriptionStatus();
     
@@ -538,6 +609,18 @@ export const auPairService = {
     }
 
     if (status.role === 'host_family' && status.subscriptionStatus !== 'premium') {
+      // Check for pending or rejected payment submission
+      const latestSubmission = await this.getLatestPaymentSubmission();
+      
+      if (latestSubmission) {
+        if (latestSubmission.status === 'pending') {
+          return { allowed: false, reason: 'payment_pending' };
+        }
+        if (latestSubmission.status === 'rejected') {
+          return { allowed: false, reason: 'payment_rejected' };
+        }
+      }
+      
       return { allowed: false, reason: 'not_premium' };
     }
 
@@ -562,41 +645,6 @@ export const auPairService = {
     }
 
     return data;
-  },
-
-  async submitPaymentProof(file: File, amount: number) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    // 1. Upload file
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${Date.now()}_proof.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from('payment_proofs')
-      .upload(fileName, file);
-
-    if (uploadError) throw uploadError;
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('payment_proofs')
-      .getPublicUrl(fileName);
-
-    // 2. Create payment submission record
-    const { error: paymentError } = await supabase
-      .from('payment_submissions')
-      .insert({
-        user_id: user.id,
-        image_url: publicUrl,
-        plan_type: 'au_pair_premium_monthly', // Defaulting to monthly based on UI
-        amount: amount,
-        status: 'pending'
-      });
-
-    if (paymentError) throw paymentError;
-
-    // 3. User remains free until admin approves the submission
-    // The admin review process will trigger the upgrade via review_payment_submission RPC
   },
 
   // Admin-specific methods for managing admin-owned listings

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
+import { useFormPersistence } from '../hooks/useFormPersistence';
 import { marketplaceService } from '../services/marketplaceService';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -22,10 +23,7 @@ export function MarketplacePostPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedProvince, setSelectedProvince] = useState('');
   const [availableCities, setAvailableCities] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
-
   const [availableSubcategories, setAvailableSubcategories] = useState<Subcategory[]>([]);
   const [isCustomBrand, setIsCustomBrand] = useState(false);
   
@@ -36,7 +34,7 @@ export function MarketplacePostPage() {
     { value: 'email', label: t('marketplacePost.contact_methods.email') || 'Email', id: 'email' },
   ], [t]);
 
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     // Basic Info
     title: '',
     title_zh: '',
@@ -77,30 +75,37 @@ export function MarketplacePostPage() {
     contact_wechat: '',
     contact_email: '',
     contact_phone: '',
+  };
+
+  const {
+    data: formData,
+    setData: setFormData,
+    clearPersistence
+  } = useFormPersistence({
+    key: 'marketplace_post_draft',
+    initialData: initialFormData
   });
 
   // Update cities when province changes
   useEffect(() => {
-    if (selectedProvince) {
-      const cities = getCitiesForProvince(selectedProvince);
+    if (formData.location_province) {
+      const cities = getCitiesForProvince(formData.location_province);
       setAvailableCities(cities);
-      setFormData(prev => ({ ...prev, location_province: selectedProvince, location_city: '' }));
     } else {
       setAvailableCities([]);
     }
-  }, [selectedProvince]);
+  }, [formData.location_province]);
 
   // Update subcategories when category changes
   useEffect(() => {
     setIsCustomBrand(false); // Reset custom brand when category changes
-    if (selectedCategory) {
-      const subcats = getSubcategories(selectedCategory);
+    if (formData.category) {
+      const subcats = getSubcategories(formData.category);
       setAvailableSubcategories(subcats);
-      setFormData(prev => ({ ...prev, category: selectedCategory, subcategory: '', brand: '' }));
     } else {
       setAvailableSubcategories([]);
     }
-  }, [selectedCategory]);
+  }, [formData.category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +173,7 @@ export function MarketplacePostPage() {
       });
       
       showToast('success', t('marketplacePost.toast.create_success'));
+      clearPersistence();
       navigate(`/marketplace/${item.id}`);
     } catch (error: any) {
       console.error('Error creating item:', error);
@@ -410,8 +416,8 @@ export function MarketplacePostPage() {
                     {t('marketplacePost.category')} *
                   </label>
                   <Select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    value={formData.category}
+                    onChange={(e) => handleChange('category', e.target.value)}
                     required
                   >
                     <option value="">{t('marketplace.categories.select')}</option>
@@ -680,8 +686,8 @@ export function MarketplacePostPage() {
                     {t('marketplacePost.province')} *
                   </label>
                   <Select
-                    value={selectedProvince}
-                    onChange={(e) => setSelectedProvince(e.target.value)}
+                    value={formData.location_province}
+                    onChange={(e) => handleChange('location_province', e.target.value)}
                     required
                   >
                     <option value="">{t('marketplacePost.selectProvince')}</option>
@@ -701,7 +707,7 @@ export function MarketplacePostPage() {
                     value={formData.location_city}
                     onChange={(e) => handleChange('location_city', e.target.value)}
                     required
-                    disabled={!selectedProvince}
+                    disabled={!formData.location_province}
                   >
                     <option value="">{t('marketplacePost.selectCity')}</option>
                     {availableCities.map(city => (

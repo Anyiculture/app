@@ -24,9 +24,10 @@ interface AdminSidebarProps {
   onTabChange: (tab: string) => void;
   onLogout: () => void;
   className?: string;
+  stats?: any;
 }
 
-export function AdminSidebar({ activeTab, onTabChange, onLogout, className }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, onLogout, className, stats }: AdminSidebarProps) {
   const { t } = useI18n();
   const [visibleModules, setVisibleModules] = useState<string[]>([]);
 
@@ -98,7 +99,12 @@ export function AdminSidebar({ activeTab, onTabChange, onLogout, className }: Ad
             )}
           >
             <item.icon size={18} className={cn(activeTab === item.id ? "text-vibrant-purple" : "text-gray-400")} />
-            {t(item.label) || item.label.split('.').pop()} 
+            <span className="flex-1 text-left">{t(item.label) || item.label.split('.').pop()}</span>
+            {item.id === 'payments' && stats?.pendingPaymentSubmissions > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                {stats.pendingPaymentSubmissions}
+              </span>
+            )}
           </button>
         ))}
       </nav>

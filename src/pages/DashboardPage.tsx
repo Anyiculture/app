@@ -6,13 +6,15 @@ import { useI18n } from '../contexts/I18nContext';
 import { supabase } from '../lib/supabase';
 import { GeneralOnboarding } from '../components/GeneralOnboarding';
 import { HeroCarousel } from '../components/HeroCarousel';
-import { ChevronRight, Loader2, ShoppingBag, Briefcase, Calendar, GraduationCap, Users, Sparkles, ShieldCheck, Baby, TrendingUp, MessageSquare } from 'lucide-react';
+import { ChevronRight, Loader2, ShoppingBag, Briefcase, Calendar, GraduationCap, Users, Sparkles, ShieldCheck, Baby, TrendingUp, MessageSquare, Upload } from 'lucide-react';
 import { MarketplaceCard } from '../components/marketplace/MarketplaceCard';
 import { EventCard } from '../components/events/EventCard';
 import { ProfileCard } from '../components/aupair/ProfileCard';
 import { EducationCard } from '../components/education/EducationCard';
 import { BackgroundBlobs, GlassCard, Button } from '../components/ui';
 import { motion } from 'framer-motion';
+import { auPairService, UserSubscriptionStatus } from '../services/auPairService';
+import { isAfter, differenceInDays } from 'date-fns';
 
 interface Profile {
   id: string;
@@ -31,6 +33,8 @@ export function DashboardPage() {
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPendingPayment, setIsPendingPayment] = useState(false);
+  const [subStatus, setSubStatus] = useState<UserSubscriptionStatus | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -80,9 +84,12 @@ export function DashboardPage() {
           .eq('user_id', user.id)
           .maybeSingle();
         
-        if (hfProfile?.profile_status === 'pending_payment') {
-           navigate('/au-pair/payment');
-           return;
+        // Fetch Detailed Subscription Status for Timer
+        const subscription = await auPairService.getUserSubscriptionStatus();
+        setSubStatus(subscription);
+
+        if (hfProfile?.profile_status === 'pending_payment' || subscription?.latestSubmission?.status === 'pending') {
+           setIsPendingPayment(true);
         }
       }
 
@@ -137,7 +144,6 @@ export function DashboardPage() {
     return <GeneralOnboarding userId={user?.id || ''} onComplete={loadProfile} />;
   }
 
-  const isEmployer = userRoles.includes('employer');
   const isAuPair = userRoles.includes('au_pair');
   const isHostFamily = userRoles.includes('host_family');
 
@@ -197,6 +203,96 @@ export function DashboardPage() {
             </motion.div>
           )}
         </div>
+
+        {/* Pending Payment Banner */}
+        {isHostFamily && isPendingPayment && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <GlassCard className="p-4 sm:p-6 border-l-4 border-l-amber-500 bg-amber-50/40">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4 text-center sm:text-left">
+                  <div className="p-3 rounded-2xl bg-amber-100 text-amber-600 shrink-0">
+                    <Upload size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">
+                      {t('dashboard.pendingPayment') || 'Payment Required'}
+                    </h3>
+                    <p className="text-sm text-gray-500 font-medium">
+                      {t('dashboard.pendingPaymentDesc') || 'Upload your payment proof to activate your subscription and access all features.'}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => navigate('/au-pair/payment')}
+                  className="bg-amber-500 hover:bg-amber-600 text-white shrink-0 flex items-center gap-2"
+                >
+                  <Upload size={16} />
+                  {t('dashboard.uploadProof') || 'Upload Proof'}
+                </Button>
+              </div>
+            </GlassCard>
+          </motion.div>
+        )}
+
+        {/* Subscription Timer Banner */}
+        {isHostFamily && subStatus?.subscriptionExpiresAt && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <GlassCard className={`p-4 sm:p-6 border-l-4 ${
+              isAfter(new Date(subStatus.subscriptionExpiresAt), new Date()) 
+                ? 'border-l-emerald-500 bg-emerald-50/30' 
+                : 'border-l-rose-500 bg-rose-50/30'
+            }`}>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4 text-center sm:text-left">
+                  <div className={`p-3 rounded-2xl ${
+                    isAfter(new Date(subStatus.subscriptionExpiresAt), new Date())
+                      ? 'bg-emerald-100 text-emerald-600'
+                      : 'bg-rose-100 text-rose-600'
+                  }`}>
+                    <Calendar size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">
+                      {t('dashboard.subscriptionTimer')}
+                    </h3>
+                    <p className="text-sm text-gray-500 font-medium">
+                      {isAfter(new Date(subStatus.subscriptionExpiresAt), new Date())
+                        ? t('dashboard.daysRemaining', { days: differenceInDays(new Date(subStatus.subscriptionExpiresAt), new Date()) })
+                        : t('dashboard.expired')}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  {!isAfter(new Date(subStatus.subscriptionExpiresAt), new Date()) && (
+                    <Button 
+                      onClick={() => navigate('/au-pair/plans')}
+                      className="bg-vibrant-purple text-white hover:bg-vibrant-purple/90"
+                    >
+                      {t('dashboard.renewSubscription')}
+                    </Button>
+                  )}
+                  <div className="text-right hidden sm:block">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                      {t('settings.billing.expiresOn')}
+                    </p>
+                    <p className="text-sm font-bold text-gray-900">
+                      {new Date(subStatus.subscriptionExpiresAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        )}
 
         {/* Dynamic Greeting & Hero */}
         <div className="mb-10 sm:mb-16 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
@@ -274,18 +370,7 @@ export function DashboardPage() {
             <EducationShelfContent />
           </SectionContainer>
 
-          {(isEmployer || isAdmin) && (
-            <SectionContainer 
-              id="candidates"
-              title={t('dashboard.recommendedCandidates')} 
-              subtitle={t('dashboard.candidatesSubtitle')}
-              link="/candidates"
-              icon={<Users size={32} />}
-              gradient="from-emerald-500 to-teal-500"
-            >
-              <CandidatesShelfContent />
-            </SectionContainer>
-          )}
+
 
           {(isHostFamily || isAdmin) && (
             <SectionContainer 
@@ -631,58 +716,7 @@ function CommunityShelfContent() {
   );
 }
 
-function CandidatesShelfContent() {
-  const { t } = useI18n();
-  const [loading, setLoading] = useState(true);
-  const [candidates, setCandidates] = useState<any[]>([]);
 
-
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
-        .from('profiles_jobseeker')
-        .select('*, profiles(display_name, avatar_url, full_name)')
-        .limit(10);
-      setCandidates(data || []);
-      setLoading(false);
-    };
-    load();
-  }, []);
-
-  if (loading) return <SkeletonGrid size={6} />;
-  return (
-    <>
-      {candidates.map((candidate, i) => {
-        const name = candidate.profiles?.display_name || candidate.full_name || t('dashboard.candidate');
-        const avatar = candidate.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-        return (
-          <motion.div
-            key={candidate.id}
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="w-[40vw] sm:w-[220px] md:w-[260px] flex-none snap-start"
-          >
-            <Link to={`/candidate/${candidate.user_id}`}>
-              <GlassCard className="p-1 sm:p-2 hover:border-emerald-500/40 transition-colors group">
-                <div className="relative mb-1 sm:mb-2 overflow-hidden rounded-lg sm:rounded-xl h-24 sm:h-32">
-                  <img src={avatar} alt={name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-white/90 backdrop-blur-md rounded-md">
-                    <span className="text-[7px] sm:text-[8px] font-black uppercase text-emerald-600 tracking-widest">{t('dashboard.online')}</span>
-                  </div>
-                </div>
-                <div className="px-1">
-                  <h4 className="text-[11px] sm:text-xs font-black text-gray-900 uppercase tracking-tight truncate mb-0.5 group-hover:text-emerald-600 transition-colors">{name}</h4>
-                  <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{candidate.desired_job_title}</p>
-                </div>
-              </GlassCard>
-            </Link>
-          </motion.div>
-        );
-      })}
-    </>
-  );
-}
 
 function HostFamiliesShelfContent() {
   const [loading, setLoading] = useState(true);

@@ -8907,3 +8907,62 @@ ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]'::jsonb;
 COMMENT ON COLUMN public.education_resources.images IS 'Array of image URLs for the education program';
 
 
+-- Migration: 20260310_cumulative_profile_fix.sql
+
+-- 1. Relax user_id constraints to allow multiple admin-owned listings
+-- Admin-owned listings will have user_id = null while self-owned listings must have a user_id.
+DO $$ 
+BEGIN
+  -- Drop NOT NULL from user_id to allow admin "orphan" listings
+  ALTER TABLE IF EXISTS au_pair_profiles ALTER COLUMN user_id DROP NOT NULL;
+  ALTER TABLE IF EXISTS host_family_profiles ALTER COLUMN user_id DROP NOT NULL;
+
+  -- Add check constraint to ensure self-owned listings always have a user_id
+  ALTER TABLE au_pair_profiles DROP CONSTRAINT IF EXISTS check_self_owned_has_user;
+  ALTER TABLE au_pair_profiles ADD CONSTRAINT check_self_owned_has_user 
+    CHECK (created_by != 'self' OR user_id IS NOT NULL);
+
+  ALTER TABLE host_family_profiles DROP CONSTRAINT IF EXISTS check_self_owned_has_user;
+  ALTER TABLE host_family_profiles ADD CONSTRAINT check_self_owned_has_user 
+    CHECK (created_by != 'self' OR user_id IS NOT NULL);
+
+  -- 2. Backfill existing records with self-ownership (if missing)
+  UPDATE au_pair_profiles 
+  SET owner_user_id = user_id, created_by = 'self'
+  WHERE owner_user_id IS NULL AND owner_admin_id IS NULL AND user_id IS NOT NULL;
+
+  UPDATE host_family_profiles 
+  SET owner_user_id = user_id, created_by = 'self'
+  WHERE owner_user_id IS NULL AND owner_admin_id IS NULL AND user_id IS NOT NULL;
+
+  -- 3. Update RLS policies to be robust against legacy data
+  -- Drop and recreate update policies to use a fallback to user_id
+  
+  DROP POLICY IF EXISTS "Au pairs can update own profile" ON au_pair_profiles;
+  CREATE POLICY "Au pairs can update own profile"
+    ON au_pair_profiles FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = user_id OR owner_user_id = auth.uid())
+    WITH CHECK (auth.uid() = user_id OR owner_user_id = auth.uid());
+
+  DROP POLICY IF EXISTS "Host families can update own profile" ON host_family_profiles;
+  CREATE POLICY "Host families can update own profile"
+    ON host_family_profiles FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = user_id OR owner_user_id = auth.uid())
+    WITH CHECK (auth.uid() = user_id OR owner_user_id = auth.uid());
+
+  -- 4. Ensure consistent INSERT policies (using WITH CHECK)
+  DROP POLICY IF EXISTS "Au pairs can insert own profile" ON au_pair_profiles;
+  CREATE POLICY "Au pairs can insert own profile"
+    ON au_pair_profiles FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = user_id OR owner_admin_id = auth.uid());
+
+  DROP POLICY IF EXISTS "Host families can insert own profile" ON host_family_profiles;
+  CREATE POLICY "Host families can insert own profile"
+    ON host_family_profiles FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = user_id OR owner_admin_id = auth.uid());
+
+END $$;

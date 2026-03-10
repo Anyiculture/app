@@ -13,6 +13,7 @@ import { COMMON_TECHNOLOGIES, COMPANY_SIZE_OPTIONS } from '../constants/companyI
 import { ImageUpload } from './ui/ImageUpload';
 import { Select } from './ui/Select';
 import { ConfirmModal } from './ui/ConfirmModal';
+import { useFormPersistence } from '../hooks/useFormPersistence';
 
 interface EmployerOnboardingProps {
   userId?: string;
@@ -39,12 +40,11 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
     }
   };
 
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     company_name: '',
     company_type: 'employer' as 'employer' | 'agency',
     industry: '',
@@ -69,6 +69,24 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
     // Online presence
     website: '',
     linkedin_url: '',
+  };
+
+  const {
+    data: formData,
+    setData: setFormData,
+    clearPersistence: clearFormPersistence
+  } = useFormPersistence({
+    key: `employer-onboarding-data-${userId || 'new'}`,
+    initialData: initialFormState
+  });
+
+  const {
+    data: step,
+    setData: setStep,
+    clearPersistence: clearStepPersistence
+  } = useFormPersistence({
+    key: `employer-onboarding-step-${userId || 'new'}`,
+    initialData: 1
   });
 
   // Fetch existing data for Edit/View mode
@@ -81,6 +99,12 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
     async function loadExistingProfile() {
       if (!userId || mode === 'create') return;
       
+      const hasDraft = localStorage.getItem(`employer-onboarding-data-${userId}`);
+      if (hasDraft) {
+        console.log('Using persisted draft for Employer onboarding');
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from('profiles_employer')
@@ -267,6 +291,8 @@ export function EmployerOnboarding({ userId: propUserId, onComplete, mode = 'cre
       // Mark jobs onboarding as completed in profile
       await profileService.completeModuleOnboarding('jobs');
 
+      clearFormPersistence();
+      clearStepPersistence();
       handleComplete();
     } catch (error: any) {
       console.error('Failed to save profile:', error);

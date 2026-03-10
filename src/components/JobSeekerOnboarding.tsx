@@ -14,9 +14,9 @@ import { OnboardingSuccessModal } from './ui/OnboardingSuccessModal';
 import { profileService } from '../services/profileService';
 import { BackgroundBlobs } from './ui/BackgroundBlobs';
 import { FileUpload } from './ui/FileUpload';
-import { PhoneInput } from './ui/PhoneInput'; // Added PhoneInput import
-
+import { PhoneInput } from './ui/PhoneInput';
 import { ConfirmModal } from './ui/ConfirmModal';
+import { useFormPersistence } from '../hooks/useFormPersistence';
 
 export interface JobSeekerOnboardingProps {
   userId?: string;
@@ -32,11 +32,11 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
   const userId = propUserId || user?.id;
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
-  const [formData, setFormData] = useState({
+
+  const initialFormState = {
     // Step 1: Basics & Resume
     resume_url: '',
     first_name: '',
@@ -87,6 +87,24 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
       issuer: string;
       issue_date: string;
     }[],
+  };
+
+  const { 
+    data: formData, 
+    setData: setFormData, 
+    clearPersistence: clearFormPersistence 
+  } = useFormPersistence({
+    key: `jobseeker-onboarding-data-${userId || 'new'}`,
+    initialData: initialFormState
+  });
+
+  const {
+    data: step,
+    setData: setStep,
+    clearPersistence: clearStepPersistence
+  } = useFormPersistence({
+    key: `jobseeker-onboarding-step-${userId || 'new'}`,
+    initialData: 1
   });
 
   // Fetch existing data for Edit/View mode
@@ -99,6 +117,15 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
     async function loadExistingProfile() {
       if (!userId || mode === 'create') return;
       
+      // If we already have a draft in localStorage, don't overwrite it with DB data
+      // unless the user explicitly wants to discard it.
+      // For now, we follow the rule: only load from DB if no draft exists.
+      const hasDraft = localStorage.getItem(`jobseeker-onboarding-data-${userId}`);
+      if (hasDraft) {
+        console.log('Using persisted draft for JobSeeker onboarding');
+        return;
+      }
+
       try {
         // Fetch Job Seeker Profile
         const { data: profile, error: profileError } = await supabase
@@ -172,11 +199,11 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
   const totalSteps = 5;
 
   const allCities = useMemo(() => {
-    return CHINA_LOCATIONS.flatMap(province => 
+    return CHINA_LOCATIONS.flatMap(province =>
       province.cities.map(city => ({
         ...city,
         province: province.name_en,
-        // Create a unique value for key/selection logic if needed, 
+        // Create a unique value for key/selection logic if needed,
         // but simple name_en is requested "from A to Z"
       }))
     ).sort((a, b) => a.name_en.localeCompare(b.name_en));
@@ -315,7 +342,7 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
               id: userId,
               display_name: user.email?.split('@')[0] || 'User',
               email: user.email,
-              role: 'job_seeker', 
+              role: 'job_seeker',
               updated_at: new Date().toISOString()
            });
            if (insertProfileError) {
@@ -373,6 +400,10 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
 
       // Mark jobs onboarding as completed
       await profileService.completeModuleOnboarding('jobs');
+
+      // Clear persisted data on successful submission
+      clearFormPersistence();
+      clearStepPersistence();
 
       // Show success modal instead of navigating immediately
       setShowSuccessModal(true);
@@ -545,7 +576,7 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">{t('jobsOnboarding.currentCity')} *</label>
-                <select 
+                <select
                   value={formData.current_location_city}
                   onChange={(e) => updateField('current_location_city', e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-vibrant-purple focus:ring-4 focus:ring-vibrant-purple/10 bg-white disabled:bg-gray-100"
@@ -954,7 +985,7 @@ export function JobSeekerOnboarding({ userId: propUserId, onComplete, mode = 'cr
                  disabled={loading || !formData.first_name || !formData.last_name}
                 className="flex items-center gap-2 px-10 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-semibold shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
               >
-                {loading 
+                {loading
                   ? t('common.saving')
                   : (isEditing ? t('common.saveChanges') : t('common.complete'))}
                 <CheckCircle size={20} />

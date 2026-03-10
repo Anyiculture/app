@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle, AlertCircle, ChevronLeft, ArrowRight } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
 import { auPairService } from '../services/auPairService';
+import { useFormPersistence } from '../hooks/useFormPersistence';
 import { supabase } from '../lib/supabase';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -30,7 +31,6 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
   const isViewOnly = mode === 'view';
   const { t, language } = useI18n();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
@@ -38,21 +38,7 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
   const totalSteps = 8;
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    async function checkAdmin() {
-      try {
-        const { adminService } = await import('../services/adminService');
-        const admin = await adminService.checkIsAdmin();
-        setIsAdmin(admin);
-      } catch (e) {
-        setIsAdmin(false);
-      }
-    }
-
-    checkAdmin();
-  }, []);
-
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     // Section A: Family Lifestyle
     family_name: '',
     family_size: 0,
@@ -101,6 +87,25 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
     housing_type: '', // Map to home_type
     requirements: '',
     expectations: ''
+  };
+
+  const {
+    data: formData,
+    setData: setFormData,
+    clearPersistence: clearFormPersistence
+  } = useFormPersistence({
+    key: `hostfamily-onboarding-data-${userId || 'new'}`,
+    initialData: initialFormData,
+    enableBeforeUnload: mode !== 'view'
+  });
+
+  const {
+    data: step,
+    setData: setStep,
+    clearPersistence: clearStepPersistence
+  } = useFormPersistence({
+    key: `hostfamily-onboarding-step-${userId || 'new'}`,
+    initialData: 1
   });
 
   // Fetch existing data for Edit/View mode
@@ -112,6 +117,12 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
 
     async function loadExistingProfile() {
       if (!userId || mode === 'create') return;
+      
+      const hasDraft = localStorage.getItem(`hostfamily-onboarding-data-${userId}`);
+      if (hasDraft) {
+        console.log('Using persisted draft for HostFamily onboarding');
+        return;
+      }
       
       try {
         const { data, error } = await supabase
@@ -167,21 +178,21 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
     loadExistingProfile();
   }, [userId, mode, initialData]);
 
-  // Step-by-step persistence
+  // Draft loading is now handled by useFormPersistence
+  
   useEffect(() => {
-    const savedData = localStorage.getItem('host_family_onboarding_draft');
-    if (savedData) {
+    async function checkAdmin() {
       try {
-        setFormData(prev => ({ ...prev, ...JSON.parse(savedData) }));
+        const { adminService } = await import('../services/adminService');
+        const admin = await adminService.checkIsAdmin();
+        setIsAdmin(admin);
       } catch (e) {
-        console.error('Failed to load draft:', e);
+        setIsAdmin(false);
       }
     }
-  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('host_family_onboarding_draft', JSON.stringify(formData));
-  }, [formData]);
+    checkAdmin();
+  }, []);
 
   const updateField = (field: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -317,7 +328,8 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
         current_city: formData.city
       });
       
-      localStorage.removeItem('host_family_onboarding_draft');
+      clearFormPersistence();
+      clearStepPersistence();
       
       // Delay for UX
           setTimeout(() => {
@@ -825,7 +837,7 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
                        </div>
                        <div className="text-sm text-gray-600 grid grid-cols-2 gap-2">
                           <p><span className="font-medium">{t('common.name')}:</span> {formData.family_name}</p>
-                          <p><span className="font-medium">{t('common.location')}:</span> {formData.city}, {formData.country}</p>
+                          <p><span className="font-medium">{t('auPair.onboarding.location')}:</span> {formData.city}, {formData.country}</p>
                           <p><span className="font-medium">{t('auPair.onboarding.familySize')}:</span> {formData.family_size}</p>
                           <p><span className="font-medium">{t('auPair.onboarding.children')}:</span> {formData.children_count}</p>
                        </div>

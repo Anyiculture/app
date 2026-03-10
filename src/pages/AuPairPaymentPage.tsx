@@ -4,6 +4,8 @@ import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Shield, MessageSquare, Eye, Sparkles, Upload, CheckCircle, XCircle, Smartphone } from "lucide-react";
 import { auPairService } from "../services/auPairService";
+import { paymentService } from '../services/paymentService';
+import { supabase } from '../lib/supabase';
 import { GlassCard } from "../components/ui/GlassCard";
 import { BackgroundBlobs } from '../components/ui';
 import { motion } from 'framer-motion';
@@ -20,6 +22,7 @@ export function AuPairPaymentPage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submissionStatus, setSubmissionStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
+  const [latestSubmission, setLatestSubmission] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export function AuPairPaymentPage() {
     try {
       const submission = await auPairService.getLatestPaymentSubmission();
       if (submission) {
+        setLatestSubmission(submission);
         setSubmissionStatus(submission.status);
       }
     } catch (err) {
@@ -66,7 +70,18 @@ export function AuPairPaymentPage() {
 
     setLoading(true);
     try {
-      await auPairService.submitPaymentProof(selectedFile, 100); // Amount 100 as per UI
+      const { data: profile } = await supabase
+        .from('host_family_profiles')
+        .select('id')
+        .eq('id', user?.id)
+        .maybeSingle();
+
+      if (profile) {
+        await paymentService.submitPaymentProof(selectedFile, 'host_family_premium', 100);
+      } else {
+        await paymentService.submitPaymentProof(selectedFile, 'au_pair_premium_monthly', 100);
+      }
+      
       setShowUploadModal(false);
       navigate('/au-pair/payment/success');
     } catch (err: any) {
@@ -182,23 +197,46 @@ export function AuPairPaymentPage() {
                 </div>
 
                 {submissionStatus === 'pending' ? (
-                  <div className="w-full p-4 bg-yellow-50 border border-yellow-200 rounded-xl mb-4">
-                    <div className="flex items-center justify-center gap-2 text-yellow-700 font-bold mb-1">
-                      <Sparkles size={18} />
-                      <p className="uppercase tracking-widest text-sm">{t('auPair.payment.pendingTitle') || 'Under Review'}</p>
+                  <div className="flex flex-col gap-3">
+                    <div className="w-full p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                      <div className="flex items-center justify-center gap-2 text-yellow-700 font-bold mb-1">
+                        <Sparkles size={18} />
+                        <p className="uppercase tracking-widest text-sm">{t('auPair.payment.pendingTitle') || 'Under Review'}</p>
+                      </div>
+                      <p className="text-xs text-yellow-600">
+                        {t('auPair.payment.pendingDesc') || 'Admin is verifying your proof. Typically takes 24-48 hours.'}
+                      </p>
                     </div>
-                    <p className="text-xs text-yellow-600">
-                      {t('auPair.payment.pendingDesc') || 'Admin is verifying your proof. Typically takes 2-4 hours.'}
-                    </p>
+                    <Button
+                        onClick={() => setShowUploadModal(true)}
+                        variant="outline"
+                        className="w-full h-12 text-sm font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle size={18} />
+                        {t('paymentWechat.payment.reuploadProof') || 'Upload Proof Again'}
+                      </Button>
                   </div>
                 ) : (
-                  <Button
-                    onClick={() => setShowUploadModal(true)}
-                    className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle size={18} />
-                    {submissionStatus === 'rejected' ? t('paymentWechat.payment.reuploadProof') : t('paymentWechat.payment.iHavePaid')}
-                  </Button>
+                  <>
+                    {submissionStatus === 'rejected' && (
+                      <div className="w-full p-4 bg-red-50 border border-red-200 rounded-xl mb-4 text-left">
+                        <div className="flex items-center gap-2 text-red-700 font-bold mb-1">
+                          <XCircle size={18} />
+                          <p className="uppercase tracking-widest text-sm">{t('auPair.payment.rejectedTitle') || 'REJECTED'}</p>
+                        </div>
+                        <p className="text-xs text-red-600">
+                          {latestSubmission?.admin_notes || 'Please provide a clearer proof of payment.'}
+                        </p>
+                      </div>
+                    )}
+                    <Button
+                      onClick={() => setShowUploadModal(true)}
+                      className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle size={18} />
+                      {submissionStatus === 'rejected' ? t('paymentWechat.payment.reuploadProof') : t('paymentWechat.payment.iHavePaid')}
+                    </Button>
+                  </>
                 )}
               </div>
 
@@ -276,7 +314,7 @@ export function AuPairPaymentPage() {
                     disabled={!selectedFile || loading}
                     className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                    {loading ? t('common.uploading') : t('auPair.payment.submitProof')}
+                    {loading ? t('common.upload.uploading') : t('auPair.payment.submitProof')}
                 </Button>
             </div>
         </div>

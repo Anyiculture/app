@@ -77,9 +77,9 @@ export function AuPairPaymentSuccessPage() {
                  <div className="absolute inset-0 bg-green-400 blur-2xl opacity-20 animate-pulse" />
                  <CheckCircle className="text-green-600 relative z-10" size={40} />
                </motion.div>
-               <h2 className="text-5xl font-black text-gray-900 mb-6 uppercase tracking-tight">Success!</h2>
+               <h2 className="text-5xl font-black text-gray-900 mb-6 uppercase tracking-tight">{t('auPair.payment.success.title') || 'Success!'}</h2>
                <p className="text-xl text-gray-400 font-black uppercase tracking-widest mb-12 max-w-sm mx-auto leading-relaxed pt-6 border-t border-gray-100">
-                 Your profile is now active and you have full access
+                 {t('auPair.payment.success.desc') || 'Your proof is under review.'}
                </p>
                
                <motion.button 
@@ -89,7 +89,7 @@ export function AuPairPaymentSuccessPage() {
                  className="group w-full h-16 bg-gray-900 text-white rounded-[1.5rem] text-[12px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-gray-800 transition-all flex items-center justify-center gap-4"
                >
                  <PartyPopper size={20} className="group-hover:rotate-12 transition-transform" />
-                 Explore {t('common.dashboard') || 'Dashboard'}
+                 {t('auPair.payment.success.explore') || 'Explore Dashboard'}
                  <ArrowRight size={20} />
                </motion.button>
             </div>

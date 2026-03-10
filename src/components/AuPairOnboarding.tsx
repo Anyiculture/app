@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useI18n } from '../contexts/I18nContext';
 import { auPairService } from '../services/auPairService';
+import { useFormPersistence } from '../hooks/useFormPersistence';
 import { validators, validateField } from '../utils/formValidation';
 import { COUNTRIES } from '../constants/countries';
 import { ChevronLeft, AlertCircle, CheckCircle, ArrowRight, Trash2, Save } from 'lucide-react';
@@ -40,14 +41,14 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
   const isViewOnly = mode === 'view';
   const { t, language } = useI18n();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const totalSteps = 10;
   const [isAdmin, setIsAdmin] = useState(false);
-  const [formData, setFormData] = useState({
+  
+  const initialFormData = {
     // Step 1: Basic Info
     first_name: '',
     middle_name: '',
@@ -92,6 +93,25 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     // Extra / Legacy
     bio: '',
     has_tattoos: false,
+  };
+
+  const { 
+    data: formData, 
+    setData: setFormData, 
+    clearPersistence: clearFormPersistence 
+  } = useFormPersistence({
+    key: `aupair-onboarding-data-${userId || 'new'}`,
+    initialData: initialFormData,
+    enableBeforeUnload: mode !== 'view'
+  });
+
+  const {
+    data: step,
+    setData: setStep,
+    clearPersistence: clearStepPersistence
+  } = useFormPersistence({
+    key: `aupair-onboarding-step-${userId || 'new'}`,
+    initialData: 1
   });
 
   useEffect(() => {
@@ -108,20 +128,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     checkAdmin();
   }, []);
 
-  useEffect(() => {
-    const savedData = localStorage.getItem('au_pair_onboarding_draft');
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        // If editing/viewing, we prefer the fetched data, but for creation, drafts are king
-        if (mode === 'create') {
-          setFormData(prev => ({ ...prev, ...parsed }));
-        }
-      } catch (e) {
-        console.error('Failed to load draft:', e);
-      }
-    }
-  }, [mode]);
+  // Draft loading is now handled by useFormPersistence
 
   // Fetch existing data for Edit/View mode
   useEffect(() => {
@@ -133,6 +140,12 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     async function loadExistingProfile() {
       if (!userId && !initialData?.profileId) return;
       if (mode === 'create') return;
+      
+      const hasDraft = localStorage.getItem(`aupair-onboarding-data-${userId}`);
+      if (hasDraft) {
+        console.log('Using persisted draft for AuPair onboarding');
+        return;
+      }
       
       try {
         let data;
@@ -191,12 +204,8 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     loadExistingProfile();
   }, [userId, mode, initialData]);
 
-  useEffect(() => {
-    localStorage.setItem('au_pair_onboarding_draft', JSON.stringify(formData));
-  }, [formData]);
-
   const saveAsDraft = () => {
-    localStorage.setItem('au_pair_onboarding_draft', JSON.stringify(formData));
+    // Manual save just to give user feedback, hook handles auto-save
     setShowSaveConfirm(true);
     setTimeout(() => setShowSaveConfirm(false), 3000);
   };
@@ -384,7 +393,8 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
           // Create new admin-owned listing
           await auPairService.createAdminAuPairProfile(profileData);
         }
-        localStorage.removeItem('au_pair_onboarding_draft');
+        clearFormPersistence();
+        clearStepPersistence();
         if (onComplete) onComplete();
       } else {
         // Normal user flow: create user account and profile
@@ -393,7 +403,8 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
           full_name: fullName,
           current_city: formData.current_city
         });
-        localStorage.removeItem('au_pair_onboarding_draft');
+        clearFormPersistence();
+        clearStepPersistence();
         setTimeout(() => {
           if (onComplete) onComplete();
         }, 1500);
@@ -1097,7 +1108,7 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
                        <div className="text-sm text-gray-600 grid grid-cols-2 gap-2">
                           <p><span className="font-medium">{t('common.name')}:</span> {formData.first_name} {formData.last_name}</p>
                           <p><span className="font-medium">{t('common.age')}:</span> {formData.age}</p>
-                          <p><span className="font-medium">{t('common.location')}:</span> {formData.current_city}, {COUNTRIES.find(c => c.code === formData.current_country)?.[language === 'zh' ? 'zh' : 'en'] || formData.current_country}</p>
+                          <p><span className="font-medium">{t('auPair.onboarding.location')}:</span> {formData.current_city}, {COUNTRIES.find(c => c.code === formData.current_country)?.[language === 'zh' ? 'zh' : 'en'] || formData.current_country}</p>
                           <p><span className="font-medium">{t('common.nationality')}:</span> {COUNTRIES.find(c => c.code === formData.nationality)?.[language === 'zh' ? 'zh' : 'en'] || formData.nationality}</p>
                        </div>
                     </div>

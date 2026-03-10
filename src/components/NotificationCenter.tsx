@@ -213,7 +213,7 @@ export function NotificationCenter() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-1">
                           <h4 className="font-medium text-gray-900 text-sm">
-                            {notification.title}
+                            {t(notification.title) || notification.title}
                           </h4>
                           <button
                             onClick={(e) => handleDelete(notification.id, e)}
@@ -223,7 +223,7 @@ export function NotificationCenter() {
                           </button>
                         </div>
                         <p className="text-sm text-gray-600 mb-2">
-                          {notification.message}
+                          {t(notification.message) || notification.message}
                         </p>
                         <p className="text-xs text-gray-500">
                           {localizationUtils.formatRelativeTime(notification.created_at)}

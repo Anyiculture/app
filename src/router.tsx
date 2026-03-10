@@ -60,7 +60,7 @@ import { Careers } from './pages/Careers';
 import { Blog } from './pages/Blog';
 import { Privacy } from './pages/Privacy';
 import { Terms } from './pages/Terms';
-import { CandidateBrowsePage } from './pages/CandidateBrowsePage';
+// import { CandidateBrowsePage } from './pages/CandidateBrowsePage';
 import { EmployerDashboardPage } from './pages/EmployerDashboardPage';
 import { EmployerProfileEditPage } from './pages/EmployerProfileEditPage';
 import { HostFamilyEditProfilePage } from './pages/HostFamilyEditProfilePage';
@@ -84,7 +84,7 @@ import { SecuritySettingsPage } from './pages/settings/SecuritySettingsPage';
 import { BillingSettingsPage } from './pages/settings/BillingSettingsPage';
 import { NotificationSettings } from './components/settings/NotificationSettings';
 
-import { CandidateProfilePage } from './pages/CandidateProfilePage';
+// import { CandidateProfilePage } from './pages/CandidateProfilePage';
 
 // ... (keep existing imports)
 
@@ -472,6 +472,7 @@ export const router = createBrowserRouter([
         element: <MyCommunityPostsPage />,
         errorElement: <ErrorBoundary />,
       },
+      /*
       {
         path: 'candidates',
         element: <JobsProtectedRoute requireRole="employer"><CandidateBrowsePage /></JobsProtectedRoute>,
@@ -482,10 +483,15 @@ export const router = createBrowserRouter([
         element: <JobsProtectedRoute requireRole="employer"><CandidateProfilePage /></JobsProtectedRoute>,
         errorElement: <ErrorBoundary />,
       },
+      */
 
       {
         path: 'messages',
-        element: <MessagingPage />,
+        element: (
+          <ProtectedRoute>
+            <MessagingPage />
+          </ProtectedRoute>
+        ),
         errorElement: <ErrorBoundary />,
       },
       {

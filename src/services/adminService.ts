@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { notificationService } from './notificationService';
 
 export interface AdminRole {
   id: string;
@@ -49,6 +50,7 @@ export interface AdminStats {
   activeConversations: number;
   totalAuPairs: number;
   totalHostFamilies: number;
+  pendingPaymentSubmissions: number;
 }
 
 export const adminService = {
@@ -222,6 +224,7 @@ export const adminService = {
           activeConversations: 0,
           totalAuPairs: 0,
           totalHostFamilies: 0,
+          pendingPaymentSubmissions: 0,
         };
       }
 
@@ -238,6 +241,7 @@ export const adminService = {
         activeConversations: statsData.activeConversations ?? statsData.active_conversations ?? 0,
         totalAuPairs: statsData.totalAuPairs ?? statsData.au_pair_count ?? 0,
         totalHostFamilies: statsData.totalHostFamilies ?? statsData.host_family_count ?? 0,
+        pendingPaymentSubmissions: statsData.pendingPaymentSubmissions ?? statsData.pending_payments ?? 0,
       };
     } catch (err) {
       console.error('Error in getAdminStats, attempting fallback:', err);
@@ -264,7 +268,8 @@ export const adminService = {
         supabase.from('visa_applications').select('*', { count: 'exact', head: true }).eq('status', 'submitted'),
         supabase.from('conversations').select('*', { count: 'exact', head: true }).neq('is_blocked', true),
         supabase.from('au_pair_profiles').select('*', { count: 'exact', head: true }).eq('profile_status', 'active'),
-        supabase.from('host_family_profiles').select('*', { count: 'exact', head: true }).eq('profile_status', 'active')
+        supabase.from('host_family_profiles').select('*', { count: 'exact', head: true }).eq('profile_status', 'active'),
+        supabase.from('payment_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending')
       ]);
 
       const getCount = (result: PromiseSettledResult<any>, label: string) => {
@@ -292,6 +297,7 @@ export const adminService = {
         activeConversations: getCount(results[8], 'conversations'),
         totalAuPairs: getCount(results[9], 'au_pairs'),
         totalHostFamilies: getCount(results[10], 'host_families'),
+        pendingPaymentSubmissions: getCount(results[11], 'payment_submissions'),
       };
 
       console.log('Manual fallback stats completed:', stats);
@@ -310,6 +316,7 @@ export const adminService = {
         activeConversations: 0,
         totalAuPairs: 0,
         totalHostFamilies: 0,
+        pendingPaymentSubmissions: 0,
       };
     }
   },
@@ -699,10 +706,34 @@ export const adminService = {
                 .select('id, full_name, email')
                 .in('id', userIds);
             
-            const submissionsWithProfiles = data.map((item: any) => ({
-                ...item,
-                user: profiles?.find((p: any) => p.id === item.user_id)
-            }));
+            const { data: hfProfiles } = await supabase
+                .from('host_family_profiles')
+                .select('user_id, father_name, mother_name')
+                .in('user_id', userIds);
+
+            const { data: apProfiles } = await supabase
+                .from('au_pair_profiles')
+                .select('user_id, display_name')
+                .in('user_id', userIds);
+
+            const submissionsWithProfiles = data.map((item: any) => {
+                let user = profiles?.find((p: any) => p.id === item.user_id);
+                
+                if (!user) {
+                  const hf = hfProfiles?.find((p: any) => p.user_id === item.user_id);
+                  const ap = apProfiles?.find((p: any) => p.user_id === item.user_id);
+                  if (hf) {
+                    user = { id: hf.user_id, full_name: `${hf.father_name || ''} ${hf.mother_name || ''}`.trim() || 'Host Family', email: 'Host Family (No Email)' };
+                  } else if (ap) {
+                    user = { id: ap.user_id, full_name: ap.display_name || 'Au Pair', email: 'Au Pair (No Email)' };
+                  }
+                }
+
+                return {
+                  ...item,
+                  user: user
+                };
+            });
             return { data: submissionsWithProfiles, total: count || 0 };
         }
     }
@@ -711,7 +742,16 @@ export const adminService = {
   },
 
   async updatePaymentSubmissionStatus(id: string, status: string, notes?: string) {
-    // Use the RPC function for safe processing (updating subscription etc.)
+    // 1. Get the submission to know the user_id
+    const { data: submission, error: fetchError } = await supabase
+      .from('payment_submissions')
+      .select('user_id')
+      .eq('id', id)
+      .single();
+    
+    if (fetchError) throw fetchError;
+
+    // 2. Use the RPC function for safe processing (updating subscription etc.)
     const { data, error } = await supabase.rpc('review_payment_submission', {
       submission_id: id,
       new_status: status,
@@ -721,6 +761,25 @@ export const adminService = {
     if (error) throw error;
     if (data && !data.success) throw new Error(data.message);
     
+    // 3. Notify the user
+    try {
+      const title = status === 'approved' ? 'Payment Approved!' : 'Payment Proof Rejected';
+      const message = status === 'approved' 
+        ? 'Your payment has been approved. You can now contact au pairs!' 
+        : `Your payment proof was rejected. Reason: ${notes || 'Please provide a clearer image'}`;
+      
+      await notificationService.createNotification(
+        submission.user_id,
+        'payment_update',
+        title,
+        message,
+        status === 'approved' ? '/au-pairs' : '/au-pair/payment'
+      );
+    } catch (notifyError) {
+      console.error('Failed to send notification:', notifyError);
+      // Don't throw here, as the payment update was successful
+    }
+
     await this.logActivity('review_payment', 'payment_submissions', id, { status, notes });
   },
 

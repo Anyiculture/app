@@ -2,16 +2,28 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
+import { useFormPersistence } from '../hooks/useFormPersistence';
 import { Mail, Lock, Eye, EyeOff, User, ArrowLeft } from 'lucide-react';
 
 export function SignUpPage() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const { t, language, setLanguage } = useI18n();
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+  
+  const {
+    data: formData,
+    setData: setFormData,
+    clearPersistence
+  } = useFormPersistence({
+    key: 'signup_draft',
+    initialData: {
+      firstName: '',
+      lastName: '',
+      email: '',
+    },
+  });
+
+  const [passwords, setPasswords] = useState({
     password: '',
     confirmPassword: '',
   });
@@ -23,14 +35,18 @@ export function SignUpPage() {
   const [success, setSuccess] = useState(false);
 
   const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'password' || field === 'confirmPassword') {
+      setPasswords(prev => ({ ...prev, [field]: value }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
+    if (passwords.password !== passwords.confirmPassword) {
       setError(t('auth.passwordsDoNotMatch'));
       return;
     }
@@ -40,7 +56,7 @@ export function SignUpPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
+    if (passwords.password.length < 6) {
       setError(t('auth.passwordTooShort'));
       return;
     }
@@ -48,7 +64,8 @@ export function SignUpPage() {
     setLoading(true);
 
     try {
-      await signUp(formData.email, formData.password, formData.firstName, formData.lastName);
+      await signUp(formData.email, passwords.password, formData.firstName, formData.lastName);
+      clearPersistence();
       setSuccess(true);
       setTimeout(() => navigate('/dashboard'), 2000);
     } catch (err: any) {
@@ -174,7 +191,7 @@ export function SignUpPage() {
                 <Lock className="w-4 h-4 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
+                  value={passwords.password}
                   onChange={(e) => updateField('password', e.target.value)}
                   placeholder={t('auth.enterPassword')}
                   required
@@ -200,7 +217,7 @@ export function SignUpPage() {
                 <Lock className="w-4 h-4 text-gray-400" />
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
-                  value={formData.confirmPassword}
+                  value={passwords.confirmPassword}
                   onChange={(e) => updateField('confirmPassword', e.target.value)}
                   placeholder={t('auth.confirmPasswordPlaceholder')}
                   required

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
+import { useFormPersistence } from '../hooks/useFormPersistence';
 import { jobsService } from '../services/jobsService';
 import { BackgroundBlobs } from '../components/ui/BackgroundBlobs';
 import { JOB_CATEGORIES } from '../constants/jobCategories';
@@ -15,7 +16,7 @@ export function PostJobPage() {
   const [error, setError] = useState('');
 
   // Updated state for new category structure
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     title: '',
     description: '',
     job_type: 'full_time' as 'full_time' | 'part_time' | 'contract' | 'internship' | 'freelance',
@@ -38,6 +39,15 @@ export function PostJobPage() {
     application_email: '',
     application_url: '',
     application_deadline: '',
+  };
+
+  const {
+    data: formData,
+    setData: setFormData,
+    clearPersistence
+  } = useFormPersistence({
+    key: 'post_job_draft',
+    initialData: initialFormData
   });
 
   const [skillInput, setSkillInput] = useState('');
@@ -148,6 +158,7 @@ export function PostJobPage() {
         featured: false,
       });
 
+      clearPersistence();
       navigate('/jobs');
     } catch (err: any) {
       setError(err.message || 'Failed to post job');

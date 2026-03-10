@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User, Session, AuthChangeEvent, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../services/profileService';
@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [connectionError, setConnectionError] = useState(false);
+  const userRef = useRef<User | null>(null);
 
   useEffect(() => {
     // Initial session fetch - let Supabase handle timeouts naturally
@@ -57,7 +58,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      setUser(session?.user ?? null);
+      const newUser = session?.user ?? null;
+      
+      // Optimization: Only update user state if the user ID changed or nullity changed.
+      // This prevents unnecessary re-renders of the entire app on background token refreshes.
+      if (newUser?.id !== userRef.current?.id) {
+        userRef.current = newUser;
+        setUser(newUser);
+      }
 
       if (event === 'SIGNED_IN' && session?.user) {
         // Background profile operations - don't block auth state

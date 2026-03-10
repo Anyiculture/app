@@ -8,7 +8,9 @@ import {
   CheckCircle,
   MessageCircle,
   User,
-  ShieldCheck
+  ShieldCheck,
+  Shield,
+  AlertCircle
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -30,6 +32,7 @@ export function AuPairProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<UserSubscriptionStatus | null>(null);
+  const [latestSubmission, setLatestSubmission] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
@@ -46,8 +49,12 @@ export function AuPairProfilePage() {
       
       // Check User Subscription
       if (user) {
-        const status = await auPairService.getUserSubscriptionStatus();
+        const [status, submission] = await Promise.all([
+          auPairService.getUserSubscriptionStatus(),
+          auPairService.getLatestPaymentSubmission()
+        ]);
         setSubscriptionStatus(status);
+        setLatestSubmission(submission);
       }
     } catch (error) {
       console.error('Error checking admin status:', error);
@@ -84,14 +91,14 @@ export function AuPairProfilePage() {
       const { allowed, reason } = await auPairService.canSendMessage();
       
       if (!allowed) {
-        if (reason === 'not_premium') {
-          // Check if they already submitted proof
-          const submission = await auPairService.getLatestPaymentSubmission();
-          if (submission && submission.status === 'pending') {
-            alert(t('auPair.payment.pendingApproval') || 'Your payment proof is under review. Please wait for admin approval.');
-            return;
-          }
-          // Otherwise redirect to payment
+        if (reason === 'payment_pending') {
+          alert(t('auPair.payment.pendingApproval') || 'Your payment proof is under review. Please wait for admin approval.');
+          return;
+        } else if (reason === 'payment_rejected') {
+          alert('Your previous payment proof was rejected. Please upload a new proof on the payment page.');
+          navigate('/au-pair/payment');
+          return;
+        } else if (reason === 'not_premium') {
           navigate('/au-pair/payment');
           return;
         } else if (reason === 'onboarding_incomplete') {
@@ -171,6 +178,33 @@ export function AuPairProfilePage() {
           {t('common.back') || 'Back'}
         </Button>
 
+        {/* Status Banner for Host Families */}
+        {subscriptionStatus?.role === 'host_family' && latestSubmission?.status && latestSubmission?.status !== 'approved' && (
+          <div className={`mb-6 p-4 rounded-xl border flex items-center gap-4 ${
+            latestSubmission?.status === 'pending' 
+              ? 'bg-amber-50 border-amber-200 text-amber-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+              latestSubmission?.status === 'pending' ? 'bg-amber-100' : 'bg-red-100'
+            }`}>
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-semibold">
+                {latestSubmission?.status === 'pending' 
+                  ? t('auPair.payment.pendingTitle') 
+                  : t('auPair.payment.rejectedTitle')}
+              </h3>
+              <p className="text-sm opacity-90">
+                {latestSubmission?.status === 'pending' 
+                  ? t('auPair.payment.pendingDesc') 
+                  : latestSubmission?.admin_notes || t('auPair.payment.reuploadDesc')}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-6">
                 <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-300">
@@ -209,17 +243,47 @@ export function AuPairProfilePage() {
             <div className="flex-shrink-0">
                  {/* Hide contact button if admin is viewing admin-created listing */}
                  {isAdmin && profile.user_id === 'admin' ? null : (
-                    <Button 
-                      onClick={handleContact}
-                      className={`${subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin ? 'bg-pink-600 hover:bg-pink-700' : 'bg-gray-600 hover:bg-gray-700'} text-white flex items-center gap-2`}
-                    >
-                      {subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin ? (
-                        <MessageCircle size={16} />
-                      ) : (
-                        <Lock size={16} />
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        onClick={handleContact}
+                        disabled={!(subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin) && latestSubmission?.status === 'pending'}
+                        className={`${
+                          subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin 
+                            ? 'bg-pink-600 hover:bg-pink-700' 
+                            : latestSubmission?.status === 'pending'
+                              ? 'bg-amber-500 cursor-not-allowed opacity-80'
+                              : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white flex items-center gap-2 transition-colors`}
+                      >
+                        {subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin ? (
+                          <MessageCircle size={16} />
+                        ) : latestSubmission?.status === 'pending' ? (
+                          <Loading size="sm" />
+                        ) : (
+                          <Lock size={16} />
+                        )}
+                        {latestSubmission?.status === 'pending' && !(subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin)
+                          ? (t('auPair.payment.pending') || 'Pending Approval')
+                          : (subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin)
+                            ? (t('auPair.profile.contactAuPair') || 'Contact Au Pair')
+                            : (t('auPair.profile.unlockContact') || 'Unlock Contact Details')}
+                      </Button>
+
+                      {/* Show Upload Proof button for Host Families who are not fully approved */}
+                      {!isAdmin && subscriptionStatus?.role === 'host_family' && latestSubmission?.status !== 'approved' && (
+                        <Button
+                          onClick={() => navigate('/au-pair/payment')}
+                          className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 transition-colors text-sm py-2"
+                        >
+                          <Shield size={16} />
+                          {latestSubmission?.status === 'pending'
+                            ? (t('auPair.payment.updateProof') || 'Update Payment Proof')
+                            : latestSubmission?.status === 'rejected' 
+                              ? (t('paymentWechat.payment.reuploadProof') || 'Re-upload Proof')
+                              : (t('auPair.payment.submitProof') || 'Upload Payment Proof')}
+                        </Button>
                       )}
-                      {t('auPair.profile.unlockContact')}
-                    </Button>
+                    </div>
                  )}
             </div>
         </div>

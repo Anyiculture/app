@@ -136,6 +136,7 @@ export function AdminPortalPage() {
       activeTab={activeTab} 
       onTabChange={handleTabChange} 
       onLogout={handleLogout}
+      stats={stats}
     >
       {renderContent()}
     </AdminLayout>

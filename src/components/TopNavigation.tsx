@@ -129,13 +129,6 @@ export function TopNavigation() {
       icon: Users,
       color: 'bg-gradient-to-br from-cyan-400 to-blue-500 shadow-cyan-200'
     },
-    { 
-      path: '/candidates', 
-      label: t('nav.browseCandidates'),
-      icon: Users,
-      color: 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-purple-200',
-      requiresAuth: true
-    },
   ];
 
   const handleSignOut = async () => {

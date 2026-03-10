@@ -8,9 +8,10 @@ interface AdminLayoutProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onLogout: () => void;
+  stats?: any; // Added stats for badges
 }
 
-export function AdminLayout({ children, activeTab, onTabChange, onLogout }: AdminLayoutProps) {
+export function AdminLayout({ children, activeTab, onTabChange, onLogout, stats }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -22,6 +23,7 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout }: Admi
         activeTab={activeTab} 
         onTabChange={onTabChange} 
         onLogout={onLogout}
+        stats={stats}
       />
 
       {/* Mobile Sidebar Overlay */}
@@ -34,6 +36,7 @@ export function AdminLayout({ children, activeTab, onTabChange, onLogout }: Admi
                  activeTab={activeTab} 
                  onTabChange={(t) => { onTabChange(t); setIsMobileMenuOpen(false); }} 
                  onLogout={onLogout}
+                 stats={stats}
                  className="flex w-full h-full border-r-0" // Override hidden lg:flex and borders
                />
              </div>

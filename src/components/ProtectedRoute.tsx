@@ -5,10 +5,11 @@ import { Loading } from './ui/Loading';
 
 interface ProtectedRouteProps {
   children: ReactNode;
+  requirePaymentApproval?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+export function ProtectedRoute({ children, requirePaymentApproval = false }: ProtectedRouteProps) {
+  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
   if (loading) {
@@ -20,6 +21,17 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     // For now, just simple redirect
     setTimeout(() => navigate('/signin'), 0);
     return <Loading />; // or null
+  }
+
+  // Check for payment approval if required
+  if (requirePaymentApproval && profile) {
+    const isHostFamily = (profile as any).au_pair_role === 'host_family';
+    const isPremium = (profile as any).au_pair_subscription_status === 'premium';
+    
+    if (isHostFamily && !isPremium) {
+      setTimeout(() => navigate('/au-pair/payment'), 0);
+      return <Loading />;
+    }
   }
 
   return <>{children}</>;
