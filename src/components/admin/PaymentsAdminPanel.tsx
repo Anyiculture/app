@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { adminService } from '../../services/adminService';
 import { StartConversationButton } from './ui/StartConversationButton';
 import { Button, Modal, ConfirmDialog } from '../ui';
-import { Eye, ChevronLeft, ChevronRight, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Eye, ChevronLeft, ChevronRight, Image as ImageIcon, Trash2, Archive, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 
 const SimpleCard = ({ children, className = "", noPadding = false }: { children: React.ReactNode, className?: string, noPadding?: boolean }) => (
@@ -14,7 +14,7 @@ const SimpleCard = ({ children, className = "", noPadding = false }: { children:
 
 export function PaymentsAdminPanel() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'requests' | 'history'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'history' | 'deleted'>('requests');
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -25,6 +25,7 @@ export function PaymentsAdminPanel() {
   const [proofModalOpen, setProofModalOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeletedDetailsModal, setShowDeletedDetailsModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -35,16 +36,20 @@ export function PaymentsAdminPanel() {
     setData([]); // Clear stale data immediately
     try {
       if (activeTab === 'requests') {
-        const { data, total } = await adminService.getPaymentSubmissions(itemsPerPage, (page - 1) * itemsPerPage, filter);
+       const { data, total } = await adminService.getPaymentSubmissions(itemsPerPage, (page - 1) * itemsPerPage, filter);
+        setData(data);
+        setTotal(total);
+      } else if (activeTab === 'deleted') {
+       const { data, total } = await adminService.getDeletedPaymentSubmissions(itemsPerPage, (page - 1) * itemsPerPage);
         setData(data);
         setTotal(total);
       } else {
-        const { data, total } = await adminService.getTransactions(itemsPerPage, (page - 1) * itemsPerPage);
+       const { data, total } = await adminService.getTransactions(itemsPerPage, (page -1) * itemsPerPage);
         setData(data);
         setTotal(total);
       }
-    } catch (error) {
-      console.error('Error loading payments:', error);
+    } catch(error) {
+     console.error('Error loading payments:', error);
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +108,13 @@ export function PaymentsAdminPanel() {
                 >
                     {t('admin.payments.tabs.history')}
                 </button>
+                <button
+                    onClick={() => { setActiveTab('deleted'); setPage(1); }}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1 ${activeTab === 'deleted' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}
+                >
+                    <Archive size={14} />
+                    {t('admin.payments.tabs.deleted') || 'Deleted'}
+                </button>
             </div>
             {activeTab === 'requests' && (
                 <select
@@ -148,64 +160,112 @@ export function PaymentsAdminPanel() {
               ) : data.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                    {activeTab === 'requests' ? t('admin.payments.noRequests') : t('admin.payments.noTransactions')}
+                    {activeTab === 'requests' ? t('admin.payments.noRequests') : 
+                     activeTab === 'deleted' ? (t('admin.payments.noDeleted') || 'No deleted records found') :
+                     t('admin.payments.noTransactions')}
                   </td>
                 </tr>
               ) : (
                 data.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{item.user?.full_name || 'Unknown'}</div>
-                      <div className="text-xs text-gray-500">{item.user?.email}</div>
-                    </td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      <div className="capitalize">{item.plan_type?.replace(/_/g, ' ') || item.method}</div>
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {item.amount ? `¥${item.amount}` : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
-                        (item.status === 'approved' || item.status === 'confirmed') ? 'bg-green-100 text-green-700' :
-                        (item.status === 'rejected' || item.status === 'failed') ? 'bg-red-100 text-red-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {t(`admin.payments.status.${item.status}`) || item.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">
-                      {format(new Date(item.created_at), 'MMM d, yyyy')}
-                    </td>
-                    <td className="px-4 py-3 text-right flex justify-end gap-2">
-                        {activeTab === 'requests' && item.image_url && (
-                            <Button size="sm" variant="outline" onClick={() => { setSelectedSubmission(item); setProofModalOpen(true); }}>
-                                <Eye size={14} className="mr-1" /> {t('admin.payments.actions.viewProof')}
-                            </Button>
-                        )}
-                        <StartConversationButton 
-                            userId={item.user_id} 
-                            userName={item.user?.full_name || 'User'} 
-                            contextType="payment" 
-                            sourceContext={`Payment: ${item.plan_type}`}
-                            size="sm"
-                            variant="ghost"
-                            className="text-blue-600"
-                        />
-                        {!item.deleted_at && (
+                    {activeTab === 'deleted' ? (
+                      // Deleted tab row structure
+                      <>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-900">{item.full_name || 'Unknown'}</div>
+                          <div className="text-xs text-gray-500">{item.email || 'No Email'}</div>
+                        </td>
+                        <td className="px-4 py-3 hidden md:table-cell">
+                          <div className="capitalize">{item.plan_type?.replace(/_/g, ' ') || item.method || '-'}</div>
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-900">
+                          {item.amount ? `¥${item.amount}` : '-'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
+                            (item.status === 'approved' || item.status === 'confirmed') ? 'bg-green-100 text-green-700' :
+                            (item.status === 'rejected' || item.status === 'failed') ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {t(`admin.payments.status.${item.status}`) || item.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">
+                          <div className="text-xs">
+                            <div>Created: {format(new Date(item.created_at), 'MMM d, yyyy')}</div>
+                            {item.deleted_at && (
+                              <div className="text-red-600">Deleted: {format(new Date(item.deleted_at), 'MMM d, yyyy')}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right flex justify-end gap-2">
                           <Button
                             size="sm"
-                            variant="ghost"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => {
-                              setSelectedSubmission(item);
-                              setShowDeleteConfirm(true);
-                            }}
+                            variant="outline"
+                            onClick={() => { setSelectedSubmission(item); setShowDeletedDetailsModal(true); }}
                           >
-                            <Trash2 size={14} className="mr-1" />
-                            {t('admin.common.delete')}
+                            <Eye size={14} className="mr-1" />
+                            {t('admin.common.details') || 'Details'}
                           </Button>
-                        )}
-                    </td>
+                        </td>
+                      </>
+                    ) : (
+                      // Active tabs row structure (requests & history)
+                      <>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-900">{item.user?.full_name || 'Unknown'}</div>
+                          <div className="text-xs text-gray-500">{item.user?.email}</div>
+                        </td>
+                        <td className="px-4 py-3 hidden md:table-cell">
+                          <div className="capitalize">{item.plan_type?.replace(/_/g, ' ') || item.method}</div>
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-900">
+                          {item.amount ? `¥${item.amount}` : '-'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
+                            (item.status === 'approved' || item.status === 'confirmed') ? 'bg-green-100 text-green-700' :
+                            (item.status === 'rejected' || item.status === 'failed') ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {t(`admin.payments.status.${item.status}`) || item.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">
+                          {format(new Date(item.created_at), 'MMM d, yyyy')}
+                        </td>
+                        <td className="px-4 py-3 text-right flex justify-end gap-2">
+                            {activeTab === 'requests' && item.image_url && (
+                                <Button size="sm" variant="outline" onClick={() => { setSelectedSubmission(item); setProofModalOpen(true); }}>
+                                    <Eye size={14} className="mr-1" /> {t('admin.payments.actions.viewProof')}
+                                </Button>
+                            )}
+                            <StartConversationButton 
+                               userId={item.user_id} 
+                               userName={item.user?.full_name || 'User'} 
+                               contextType="payment" 
+                                sourceContext={`Payment: ${item.plan_type}`}
+                                size="sm"
+                                variant="ghost"
+                                className="text-blue-600"
+                            />
+                            {!item.deleted_at && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => {
+                                  setSelectedSubmission(item);
+                                  setShowDeleteConfirm(true);
+                                }}
+                              >
+                                <Trash2 size={14} className="mr-1" />
+                                {t('admin.common.delete')}
+                              </Button>
+                            )}
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))
               )}
@@ -319,11 +379,99 @@ export function PaymentsAdminPanel() {
         onConfirm={handleDelete}
         title={t('admin.payments.confirmDeleteTitle') || 'Delete Payment Submission'}
         message={t('admin.payments.confirmDeleteMessage') || 'Are you sure you want to delete this payment submission? This action will soft-delete the record and cannot be undone.'}
-        confirmText={t('admin.common.delete') || 'Delete'}
+       confirmText={t('admin.common.delete') || 'Delete'}
         cancelText={t('common.cancel') || 'Cancel'}
         variant="danger"
         loading={processing}
       />
+
+      {/* Deleted Details Modal */}
+      {selectedSubmission && showDeletedDetailsModal && (
+        <Modal
+          isOpen={showDeletedDetailsModal}
+          onClose={() => { setShowDeletedDetailsModal(false); setSelectedSubmission(null); }}
+          title="Deleted Payment Details"
+        >
+          <div className="p-6 space-y-6">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Archive className="text-red-600 mt-1" size={20} />
+                <div>
+                  <h3 className="font-semibold text-red-900">This record has been deleted</h3>
+                  <p className="text-sm text-red-700 mt-1">This payment was removed from the active list and moved to the archive.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-gray-500 uppercase font-bold">User</label>
+                <p className="font-medium">{selectedSubmission.full_name || selectedSubmission.user?.full_name}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 uppercase font-bold">Email</label>
+                <p className="font-medium">{selectedSubmission.email || selectedSubmission.user?.email}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 uppercase font-bold">Plan Type</label>
+                <p className="font-medium capitalize">{selectedSubmission.plan_type?.replace(/_/g, ' ') || '-'}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 uppercase font-bold">Amount</label>
+                <p className="font-medium">¥{selectedSubmission.amount || '0.00'}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 uppercase font-bold">Status</label>
+                <p className="font-medium capitalize">{selectedSubmission.status}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 uppercase font-bold">Created At</label>
+                <p className="font-medium">{format(new Date(selectedSubmission.created_at), 'PP p')}</p>
+              </div>
+              {selectedSubmission.deleted_at && (
+                <>
+                  <div>
+                    <label className="text-xs text-gray-500 uppercase font-bold">Deleted At</label>
+                    <p className="font-medium text-red-600">{format(new Date(selectedSubmission.deleted_at), 'PP p')}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 uppercase font-bold">Deleted By</label>
+                    <p className="font-medium text-red-600">{selectedSubmission.deleted_by ? 'Admin User' : 'Unknown'}</p>
+                  </div>
+                  {selectedSubmission.deletion_reason && (
+                    <div className="col-span-2">
+                      <label className="text-xs text-gray-500 uppercase font-bold">Deletion Reason</label>
+                      <p className="font-medium text-red-600">{selectedSubmission.deletion_reason}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {selectedSubmission.image_url && (
+              <div>
+                <label className="text-xs text-gray-500 uppercase font-bold mb-2 block">Payment Proof</label>
+                <div className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center min-h-[200px]">
+                  <img src={selectedSubmission.image_url} alt="Payment Proof" className="max-w-full max-h-[500px] object-contain" />
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-4 border-t border-gray-100">
+              <Button
+                variant="outline"
+                onClick={() => { setShowDeletedDetailsModal(false); setSelectedSubmission(null); }}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
+
+
+
+

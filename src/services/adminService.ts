@@ -813,32 +813,65 @@ export const adminService = {
     await this.logActivity('review_payment', 'payment_submissions', id, { status, notes });
   },
 
-  async getTransactions(limit: number = 20, offset: number = 0) {
-    const { data, error, count } = await supabase
+  async getTransactions(limit: number= 20, offset: number= 0) {
+   const { data, error, count } = await supabase
       .from('payments')
       .select('*', { count: 'exact' })
+      .is('deleted_at', null) // Only show non-deleted payments
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .range(offset, offset + limit -1);
 
     if (error) throw error;
 
     // Manual join
     if (data && data.length > 0) {
-        const userIds = [...new Set(data.map((i: any) => i.user_id))];
+       const userIds = [...new Set(data.map((i: any) => i.user_id))];
         if (userIds.length > 0) {
-            const { data: profiles } = await supabase
+           const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
                 .in('id', userIds);
             
-            const transactionsWithProfiles = data.map((item: any) => ({
+           const transactionsWithProfiles = data.map((item: any) => ({
                 ...item,
-                user: profiles?.find((p: any) => p.id === item.user_id)
+               user: profiles?.find((p: any) => p.id === item.user_id)
             }));
             return { data: transactionsWithProfiles, total: count || 0 };
         }
     }
 
     return { data: data || [], total: count || 0 };
+  },
+
+  async getDeletedPayments(limit: number= 20, offset: number= 0) {
+   const { data, error } = await supabase.rpc('get_deleted_payments', {
+      page_size: limit,
+      page_offset: offset
+    });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+     const total = data[0]?.total_count || 0;
+      return { data, total };
+    }
+
+    return { data: [], total: 0 };
+  },
+
+  async getDeletedPaymentSubmissions(limit: number= 20, offset: number= 0) {
+   const { data, error } = await supabase.rpc('get_deleted_payment_submissions', {
+      page_size: limit,
+      page_offset: offset
+    });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+     const total = data[0]?.total_count || 0;
+      return { data, total };
+    }
+
+    return { data: [], total: 0 };
   }
 };

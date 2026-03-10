@@ -658,6 +658,12 @@
       },
       "noRequests": "No payment requests found",
       "noTransactions": "No payment transactions found",
+      "noDeleted": "No deleted records found",
+      "tabs": {
+        "requests": "Payment Requests",
+        "history": "Payment History",
+        "deleted": "Deleted"
+      },
       "confirmDeleteTitle": "Delete Payment Submission",
       "confirmDeleteMessage": "Are you sure you want to delete this payment submission? This action will soft-delete the record and cannot be undone."
     },
