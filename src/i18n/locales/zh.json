@@ -725,12 +725,23 @@
         "approved": "已批准",
         "rejected": "已拒绝",
         "confirmed": "已确认",
-        "failed": "失败"
+        "failed": "失败",
+        "Pending": "待处理",
+        "Approved": "已批准",
+        "Rejected": "已拒绝"
       },
       "actions": {
         "approve": "批准",
         "reject": "拒绝",
         "viewProof": "查看凭证"
+      },
+      "planNames": {
+        "au_pair_premium_monthly": "互惠生高级月套餐",
+        "au_pair_premium_yearly": "互惠生高级年套餐",
+        "host_family_premium_monthly": "寄宿家庭高级月套餐",
+        "host_family_premium_yearly": "寄宿家庭高级年套餐",
+        "job_posting": "招聘发布",
+        "featured_listing": "精选列表"
       },
       "noTransactions": "未找到交易"
     },

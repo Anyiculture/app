@@ -643,7 +643,29 @@
         "date": "Date",
         "actions": "Actions"
       },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "Pending": "Pending",
+        "Approved": "Approved",
+        "Rejected": "Rejected"
+      },
+      "actions": {
+        "viewProof": "View Proof",
+        "approve": "Approve",
+        "reject": "Reject"
+      },
+      "planNames": {
+        "au_pair_premium_monthly": "Au Pair Premium Monthly",
+        "au_pair_premium_yearly": "Au Pair Premium Yearly",
+        "host_family_premium_monthly": "Host Family Premium Monthly",
+        "host_family_premium_yearly": "Host Family Premium Yearly",
+        "job_posting": "Job Posting",
+        "featured_listing": "Featured Listing"
+      },
       "noRequests": "No payment requests found",
+      "noTransactions": "No transaction history found",
       "title": "Payment Redemption Codes",
       "subtitle": "Generate codes for manual payment verification (WeChat/Alipay)",
       "generate": "Generate New Code",
