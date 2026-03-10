@@ -1,3 +1,6 @@
+-- Drop old function first so we can rename parameters
+DROP FUNCTION IF EXISTS review_payment_submission(uuid, text, text);
+
 -- Fix review_payment_submission RPC to:
 -- 1. Handle host_family plan types (not only au_pair plans)
 -- 2. Start monthly subscription timer for host families upon approval
