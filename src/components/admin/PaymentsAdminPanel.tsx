@@ -124,18 +124,18 @@ export function PaymentsAdminPanel() {
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 border-b border-gray-200 text-gray-500">
               <tr>
-                <th className="px-6 py-3 font-medium">{t('admin.payments.columns.user')}</th>
-                <th className="px-6 py-3 font-medium hidden md:table-cell">{t('admin.payments.columns.plan')}</th>
-                <th className="px-6 py-3 font-medium">{t('admin.payments.columns.amount')}</th>
-                <th className="px-6 py-3 font-medium">{t('admin.payments.columns.status')}</th>
-                <th className="px-6 py-3 font-medium hidden lg:table-cell">{t('admin.payments.columns.date')}</th>
-                <th className="px-6 py-3 font-medium text-right">{t('admin.payments.columns.actions')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('admin.payments.columns.user')}</th>
+                <th className="px-4 py-2.5 font-medium hidden md:table-cell">{t('admin.payments.columns.plan')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('admin.payments.columns.amount')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('admin.payments.columns.status')}</th>
+                <th className="px-4 py-2.5 font-medium hidden lg:table-cell">{t('admin.payments.columns.date')}</th>
+                <th className="px-4 py-3 font-medium text-right">{t('admin.payments.columns.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                     <div className="flex items-center justify-center gap-2">
                       <svg className="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -147,24 +147,24 @@ export function PaymentsAdminPanel() {
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                     {activeTab === 'requests' ? t('admin.payments.noRequests') : t('admin.payments.noTransactions')}
                   </td>
                 </tr>
               ) : (
                 data.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50">
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{item.user?.full_name || 'Unknown'}</div>
                       <div className="text-xs text-gray-500">{item.user?.email}</div>
                     </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
+                    <td className="px-4 py-3 hidden md:table-cell">
                       <div className="capitalize">{item.plan_type?.replace(/_/g, ' ') || item.method}</div>
                     </td>
-                    <td className="px-6 py-4 font-medium text-gray-900">
+                    <td className="px-4 py-3 font-medium text-gray-900">
                       {item.amount ? `¥${item.amount}` : '-'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
                         (item.status === 'approved' || item.status === 'confirmed') ? 'bg-green-100 text-green-700' :
                         (item.status === 'rejected' || item.status === 'failed') ? 'bg-red-100 text-red-700' :
@@ -173,10 +173,10 @@ export function PaymentsAdminPanel() {
                         {t(`admin.payments.status.${item.status}`) || item.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-500 hidden lg:table-cell">
+                    <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">
                       {format(new Date(item.created_at), 'MMM d, yyyy')}
                     </td>
-                    <td className="px-6 py-4 text-right flex justify-end gap-2">
+                    <td className="px-4 py-3 text-right flex justify-end gap-2">
                         {activeTab === 'requests' && item.image_url && (
                             <Button size="sm" variant="outline" onClick={() => { setSelectedSubmission(item); setProofModalOpen(true); }}>
                                 <Eye size={14} className="mr-1" /> {t('admin.payments.actions.viewProof')}
@@ -214,7 +214,7 @@ export function PaymentsAdminPanel() {
         </div>
         
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
             <span className="text-sm text-gray-500">
               {t('common.page')} {page} {t('common.of')} {totalPages}
             </span>

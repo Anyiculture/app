@@ -632,24 +632,23 @@
     "payments": {
       "management": "Payments Management",
       "tabs": {
-        "requests": "Requests",
-        "history": "History"
-      },
-      "columns": {
-        "user": "User",
-        "plan": "Plan",
-        "amount": "Amount",
-        "status": "Status",
-        "date": "Date",
-        "actions": "Actions"
+        "requests": "Payment Requests",
+        "history": "Payment History"
       },
       "status": {
         "pending": "Pending",
         "approved": "Approved",
         "rejected": "Rejected",
-        "Pending": "Pending",
-        "Approved": "Approved",
-        "Rejected": "Rejected"
+        "confirmed": "Confirmed",
+        "failed": "Failed"
+      },
+      "columns": {
+        "user": "User",
+        "plan": "Plan Type",
+        "amount": "Amount",
+        "status": "Status",
+        "date": "Date",
+        "actions": "Actions"
       },
       "actions": {
         "viewProof": "View Proof",
@@ -657,16 +656,12 @@
         "reject": "Reject",
         "delete": "Delete"
       },
-      "planNames": {
-        "au_pair_premium_monthly": "Au Pair Premium Monthly",
-        "au_pair_premium_yearly": "Au Pair Premium Yearly",
-        "host_family_premium_monthly": "Host Family Premium Monthly",
-        "host_family_premium_yearly": "Host Family Premium Yearly",
-        "job_posting": "Job Posting",
-        "featured_listing": "Featured Listing"
-      },
       "noRequests": "No payment requests found",
-      "noTransactions": "No transaction history found",
+      "noTransactions": "No payment transactions found",
+      "confirmDeleteTitle": "Delete Payment Submission",
+      "confirmDeleteMessage": "Are you sure you want to delete this payment submission? This action will soft-delete the record and cannot be undone."
+    },
+    "redemptionCodes": {
       "title": "Payment Redemption Codes",
       "subtitle": "Generate codes for manual payment verification (WeChat/Alipay)",
       "generate": "Generate New Code",
@@ -677,9 +672,10 @@
       "copy": "Copy Code",
       "copied": "Copied to clipboard!",
       "noCodes": "No codes generated yet. Click 'Generate New Code' to start.",
-      "pendingRedemption": "Pending Redemption",
+      "confirmDeleteTitle": "Delete Redemption Code",
       "confirmDelete": "Are you sure you want to delete this redemption code?"
     },
+    "settings": {
     "payments": {
       "confirmDeleteTitle": "Delete Payment Submission",
       "confirmDeleteMessage": "Are you sure you want to delete this payment submission? This action will soft-delete the record and cannot be undone."

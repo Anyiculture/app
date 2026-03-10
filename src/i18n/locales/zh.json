@@ -691,8 +691,50 @@
       "noPosts": "未找到帖子"
     },
     "payments": {
+      "management": "销售与支付",
+      "tabs": {
+        "requests": "支付请求",
+        "history": "交易历史"
+      },
+      "status": {
+        "pending": "待处理",
+        "approved": "已批准",
+        "rejected": "已拒绝",
+        "confirmed": "已确认",
+        "failed": "失败"
+      },
+      "columns": {
+        "user": "用户",
+        "plan": "套餐类型",
+        "amount": "金额",
+        "status": "状态",
+        "date": "日期",
+        "actions": "操作"
+      },
+      "actions": {
+        "viewProof": "查看凭证",
+        "approve": "批准",
+        "reject": "拒绝",
+        "delete": "删除"
+      },
+      "noRequests": "无待处理支付请求",
+      "noTransactions": "无交易记录",
       "confirmDeleteTitle": "删除支付提交",
       "confirmDeleteMessage": "您确定要删除此支付提交吗？此操作将软删除记录且无法撤销。"
+    },
+    "payments": {
+      "title": "Payment Redemption Codes",
+      "subtitle": "Generate codes for manual payment verification (WeChat/Alipay)",
+      "generate": "Generate New Code",
+      "generating": "Generating...",
+      "code": "Code",
+      "redeemedBy": "Redeemed By",
+      "createdAt": "Created At",
+      "copy": "Copy Code",
+      "copied": "Copied to clipboard!",
+      "noCodes": "No codes generated yet. Click 'Generate New Code' to start.",
+      "pendingRedemption": "Pending Redemption",
+      "confirmDelete": "您确定要删除此兑换码吗？"
     },
     "payments": {
       "management": "销售与支付",
