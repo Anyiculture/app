@@ -3765,7 +3765,8 @@
         "firstAid": "First Aid",
         "swimming": "Swimming",
         "driversLicense": "Driving License",
-        "specialNeeds": "Special Needs"
+        "specialNeeds": "Special Needs",
+        "available": "Available"
       },
       "payment": {
         "unlockTitle": "Unlock Contact",
@@ -3796,6 +3797,8 @@
         "scanToSubscribe": "Scan the QR code below to subscribe",
         "pendingTitle": "Under Review",
         "pendingDesc": "Admin is verifying your proof. Typically takes 24-48 hours.",
+        "approvedTitle": "Account Approved!",
+        "approvedDesc": "Your host family account has been approved. You can now contact au pairs.",
         "success": {
           "title": "SUCCESS!",
           "subtitle": "Submission Received",

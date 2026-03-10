@@ -30,6 +30,7 @@ export function AuPairProfilePage() {
   const { t, language } = useI18n();
   const [profile, setProfile] = useState<AuPairProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<UserSubscriptionStatus | null>(null);
   const [latestSubmission, setLatestSubmission] = useState<any>(null);
@@ -58,6 +59,8 @@ export function AuPairProfilePage() {
       }
     } catch (error) {
       console.error('Error checking admin status:', error);
+    } finally {
+      setSubscriptionLoading(false);
     }
   };
 
@@ -179,27 +182,38 @@ export function AuPairProfilePage() {
         </Button>
 
         {/* Status Banner for Host Families */}
-        {subscriptionStatus?.role === 'host_family' && latestSubmission?.status && latestSubmission?.status !== 'approved' && (
+        {!subscriptionLoading && subscriptionStatus?.role === 'host_family' && latestSubmission?.status && (
           <div className={`mb-6 p-4 rounded-xl border flex items-center gap-4 ${
-            latestSubmission?.status === 'pending' 
-              ? 'bg-amber-50 border-amber-200 text-amber-800' 
-              : 'bg-red-50 border-red-200 text-red-800'
+            latestSubmission?.status === 'approved'
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : latestSubmission?.status === 'pending' 
+                ? 'bg-amber-50 border-amber-200 text-amber-800' 
+                : 'bg-red-50 border-red-200 text-red-800'
           }`}>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+              latestSubmission?.status === 'approved' ? 'bg-green-100' :
               latestSubmission?.status === 'pending' ? 'bg-amber-100' : 'bg-red-100'
             }`}>
-              <AlertCircle className="w-6 h-6" />
+              {latestSubmission?.status === 'approved' ? (
+                <CheckCircle className="w-6 h-6" />
+              ) : (
+                <AlertCircle className="w-6 h-6" />
+              )}
             </div>
             <div>
               <h3 className="font-semibold">
-                {latestSubmission?.status === 'pending' 
-                  ? t('auPair.payment.pendingTitle') 
-                  : t('auPair.payment.rejectedTitle')}
+                {latestSubmission?.status === 'approved'
+                  ? t('auPair.payment.approvedTitle')
+                  : latestSubmission?.status === 'pending' 
+                    ? t('auPair.payment.pendingTitle') 
+                    : t('auPair.payment.rejectedTitle')}
               </h3>
               <p className="text-sm opacity-90">
-                {latestSubmission?.status === 'pending' 
-                  ? t('auPair.payment.pendingDesc') 
-                  : latestSubmission?.admin_notes || t('auPair.payment.reuploadDesc')}
+                {latestSubmission?.status === 'approved'
+                  ? t('auPair.payment.approvedDesc')
+                  : latestSubmission?.status === 'pending' 
+                    ? t('auPair.payment.pendingDesc') 
+                    : latestSubmission?.admin_notes || t('auPair.payment.reuploadDesc')}
               </p>
             </div>
           </div>

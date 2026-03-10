@@ -3878,7 +3878,8 @@
       "firstAid": "急救",
       "swimming": "游泳",
       "driversLicense": "驾驶执照",
-      "specialNeeds": "特殊需求"
+      "specialNeeds": "特殊需求",
+      "available": "可联系"
     },
     "payment": {
       "unlockTitle": "解锁联系方式",
@@ -3909,6 +3910,8 @@
       "scanToSubscribe": "扫描下方二维码进行订阅",
       "pendingTitle": "审核中",
       "pendingDesc": "管理员正在核实您的凭证。通常需要 24-48 小时。",
+      "approvedTitle": "账户已通过审核！",
+      "approvedDesc": "您的寄宿家庭账户已通过审核。您现在可以联系互惠生。",
       "success": {
         "title": "成功！",
         "subtitle": "提交已收到",
