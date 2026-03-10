@@ -67,23 +67,16 @@ export function AuPairProfilePage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      
-      // Use the language-aware function to get profile with translated fields
-      const { data, error } = await supabase.rpc('get_au_pair_profile_with_language', {
-        profile_id: id,
-        user_language: language
-      });
+      const { data, error } = await supabase
+        .from('au_pair_profiles')
+        .select('*')
+        .eq('id', id)
+        .single();
 
       if (error) throw error;
-      
-      if (data && data.length > 0) {
-        setProfile(data[0]);
-      } else {
-        setProfile(null);
-      }
+      setProfile(data);
     } catch (err) {
-      console.error('Error loading profile:', err);
-      setProfile(null);
+      console.error(err);
     } finally {
       setLoading(false);
     }

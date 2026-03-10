@@ -3879,15 +3879,7 @@
       "swimming": "游泳",
       "driversLicense": "驾驶执照",
       "specialNeeds": "特殊需求",
-      "available": "可联系",
-      "introduction": "自我介绍",
-      "personality": "性格与工作风格",
-      "personalityTraits": "性格特点",
-      "workStyle": "工作风格",
-      "interests": "兴趣爱好",
-      "childAgeComfort": "擅长照顾的年龄组",
-      "rulesComfort": "能接受的规则",
-      "dealBreakers": "不可接受的事项"
+      "available": "可联系"
     },
     "payment": {
       "unlockTitle": "解锁联系方式",

@@ -73,34 +73,59 @@
 - `src/services/adminService.ts` (delete method)
 - `src/components/admin/PaymentsAdminPanel.tsx` (delete UI)
 
-### 6. ✅ User-Generated Content Translation (Multi-language Fields)
-**Root Cause**: User-generated content (bio, experience, interests, etc.) stored as plain text without translation.
+## Known Issue: Profile Content Translation
 
-**Fix - Option A: Multi-language Database Fields**:
-- Added Chinese translation columns to au_pair_profiles table:
-  - `bio_zh` - Chinese version of bio
-  - `experience_description_zh` - Chinese version of experience
-  - `introduction_zh` - Chinese version of introduction
-  - `personality_traits_zh` - Chinese version of personality traits (JSON)
-  - `work_style_zh` - Chinese version of work style (JSON)
-  - `interests_zh` - Chinese version of interests (JSON)
-  - And more...
+**Issue**: Some profile content like bio, experience description, hobbies are still showing in English on Chinese pages.
 
-- Created RPC function `get_au_pair_profile_with_language(profile_id, user_language)`:
-  - Automatically returns profile with language-appropriate fields
-  - Falls back to English if Chinese translation not available
-  - Supports both 'en' and 'zh' languages
+**Root Cause**: User-generated content (bio, personality traits, hobbies, etc.) is stored as plain text in the database per profile, not as translation keys. These cannot be translated via i18n because they're unique to each profile.
 
-- Updated AuPairProfilePage to:
-  - Use the language-aware RPC function
-  - Display translated content based on user's language preference
-  - Added helper functions for translating array fields
+**Example**:
+- Bio: "i love kids." (stored in database)
+- Hobbies: "cooking" (stored in database)
+- Experience: "Babysitting for 3 years" (stored in database)
 
-**Files Changed**:
-- `supabase/migrations/20260311_production_fixes.sql` (added multi-language columns + RPC function)
-- `src/pages/AuPairProfilePage.tsx` (updated to use language-aware loading)
-- `src/i18n/locales/en.json` (added new translation keys)
-- `src/i18n/locales/zh.json` (added Chinese translations)
+**Solutions** (to be implemented separately):
+
+### Option A: Add Translation Fields to Database (Recommended)
+Add translated versions of user content:
+```sql
+ALTER TABLE au_pair_profiles ADD COLUMN bio_zh text;
+ALTER TABLE au_pair_profiles ADD COLUMN experience_description_zh text;
+-- etc for other translatable fields
+```
+
+Then update the profile creation/editing to allow users to provide both English and Chinese versions.
+
+### Option B: Use Machine Translation API
+Integrate a translation service (Google Translate, DeepL) to translate profile content on-the-fly based on user's language preference.
+
+### Option C: Translation Keys for Common Values
+For standardized fields (hobbies, skills, personality traits), use translation keys instead of plain text:
+```typescript
+// Instead of storing "cooking", store the key "hobbies.cooking"
+hobbies: ["hobbies.cooking", "hobbies.travel"]
+```
+
+Then translate in the UI:
+```typescript
+{profile.hobbies.map(h => t(h) || h)}
+```
+
+**Current Workaround**: 
+The page already translates:
+- ✅ Country names
+- ✅ Gender
+- ✅ Education level
+- ✅ Language names
+- ✅ Skill names
+- ✅ Age groups
+- ✅ Safety badges labels
+
+But NOT:
+- ❌ Bio/About Me text
+- ❌ Experience description
+- ❌ Custom hobbies (unless using predefined keys)
+- ❌ Personality traits
 
 ## Database Changes
 
@@ -112,32 +137,16 @@
 - `profiles.host_family_subscription_end` (timestamptz)
 - `profiles.au_pair_subscription_start` (timestamptz)
 - `profiles.au_pair_subscription_end` (timestamptz)
-- **NEW**: `au_pair_profiles.bio_zh` (text)
-- **NEW**: `au_pair_profiles.experience_description_zh` (text)
-- **NEW**: `au_pair_profiles.introduction_zh` (text)
-- **NEW**: `au_pair_profiles.personality_traits_zh` (jsonb)
-- **NEW**: `au_pair_profiles.work_style_zh` (jsonb)
-- **NEW**: `au_pair_profiles.interests_zh` (jsonb)
-- **NEW**: `au_pair_profiles.child_age_comfort_zh` (jsonb)
-- **NEW**: `au_pair_profiles.rules_comfort_zh` (jsonb)
-- **NEW**: `au_pair_profiles.household_vibe_zh` (jsonb)
-- **NEW**: `au_pair_profiles.children_personalities_zh` (jsonb)
-- **NEW**: `au_pair_profiles.house_rules_details_zh` (text)
-- **NEW**: `au_pair_profiles.weekly_schedule_zh` (text)
-- **NEW**: `au_pair_profiles.extra_activities_zh` (text)
-- **NEW**: `au_pair_profiles.flexibility_expectations_zh` (text)
 
 ### New Indexes:
 - `idx_notifications_user_unread` - Faster unread notification queries
 - `idx_payment_submissions_deleted` - Faster soft-delete filtering
-- `idx_au_pair_profiles_status` - Faster active profile queries
 
 ### New Functions/Triggers:
 - `notify_user_payment_approved()` - Auto-creates notifications on approval
 - `on_payment_approved` trigger - Executes on payment status change
-- `review_payment_submission()` - Sets proper subscription dates
-- `get_au_pair_profile_with_language(profile_id, user_language)` - **NEW** Returns profile with language-specific fields
-- `getUserSubscriptionStatus()` - Updated to check host_family_subscription_status
+- Updated `review_payment_submission()` - Sets proper subscription dates
+- Updated `getUserSubscriptionStatus()` - Checks host_family_subscription_status
 
 ### RLS Policies:
 - "Admins can delete payment submissions" - DELETE permission
@@ -156,41 +165,11 @@
 ### Components:
 - `PaymentsAdminPanel.tsx`: Added delete button, confirmation dialog
 - `BillingSettingsPage.tsx`: Added subscription timing display
-- `AuPairProfilePage.tsx`: 
-  - Fixed loading states, method calls, error handling
-  - **NEW**: Uses language-aware profile loading via RPC
-  - **NEW**: Displays translated content based on user language
-  - Added helper functions: `getLanguages()`, `getInterests()`, `getPersonalityTraits()`, `getWorkStyle()`
+- `AuPairProfilePage.tsx`: Fixed loading states, method calls, error handling
 
 ### i18n:
 - Added billing-related translations (EN/ZH)
 - Added payment management translations (EN/ZH)
-- Added profile section translations (EN/ZH)
-
-## How to Use Multi-language Fields
-
-### For Existing Profiles:
-Profiles created before this migration will have NULL for Chinese fields. They will display in English.
-
-### For New/Updated Profiles:
-When creating or editing au pair profiles, populate both English and Chinese fields:
-
-```typescript
-// Example: Creating a profile
-await supabase.from('au_pair_profiles').insert({
-  display_name: 'Sarah',
-  bio: 'I love working with children.',
-  bio_zh: '我喜欢和孩子们一起工作。',
-  experience_description: 'Babysitting for 3 years',
-  experience_description_zh: '做了 3 年的保姆工作',
-  personality_traits: ['patient', 'energetic'],
-  personality_traits_zh: ['有耐心的', '精力充沛的'],
-  // ... etc
-});
-```
-
-### For Profile Editing UI (Future Enhancement):
-Add language toggle in the profile editor to switch between English and Chinese input fields.
 
 ## Testing Checklist
 
@@ -215,7 +194,7 @@ Add language toggle in the profile editor to switch between English and Chinese 
 - ✅ No duplicate notifications
 - ✅ No messaging failures
 - ✅ Soft delete works (records hidden but preserved)
-- ✅ Profile content displays in correct language (when Chinese fields populated)
+- ⚠️ User-generated content (bio, hobbies) still needs translation solution
 
 ## Deployment Steps
 
@@ -231,56 +210,40 @@ supabase db push
 psql $DATABASE_URL -f supabase/migrations/20260311_production_fixes.sql
 ```
 
-2. **Verify Migration Applied**:
-```sql
--- Check trigger exists
-SELECT * FROM pg_trigger WHERE tgname = 'on_payment_approved';
-
--- Check multi-language columns exist
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'au_pair_profiles' 
-AND column_name LIKE '%_zh';
-
--- Check RPC function exists
-SELECT proname FROM pg_proc WHERE proname = 'get_au_pair_profile_with_language';
-```
-
-3. **Deploy Frontend**:
+2. **Deploy Frontend**:
 ```bash
 npm run build
 npm run preview
 ```
 
-4. **Test**:
-- Verify notifications appear on approval
-- Test conversation initiation
-- Check subscription display in Settings
+3. **Verify**:
+- Check database triggers are active
+- Test notification appearance on approval
+- Verify subscription dates display
 - Test payment deletion in admin panel
-- Switch language to Chinese and verify profile content translates
+- Test conversation initiation
 
 ## Files Modified
 
 **Database**:
-- `supabase/migrations/20260311_production_fixes.sql` (UPDATED - ~350 lines)
+- `supabase/migrations/20260311_production_fixes.sql` (NEW - 240 lines)
 
 **Frontend TypeScript/TSX**:
 - `src/services/adminService.ts` (Added delete method)
 - `src/services/auPairService.ts` (Updated getUserSubscriptionStatus)
-- `src/pages/AuPairProfilePage.tsx` (Fixed contact method, added multi-language support)
+- `src/pages/AuPairProfilePage.tsx` (Fixed contact method)
 - `src/pages/settings/BillingSettingsPage.tsx` (Added subscription display)
 
 **Translations**:
-- `src/i18n/locales/en.json` (Added billing + profile keys)
-- `src/i18n/locales/zh.json` (Added Chinese translations)
+- `src/i18n/locales/en.json` (Added billing keys)
+- `src/i18n/locales/zh.json` (Added billing keys)
 
 ## Rollback Plan
 
 If issues occur:
 1. Revert frontend changes via git
-2. Drop database triggers: `DROP TRIGGER IF EXISTS on_payment_approved ON payment_submissions;`
-3. Drop RPC functions if needed
-4. Columns can be dropped but data will be lost: `ALTER TABLE au_pair_profiles DROP COLUMN bio_zh;`
+2. Drop database trigger: `DROP TRIGGER IF EXISTS on_payment_approved ON payment_submissions;`
+3. Remove columns if needed (data loss warning)
 
 ## Notes
 
@@ -289,15 +252,4 @@ If issues occur:
 - No breaking changes to existing APIs
 - Performance improved via new indexes
 - Bilingual support throughout
-- **Multi-language fields require manual population for existing profiles**
-- **New profiles should populate both EN and ZH fields**
-- **RPC function automatically handles language selection and fallback**
-
-## Next Steps
-
-1. ✅ Apply SQL migration
-2. ✅ Test all 5 original issues fixed
-3. ✅ Test multi-language profile display
-4. ⏳ Update profile creation/editing forms to include Chinese fields
-5. ⏳ Migrate existing profiles to add Chinese translations
-6. ⏳ Add language toggle in profile editor UI
+- User-generated content translation requires separate solution (see Known Issues)
