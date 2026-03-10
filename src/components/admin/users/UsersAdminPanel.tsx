@@ -73,7 +73,7 @@ export function UsersAdminPanel() {
     setProcessing(true);
     try {
       const newStatus = !selectedUser.is_banned;
-      await adminService.updateUserStatus(selectedUser.id, newStatus);
+      await adminService.banUser(selectedUser.id, newStatus);
       
       setUsers(users.map(u => 
         u.id === selectedUser.id ? { ...u, is_banned: newStatus } : u

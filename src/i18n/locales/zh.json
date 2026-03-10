@@ -691,6 +691,10 @@
       "noPosts": "未找到帖子"
     },
     "payments": {
+      "confirmDeleteTitle": "删除支付提交",
+      "confirmDeleteMessage": "您确定要删除此支付提交吗？此操作将软删除记录且无法撤销。"
+    },
+    "payments": {
       "management": "销售与支付",
       "tabs": {
         "requests": "支付请求",
@@ -731,9 +735,10 @@
         "Rejected": "已拒绝"
       },
       "actions": {
+        "viewProof": "查看凭证",
         "approve": "批准",
         "reject": "拒绝",
-        "viewProof": "查看凭证"
+        "delete": "删除"
       },
       "planNames": {
         "au_pair_premium_monthly": "互惠生高级月套餐",

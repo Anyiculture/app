@@ -654,7 +654,8 @@
       "actions": {
         "viewProof": "View Proof",
         "approve": "Approve",
-        "reject": "Reject"
+        "reject": "Reject",
+        "delete": "Delete"
       },
       "planNames": {
         "au_pair_premium_monthly": "Au Pair Premium Monthly",
@@ -678,6 +679,10 @@
       "noCodes": "No codes generated yet. Click 'Generate New Code' to start.",
       "pendingRedemption": "Pending Redemption",
       "confirmDelete": "Are you sure you want to delete this redemption code?"
+    },
+    "payments": {
+      "confirmDeleteTitle": "Delete Payment Submission",
+      "confirmDeleteMessage": "Are you sure you want to delete this payment submission? This action will soft-delete the record and cannot be undone."
     },
     "settings": {
       "permissionsPlaceholder": "Search permissions...",

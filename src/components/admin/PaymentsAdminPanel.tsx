@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { adminService } from '../../services/adminService';
 import { StartConversationButton } from './ui/StartConversationButton';
-import { Button, Modal } from '../ui';
-import { Eye, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { Button, Modal, ConfirmDialog } from '../ui';
+import { Eye, ChevronLeft, ChevronRight, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 const SimpleCard = ({ children, className = "", noPadding = false }: { children: React.ReactNode, className?: string, noPadding?: boolean }) => (
@@ -24,6 +24,7 @@ export function PaymentsAdminPanel() {
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
   const [proofModalOpen, setProofModalOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -60,6 +61,23 @@ export function PaymentsAdminPanel() {
     } catch (error) {
       console.error('Error reviewing payment:', error);
       alert('Failed to update status');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedSubmission) return;
+    setProcessing(true);
+    try {
+      await adminService.deletePaymentSubmission(selectedSubmission.id);
+      loadData();
+      setSelectedSubmission(null);
+      setProofModalOpen(false);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      alert('Failed to delete payment submission');
     } finally {
       setProcessing(false);
     }
@@ -173,6 +191,20 @@ export function PaymentsAdminPanel() {
                             variant="ghost"
                             className="text-blue-600"
                         />
+                        {!item.deleted_at && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => {
+                              setSelectedSubmission(item);
+                              setShowDeleteConfirm(true);
+                            }}
+                          >
+                            <Trash2 size={14} className="mr-1" />
+                            {t('admin.common.delete')}
+                          </Button>
+                        )}
                     </td>
                   </tr>
                 ))
@@ -250,6 +282,18 @@ export function PaymentsAdminPanel() {
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                     <Button
                         variant="outline"
+                        onClick={() => {
+                          setProofModalOpen(false);
+                          setShowDeleteConfirm(true);
+                        }}
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                        disabled={processing}
+                    >
+                        <Trash2 size={16} className="mr-2" />
+                        {t('admin.common.delete')}
+                    </Button>
+                    <Button
+                        variant="outline"
                         onClick={() => handleReview('rejected')}
                         className="text-red-600 border-red-200 hover:bg-red-50"
                         disabled={processing}
@@ -268,6 +312,18 @@ export function PaymentsAdminPanel() {
           </div>
         </Modal>
       )}
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title={t('admin.payments.confirmDeleteTitle') || 'Delete Payment Submission'}
+        message={t('admin.payments.confirmDeleteMessage') || 'Are you sure you want to delete this payment submission? This action will soft-delete the record and cannot be undone.'}
+        confirmText={t('admin.common.delete') || 'Delete'}
+        cancelText={t('common.cancel') || 'Cancel'}
+        variant="danger"
+        loading={processing}
+      />
     </div>
   );
 }

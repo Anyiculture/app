@@ -359,19 +359,49 @@ export const adminService = {
     await this.logActivity('delete_user', 'profiles', userId);
   },
 
-  async updateUserStatus(userId: string, banned: boolean): Promise<void> {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_banned: banned })
-      .eq('id', userId);
+  async banUser(userId: string, shouldBan: boolean): Promise<void> {
+    const { error } = await supabase.rpc('admin_ban_user', { 
+      target_user_id: userId, 
+      should_ban: shouldBan 
+    });
 
+    if (error) {
+      console.error('Error banning user:', error);
+      throw error;
+    }
+    
+    await this.logActivity(shouldBan ? 'ban_user' : 'unban_user', 'profiles', userId);
+  },
+
+  async deletePaymentSubmission(id: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    const { error } = await supabase.rpc('admin_delete_payment_submission', { 
+      submission_id: id 
+    });
+    
     if (error) throw error;
+    
+    await this.logActivity('delete_payment', 'payment_submissions', id);
+  },
 
-    await this.logActivity(
-      banned ? 'ban_user' : 'unban_user',
-      'profiles',
-      userId
-    );
+  async checkEmailBlocked(email: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc('is_email_blocked', { 
+        check_email: email 
+      });
+      
+      if (error) {
+        console.error('Error checking email blocked:', error);
+        return false;
+      }
+      
+      return data || false;
+    } catch (error) {
+      console.error('Error checking email blocked:', error);
+      return false;
+    }
   },
 
   async getContactSubmissions(status?: 'new' | 'read' | 'replied') {
