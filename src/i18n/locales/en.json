@@ -3766,7 +3766,15 @@
         "swimming": "Swimming",
         "driversLicense": "Driving License",
         "specialNeeds": "Special Needs",
-        "available": "Available"
+        "available": "Available",
+        "introduction": "Introduction",
+        "personality": "Personality & Work Style",
+        "personalityTraits": "Personality Traits",
+        "workStyle": "Work Style",
+        "interests": "Interests",
+        "childAgeComfort": "Comfortable with Age Groups",
+        "rulesComfort": "Comfortable with Rules",
+        "dealBreakers": "Deal Breakers"
       },
       "payment": {
         "unlockTitle": "Unlock Contact",

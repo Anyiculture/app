@@ -67,16 +67,23 @@ export function AuPairProfilePage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('au_pair_profiles')
-        .select('*')
-        .eq('id', id)
-        .single();
+      
+      // Use the language-aware function to get profile with translated fields
+      const { data, error } = await supabase.rpc('get_au_pair_profile_with_language', {
+        profile_id: id,
+        user_language: language
+      });
 
       if (error) throw error;
-      setProfile(data);
+      
+      if (data && data.length > 0) {
+        setProfile(data[0]);
+      } else {
+        setProfile(null);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Error loading profile:', err);
+      setProfile(null);
     } finally {
       setLoading(false);
     }
@@ -91,6 +98,7 @@ export function AuPairProfilePage() {
     if (!profile) return;
 
     try {
+      // First check if user can send messages
       const { allowed, reason } = await auPairService.canSendMessage();
       
       if (!allowed) {
@@ -98,7 +106,7 @@ export function AuPairProfilePage() {
           alert(t('auPair.payment.pendingApproval') || 'Your payment proof is under review. Please wait for admin approval.');
           return;
         } else if (reason === 'payment_rejected') {
-          alert('Your previous payment proof was rejected. Please upload a new proof on the payment page.');
+          alert(t('auPair.payment.rejectedDesc') || 'Your previous payment proof was rejected. Please upload a new proof on the payment page.');
           navigate('/au-pair/payment');
           return;
         } else if (reason === 'not_premium') {
@@ -111,16 +119,36 @@ export function AuPairProfilePage() {
         }
       }
 
-      const conversationId = await messagingService.getOrCreateConversation(
-        profile.user_id,
-        'aupair',
-        profile.id,
-        `Au Pair ${profile.display_name}`
-      );
-      navigate(`/messages?conversation=${conversationId}`);
-    } catch (error) {
+      // Use the correct messaging service method
+      const result = await messagingService.createConversationWithMessage({
+        otherUserId: profile.user_id,
+        contextType: 'aupair',
+        contextId: profile.id,
+        relatedItemTitle: `Au Pair ${profile.display_name}`,
+        initialMessage: t('auPair.profile.contactInquiry') || `Hello! I'm interested in your profile.`
+      });
+      
+      if (result.conversationId) {
+        navigate(`/messages?conversation=${result.conversationId}`);
+      } else {
+        throw new Error('Failed to create conversation');
+      }
+    } catch (error: any) {
       console.error('Failed to start conversation:', error);
-      alert('Failed to start conversation. Please try again.');
+      
+      // Provide more detailed error message
+      let errorMessage = t('admin.common.failedToStartChat') || 'Failed to start conversation. Please try again.';
+      
+      if (error?.message?.includes('Not authenticated')) {
+        errorMessage = 'Please sign in to contact au pairs.';
+        navigate('/signin');
+      } else if (error?.message?.includes('RLS') || error?.message?.includes('permission')) {
+        errorMessage = 'Permission denied. Please ensure your account is approved.';
+      } else if (error?.message?.includes('conversation')) {
+        errorMessage = 'Could not start conversation. This might be due to messaging restrictions.';
+      }
+      
+      alert(errorMessage);
     }
   };
 

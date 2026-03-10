@@ -161,13 +161,15 @@ export const auPairService = {
           subscriptionStatus: null,
           subscriptionExpiresAt: null,
           messageCount: 0,
-          onboardingCompleted: false
+          onboardingCompleted: false,
+          latestSubmission: null
         };
       }
 
+      // Fetch both old and new subscription columns
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('au_pair_role, au_pair_subscription_status, au_pair_message_count, au_pair_onboarding_completed')
+        .select('au_pair_role, au_pair_subscription_status, au_pair_message_count, au_pair_onboarding_completed, host_family_subscription_status, host_family_subscription_end')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -178,7 +180,8 @@ export const auPairService = {
           subscriptionStatus: null,
           subscriptionExpiresAt: null,
           messageCount: 0,
-          onboardingCompleted: false
+          onboardingCompleted: false,
+          latestSubmission: null
         };
       }
 
@@ -233,10 +236,22 @@ export const auPairService = {
         .limit(1)
         .maybeSingle();
 
+      // Check new host_family_subscription_status column
+      let subscriptionStatus = profile?.au_pair_subscription_status;
+      if (role === 'host_family' && profile?.host_family_subscription_status) {
+        subscriptionStatus = profile.host_family_subscription_status;
+      }
+
+      // Get subscription end date from new column
+      let subscriptionExpiresAt = subscription?.status === 'active' ? (subscription?.end_date || null) : null;
+      if (role === 'host_family' && profile?.host_family_subscription_end) {
+        subscriptionExpiresAt = profile.host_family_subscription_end;
+      }
+
       return {
         role: (role as 'host_family' | 'au_pair') || null,
-        subscriptionStatus: (profile?.au_pair_subscription_status as any) || (role === 'host_family' ? 'free' : null),
-        subscriptionExpiresAt: subscription?.status === 'active' ? (subscription?.end_date || null) : null,
+        subscriptionStatus: subscriptionStatus || (role === 'host_family' ? 'free' : null),
+        subscriptionExpiresAt,
         messageCount: profile?.au_pair_message_count || 0,
         onboardingCompleted: profile?.au_pair_onboarding_completed || false,
         latestSubmission
