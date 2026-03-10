@@ -119,6 +119,13 @@ $$;
 -- ISSUE #3: Create blocked_emails table for signup prevention
 -- =====================================================
 
+-- First, ensure profiles table has deleted_at and is_banned columns
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_banned boolean DEFAULT false;
+
+-- Add updated_at if it doesn't exist (for consistency)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
+
 -- Create table to store blocked email addresses
 CREATE TABLE IF NOT EXISTS blocked_emails (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -318,6 +325,10 @@ $$;
 -- =====================================================
 -- ISSUE #4: Add delete_payment_submission function
 -- =====================================================
+
+-- Ensure payment_submissions has deleted_at column
+ALTER TABLE payment_submissions ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+ALTER TABLE payment_submissions ADD COLUMN IF NOT EXISTS deleted_by uuid REFERENCES auth.users(id);
 
 DROP FUNCTION IF EXISTS public.admin_delete_payment_submission(uuid);
 CREATE OR REPLACE FUNCTION public.admin_delete_payment_submission(submission_id uuid)
