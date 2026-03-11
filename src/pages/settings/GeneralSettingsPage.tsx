@@ -231,11 +231,11 @@ export function GeneralSettingsPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">{t('settings.profile.citizenship')}</label>
+            <label className="block text-sm font-medium text-gray-700">{t('settings.profile.citizenship') || t('profilePage.details.citizenship')}</label>
             <Input
               value={profileData.citizenship_country || ''}
               onChange={(e) => setProfileData((prev: any) => ({ ...prev, citizenship_country: e.target.value }))}
-              placeholder={t('settings.profile.citizenship')}
+              placeholder={t('settings.profile.citizenship') || t('profilePage.details.citizenship')}
               className="bg-gray-50 border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500 rounded-lg h-10"
             />
           </div>

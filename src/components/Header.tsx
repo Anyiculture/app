@@ -55,11 +55,11 @@ export function Header() {
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     <Link
-                      to="/settings"
+                      to="/account"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
-                      {t('settings.title') || 'Settings'}
+                      {t('common.account') || 'Account'}
                     </Link>
                     <button
                       onClick={async () => {
@@ -134,11 +134,11 @@ export function Header() {
             {user ? (
               <>
                 <Link
-                  to="/settings"
+                  to="/account"
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {t('settings.title') || 'Settings'}
+                  {t('common.account') || 'Account'}
                 </Link>
                 <button
                   onClick={async () => {

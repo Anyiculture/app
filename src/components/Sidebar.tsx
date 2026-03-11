@@ -171,16 +171,16 @@ export function Sidebar({ isOpen, onClose, onToggle: _onToggle }: SidebarProps) 
               </Link>
 
               <Link
-                to="/settings"
+                to="/account"
                 onClick={handleNavClick}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${
-                  isActive('/settings')
+                  isActive('/account')
                     ? 'bg-blue-600 text-white shadow-lg'
                     : 'text-gray-300 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 <Settings size={20} className="flex-shrink-0" />
-                <span className="font-medium text-sm">{t('nav.settings')}</span>
+                <span className="font-medium text-sm">{t('common.account') || 'Account'}</span>
               </Link>
 
               {isAdmin && (

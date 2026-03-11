@@ -330,20 +330,17 @@ export const auPairService = {
     }
   },
 
-  async completeOnboarding(profileUpdates?: { full_name?: string; current_city?: string }) {
+  async completeOnboarding() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
       throw new Error('Not authenticated');
     }
 
-    const updates: any = {
+    const updates = {
       au_pair_onboarding_completed: true,
       updated_at: new Date().toISOString()
     };
-
-    if (profileUpdates?.full_name) updates.full_name = profileUpdates.full_name;
-    if (profileUpdates?.current_city) updates.current_city = profileUpdates.current_city;
 
     const { error } = await supabase
       .from('profiles')

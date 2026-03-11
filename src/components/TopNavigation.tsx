@@ -238,20 +238,12 @@ export function TopNavigation() {
                         {t('nav.dashboard')}
                       </Link>
                       <Link 
-                        to="/profile" 
-                        onClick={() => setIsProfileMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
-                      >
-                        <Users size={16} />
-                        {t('nav.profile')}
-                      </Link>
-                      <Link 
-                        to="/settings" 
+                        to="/account" 
                         onClick={() => setIsProfileMenuOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                       >
                         <Settings size={16} />
-                        {t('nav.settings')}
+                        {t('common.account') || 'Account'}
                       </Link>
                       {isAdmin && (
                         <Link 

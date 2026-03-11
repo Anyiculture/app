@@ -346,7 +346,6 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
 
     setLoading(true);
     try {
-      const fullName = `${formData.first_name} ${formData.middle_name ? formData.middle_name + ' ' : ''}${formData.last_name}`.trim();
       const displayName = `${formData.first_name} ${formData.last_name ? formData.last_name.charAt(0) + '.' : ''}`.trim() || 'Au Pair';
 
       const profileData = {
@@ -399,10 +398,8 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
       } else {
         // Normal user flow: create user account and profile
         await auPairService.createAuPairProfile(profileData);
-        await auPairService.completeOnboarding({
-          full_name: fullName,
-          current_city: formData.current_city
-        });
+        // Mark onboarding complete without mutating shared personal profile fields.
+        await auPairService.completeOnboarding();
         clearFormPersistence();
         clearStepPersistence();
         setTimeout(() => {
@@ -1311,4 +1308,3 @@ export function AuPairOnboarding({ userId, onComplete, mode = 'create', initialD
     </>
   );
 }
-

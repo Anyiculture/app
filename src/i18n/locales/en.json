@@ -633,7 +633,8 @@
       "management": "Payments Management",
       "tabs": {
         "requests": "Payment Requests",
-        "history": "Payment History"
+        "history": "Payment History",
+        "deleted": "Deleted"
       },
       "status": {
         "pending": "Pending",
@@ -659,11 +660,6 @@
       "noRequests": "No payment requests found",
       "noTransactions": "No payment transactions found",
       "noDeleted": "No deleted records found",
-      "tabs": {
-        "requests": "Payment Requests",
-        "history": "Payment History",
-        "deleted": "Deleted"
-      },
       "confirmDeleteTitle": "Delete Payment Submission",
       "confirmDeleteMessage": "Are you sure you want to delete this payment submission? This action will soft-delete the record and cannot be undone."
     },
@@ -683,13 +679,9 @@
     },
     "settings": {
       "permissionsPlaceholder": "Search permissions...",
-    "payments": {
-      "confirmDeleteTitle": "Delete Payment Submission",
-      "confirmDeleteMessage": "Are you sure you want to delete this payment submission? This action will soft-delete the record and cannot be undone.",
-      "confirmDelete": "Are you sure you want to delete this redemption code?"
-    },
-    "settings": {
-      "permissionsPlaceholder": "Search permissions...",
+      "notificationsPlaceholder": "Search notifications...",
+      "security": {
+        "desc": "Manage your password and security preferences",
         "passwordDesc": "Change your password to keep your account secure",
         "2fa": "Two-Factor Authentication",
         "2faDesc": "Add an extra layer of security to your account",
@@ -2535,6 +2527,7 @@
       "dob": "Date of Birth",
       "gender": "Gender",
       "nationality": "Nationality",
+      "citizenship": "Citizenship",
       "residence": "Country of Residence",
       "province": "Province / State",
       "city": "City",
@@ -2578,6 +2571,98 @@
     "auPair": {
       "updateDesc": "Update your Au Pair profile information and preferences",
       "viewDesc": "Preview how your profile appears to host families"
+    },
+    "security": {
+      "desc": "Manage your password and security preferences",
+      "passwordDesc": "Change your password to keep your account secure",
+      "2fa": "Two-Factor Authentication",
+      "2faDesc": "Add an extra layer of security to your account",
+      "deleteAccount": "Delete Account",
+      "deleteDesc": "Permanently remove your account and all data"
+    }
+  },
+  "account": {
+    "subtitle": "Manage your account, profile roles, subscription, and security in one place.",
+    "loadError": "Failed to load account information",
+    "sections": {
+      "overview": "Overview",
+      "personalInfo": "Personal Info",
+      "roleProfiles": "Role Profiles",
+      "billing": "Billing & Subscription",
+      "security": "Security",
+      "notifications": "Notifications"
+    },
+    "overview": {
+      "title": "Account Overview",
+      "roles": "Account roles",
+      "approvalStatus": "Approval status",
+      "subscriptionStatus": "Subscription status",
+      "paymentStatus": "Payment status",
+      "nextBillingDate": "Next billing / plan end",
+      "profileCompletion": "Profile completion"
+    },
+    "roles": {
+      "general": "General User",
+      "generalDesc": "Shared identity settings are managed in Personal Info.",
+      "hostFamilyDesc": "Manage your host family profile and approval state",
+      "auPairDesc": "Manage your Au Pair profile and visibility",
+      "employerDesc": "Manage your employer profile and hiring settings",
+      "jobSeekerDesc": "Manage your job seeker profile and applications",
+      "noRoleProfiles": "No role profiles enabled yet."
+    },
+    "status": {
+      "approved": "Approved",
+      "pendingApproval": "Pending approval",
+      "pendingPayment": "Pending payment",
+      "rejected": "Rejected",
+      "notRequired": "Not required",
+      "paymentApproved": "Approved",
+      "paymentPending": "Pending",
+      "paymentRejected": "Rejected",
+      "paymentNotSubmitted": "Not submitted"
+    },
+    "messaging": {
+      "enabled": "Messaging and contact access enabled",
+      "onboardingIncomplete": "Messaging locked until onboarding is complete",
+      "notPremium": "Messaging locked until premium activation",
+      "paymentPending": "Messaging locked while payment is under review",
+      "paymentRejected": "Messaging locked due to rejected payment",
+      "locked": "Messaging currently locked"
+    },
+    "billing": {
+      "currentPlan": "Current plan",
+      "paymentStatus": "Payment status",
+      "subscriptionStart": "Subscription start date",
+      "subscriptionEnd": "Subscription end / renewal date",
+      "approvalDate": "Approval date",
+      "contactAccess": "Contact access",
+      "contactEnabled": "Enabled",
+      "contactLocked": "Locked",
+      "pendingApprovalHint": "Your account is pending approval. Messaging remains locked until approval.",
+      "pendingPaymentHint": "Payment proof is required to activate premium access.",
+      "activeHint": "Billing and subscription data is up to date."
+    },
+    "security": {
+      "sendResetLink": "Send reset link",
+      "comingSoon": "Coming soon",
+      "deleteAccountHelp": "For account deletion requests, please contact support.",
+      "resetSent": "Password reset email sent",
+      "resetError": "Failed to send reset email"
+    },
+    "notifications": {
+      "saved": "Notification preferences updated",
+      "saveError": "Failed to update notification settings"
+    },
+    "actions": {
+      "editProfile": "Edit profile",
+      "viewProfile": "View profile",
+      "completeSetup": "Complete setup",
+      "startOnboarding": "Start onboarding",
+      "openDashboard": "Open dashboard",
+      "manageRole": "Manage role",
+      "editPersonalInfo": "Edit personal info",
+      "managePayment": "Manage payment",
+      "manageSubscription": "Manage subscription"
     }
   },
   "profilePage": {

@@ -38,7 +38,7 @@ export function HostFamilySettingsPage() {
             <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-4">
                 <Eye size={24} />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">{t('common.view')} {t('common.profile')}</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{t('common.view')} {t('common.profile.main')}</h3>
             <p className="text-gray-500 text-sm mb-6">{t('settings.hostFamily.viewDesc')}</p>
             <Button 
                 onClick={() => navigate(`/host-family/profile/${user?.id}`)}

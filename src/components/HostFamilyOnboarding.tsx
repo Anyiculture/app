@@ -322,11 +322,8 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
 
       await auPairService.createHostFamilyProfile(profileData);
       
-      // Only complete onboarding if not in edit mode
-      await auPairService.completeOnboarding({
-        full_name: formData.family_name,
-        current_city: formData.city
-      });
+      // Mark onboarding complete without mutating shared personal profile fields.
+      await auPairService.completeOnboarding();
       
       clearFormPersistence();
       clearStepPersistence();
@@ -340,11 +337,11 @@ export function HostFamilyOnboarding({ userId, onComplete, mode = 'create', init
             }
 
             if (userId) {
-                 // If we are editing, maybe go back to profile or settings
+                 // If we are editing, route back to the unified account page.
                  if (onComplete) {
                      onComplete();
                  } else {
-                     navigate('/settings');
+                     navigate('/account?section=roles');
                  }
             } else {
                  navigate('/au-pair/payment');

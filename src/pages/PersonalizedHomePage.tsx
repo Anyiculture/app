@@ -264,7 +264,7 @@ export default function PersonalizedHomePage() {
             <QuickActionButton
               icon={<Users className="w-5 h-5" />}
               label={t('home.myProfile')}
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/account')}
             />
             <QuickActionButton
               icon={<Calendar className="w-5 h-5" />}

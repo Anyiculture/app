@@ -338,7 +338,7 @@ export function ProfileView({ userId, embedded = false }: ProfileViewProps) {
                 {isOwnProfile ? (
                   !embedded && (
                     <Button
-                        onClick={() => navigate('/settings/general')}
+                        onClick={() => navigate('/account?section=personal')}
                         variant="outline"
                         className="flex items-center gap-2 px-6 shadow-sm hover:shadow-md transition-all bg-white"
                     >

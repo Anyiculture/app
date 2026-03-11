@@ -18,7 +18,7 @@ export function AuPairEditProfilePage() {
       <AuPairOnboarding 
         mode="edit" 
         userId={user.id} 
-        onComplete={() => navigate('/settings')} 
+        onComplete={() => navigate('/account?section=roles')} 
       />
     </div>
   );

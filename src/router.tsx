@@ -65,24 +65,13 @@ import { EmployerDashboardPage } from './pages/EmployerDashboardPage';
 import { EmployerProfileEditPage } from './pages/EmployerProfileEditPage';
 import { HostFamilyEditProfilePage } from './pages/HostFamilyEditProfilePage';
 import { JobSeekerEditProfilePage } from './pages/JobSeekerEditProfilePage';
-import { UnifiedProfileEditPage } from './pages/UnifiedProfileEditPage';
 import { CompanyProfilePage } from './pages/CompanyProfilePage';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { AccountPage } from './pages/AccountPage';
+import { LegacySettingsRedirectPage } from './pages/LegacySettingsRedirectPage';
 
 import { AuPairProfilePage } from './pages/AuPairProfilePage';
 import { HostFamilyProfilePage } from './pages/HostFamilyProfilePage';
-
-import { SettingsLayout } from './pages/settings/SettingsLayout';
-import { SettingsDashboardPage } from './pages/settings/SettingsDashboardPage';
-import { GeneralSettingsPage } from './pages/settings/GeneralSettingsPage';
-import { ProfilePreviewPage } from './pages/settings/ProfilePreviewPage';
-import { AuPairSettingsPage } from './pages/settings/AuPairSettingsPage';
-import { HostFamilySettingsPage } from './pages/settings/HostFamilySettingsPage';
-import { EmployerSettingsPage } from './pages/settings/EmployerSettingsPage';
-import { JobSeekerSettingsPage } from './pages/settings/JobSeekerSettingsPage';
-import { SecuritySettingsPage } from './pages/settings/SecuritySettingsPage';
-import { BillingSettingsPage } from './pages/settings/BillingSettingsPage';
-import { NotificationSettings } from './components/settings/NotificationSettings';
 
 // import { CandidateProfilePage } from './pages/CandidateProfilePage';
 
@@ -145,11 +134,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'profile/edit',
-        element: (
-          <ProtectedRoute>
-            <UnifiedProfileEditPage />
-          </ProtectedRoute>
-        ),
+        element: <Navigate to="/account?section=roles" replace />,
       },
       {
         path: 'home',
@@ -162,25 +147,26 @@ export const router = createBrowserRouter([
         errorElement: <ErrorBoundary />,
       },
       {
-        path: 'settings',
-        element: <SettingsLayout />,
+        path: 'account',
+        element: (
+          <ProtectedRoute>
+            <AccountPage />
+          </ProtectedRoute>
+        ),
         errorElement: <ErrorBoundary />,
-        children: [
-          { index: true, element: <SettingsDashboardPage /> },
-          { path: 'general', element: <GeneralSettingsPage /> },
-          { path: 'preview', element: <ProfilePreviewPage /> },
-          { path: 'security', element: <SecuritySettingsPage /> },
-          { path: 'notifications', element: <NotificationSettings /> },
-          { path: 'billing', element: <BillingSettingsPage /> },
-          { path: 'au-pair', element: <AuPairSettingsPage /> },
-          { path: 'host-family', element: <HostFamilySettingsPage /> },
-          { path: 'employer', element: <EmployerSettingsPage /> },
-          { path: 'job-seeker', element: <JobSeekerSettingsPage /> },
-        ]
+      },
+      {
+        path: 'settings/*',
+        element: (
+          <ProtectedRoute>
+            <LegacySettingsRedirectPage />
+          </ProtectedRoute>
+        ),
+        errorElement: <ErrorBoundary />,
       },
       {
         path: 'profile',
-        element: <Navigate to="/settings" replace />,
+        element: <Navigate to="/account" replace />,
         errorElement: <ErrorBoundary />,
       },
       {
