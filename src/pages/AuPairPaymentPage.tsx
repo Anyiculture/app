@@ -1,322 +1,366 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { AlertCircle, CheckCircle, Lock, Smartphone, Upload, XCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Shield, MessageSquare, Eye, Sparkles, Upload, CheckCircle, XCircle, Smartphone } from "lucide-react";
-import { auPairService } from "../services/auPairService";
-import { paymentService } from '../services/paymentService';
-import { supabase } from '../lib/supabase';
-import { GlassCard } from "../components/ui/GlassCard";
 import { BackgroundBlobs } from '../components/ui';
-import { motion } from 'framer-motion';
+import { GlassCard } from '../components/ui/GlassCard';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Loading } from '../components/ui/Loading';
+import { hostFamilySubscriptionService, type HostFamilySubscriptionState } from '../services/hostFamilySubscriptionService';
+
+type UploadMode = 'submit' | 'renew' | 'resubmit';
+
+const formatDate = (value: string | null) => {
+  if (!value) return '-';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '-';
+  return parsed.toLocaleDateString();
+};
 
 export function AuPairPaymentPage() {
   const { t } = useI18n();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  const [loadingState, setLoadingState] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [subscriptionState, setSubscriptionState] = useState<HostFamilySubscriptionState | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [submissionStatus, setSubmissionStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
-  const [latestSubmission, setLatestSubmission] = useState<any>(null);
+  const [uploadMode, setUploadMode] = useState<UploadMode>('submit');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadState = async () => {
+    if (!user?.id) return;
+    setLoadingState(true);
+    try {
+      const state = await hostFamilySubscriptionService.getState(user.id);
+      setSubscriptionState(state);
+
+      if (state.role !== 'host_family') {
+        setError(t('payment.hostFamilyOnly') || 'Only Host Family accounts can access this payment page.');
+        navigate('/account?section=billing', { replace: true });
+      } else {
+        setError(null);
+      }
+    } catch (err: any) {
+      console.error('Failed to load host family subscription state:', err);
+      setError(err?.message || 'Failed to load subscription status.');
+    } finally {
+      setLoadingState(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
-      // Redirect to login if not authenticated, passing the current path to return to after login
       navigate('/signin?redirect=/au-pair/payment');
-    } else if (user) {
-      checkSubmissionStatus();
+      return;
     }
-  }, [user, authLoading, navigate]);
-
-  const checkSubmissionStatus = async () => {
-    try {
-      const submission = await auPairService.getLatestPaymentSubmission();
-      if (submission) {
-        setLatestSubmission(submission);
-        setSubmissionStatus(submission.status);
-      }
-    } catch (err) {
-      console.error('Error checking submission status:', err);
+    if (user) {
+      void loadState();
     }
-  };
+  }, [authLoading, user?.id, navigate]);
 
-  if (authLoading) {
+  if (authLoading || loadingState) {
     return <Loading />;
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-        setError('Please upload a JPG or PNG image.');
-        return;
-      }
-      setSelectedFile(file);
-      setError(null);
-    }
+  if (!user) {
+    return <Loading />;
+  }
+
+  const isHostFamily = subscriptionState?.role === 'host_family';
+  const currentStatus = subscriptionState?.subscription_status || 'free';
+  const blockedStateFromRoute = searchParams.get('state');
+
+  const canSubmitPayment =
+    isHostFamily &&
+    (currentStatus === 'free' || currentStatus === 'premium_expired' || currentStatus === 'rejected');
+
+  const openUploadModal = (mode: UploadMode) => {
+    setUploadMode(mode);
+    setSelectedFile(null);
+    setError(null);
+    setShowUploadModal(true);
   };
 
-  const handleUploadProof = async () => {
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+      setError('Please upload a JPG or PNG image.');
+      return;
+    }
+    setSelectedFile(file);
+    setError(null);
+  };
+
+  const submitProof = async () => {
     if (!selectedFile) {
       setError('Please select a payment proof image.');
       return;
     }
 
-    setLoading(true);
+    setUploading(true);
     try {
-      const { data: profile } = await supabase
-        .from('host_family_profiles')
-        .select('id')
-        .eq('id', user?.id)
-        .maybeSingle();
-
-      if (profile) {
-        await paymentService.submitPaymentProof(selectedFile, 'host_family_premium', 100);
-      } else {
-        await paymentService.submitPaymentProof(selectedFile, 'au_pair_premium_monthly', 100);
-      }
-      
+      await hostFamilySubscriptionService.submitPaymentProof(selectedFile);
       setShowUploadModal(false);
       navigate('/au-pair/payment/success');
     } catch (err: any) {
-      console.error('Upload error:', err);
-      setError(err.message || 'Failed to upload proof. Please try again.');
+      console.error('Failed to submit host family payment proof:', err);
+      setError(err?.message || 'Failed to submit payment proof.');
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
-  const features = [
-    {
-      icon: Eye,
-      title: t('auPair.payment.viewFullProfiles'),
-      description: t('auPair.payment.viewFullProfilesDesc')
-    },
-    {
-      icon: MessageSquare,
-      title: t('auPair.payment.unlimitedMessages'),
-      description: t('auPair.payment.unlimitedMessagesDesc')
-    },
-    {
-      icon: Shield,
-      title: t('auPair.payment.verifiedProfiles'),
-      description: t('auPair.payment.verifiedProfilesDesc')
-    },
-    {
-      icon: Sparkles,
-      title: t('auPair.payment.prioritySupport'),
-      description: t('auPair.payment.prioritySupportDesc')
+  const statusPanel = () => {
+    if (!isHostFamily) {
+      return (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {t('payment.hostFamilyOnly') || 'Only Host Family accounts can access this payment page.'}
+        </div>
+      );
     }
-  ];
+
+    if (currentStatus === 'premium_active') {
+      return (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="mt-0.5 h-5 w-5 text-green-700" />
+            <div>
+              <p className="text-sm font-semibold text-green-800">
+                {t('payment.active') || 'Premium Plan is active'}
+              </p>
+              <p className="mt-1 text-sm text-green-700">
+                {(t('payment.activeUntil') || 'You already have an active premium subscription until {{date}}.')
+                  .replace('{{date}}', formatDate(subscriptionState?.expires_at || null))}
+              </p>
+              <p className="mt-1 text-xs text-green-700">
+                {t('payment.noDuplicateWhileActive') || 'You already have an active subscription and cannot pay again yet.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentStatus === 'pending_approval') {
+      return (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 text-amber-700" />
+            <div>
+              <p className="text-sm font-semibold text-amber-800">
+                {t('payment.pendingApproval') || 'Payment submitted, awaiting admin approval'}
+              </p>
+              <p className="mt-1 text-sm text-amber-700">
+                {t('payment.pendingApprovalDescription') || 'You remain on the Free Plan until approval. Duplicate submissions are blocked.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentStatus === 'premium_expired') {
+      return (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start gap-3">
+            <Lock className="mt-0.5 h-5 w-5 text-red-700" />
+            <div>
+              <p className="text-sm font-semibold text-red-800">
+                {t('payment.expired') || 'Subscription expired, you are now on the Free Plan'}
+              </p>
+              <p className="mt-1 text-sm text-red-700">
+                {t('payment.expiredDescription') || 'Renew to continue contacting au pairs.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentStatus === 'rejected') {
+      return (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start gap-3">
+            <XCircle className="mt-0.5 h-5 w-5 text-red-700" />
+            <div>
+              <p className="text-sm font-semibold text-red-800">
+                {t('payment.rejected') || 'Payment rejected'}
+              </p>
+              <p className="mt-1 text-sm text-red-700">
+                {subscriptionState?.rejection_reason || (t('payment.rejectedDescription') || 'Your payment proof was rejected. Please submit a new proof.')}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 text-blue-700" />
+          <div>
+            <p className="text-sm font-semibold text-blue-800">
+              {t('payment.freePlan') || 'Free Plan'}
+            </p>
+            <p className="mt-1 text-sm text-blue-700">
+              {t('payment.freeDescription') || 'Submit payment proof to activate Premium Plan and contact au pairs.'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans relative overflow-hidden">
       <BackgroundBlobs />
-      
-      <div className="max-w-4xl mx-auto px-6 py-20 relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 uppercase tracking-tight leading-tight">
-            {t('auPair.payment.title')}
+      <div className="max-w-4xl mx-auto px-6 py-16 relative z-10 space-y-8">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 uppercase tracking-tight">
+            {t('payment.hostFamilyPremiumTitle') || 'Host Family Premium'}
           </h1>
-          <p className="text-xl text-gray-500 font-medium max-w-2xl mx-auto">
-            {t('auPair.payment.subtitle')}
+          <p className="mt-3 text-lg text-gray-600">
+            {t('payment.hostFamilyPremiumSubtitle') || 'Premium communication access for Host Families only.'}
           </p>
         </motion.div>
 
-        <div className="max-w-md mx-auto">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="relative"
-          >
-            <div className="absolute inset-0 bg-green-500 blur-3xl opacity-20 -z-10 animate-pulse" />
-            <GlassCard className="p-8 md:p-12 bg-white/80 border-green-200/50 shadow-2xl relative overflow-hidden flex flex-col items-center text-center">
-              
-              <div className="mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider mb-6">
-                  <Smartphone size={14} />
-                  {t('auPair.payment.weChatPayOnly')}
-                </div>
-                <h3 className="text-3xl font-black text-gray-900 mb-2">
-                  ¥100 <span className="text-lg text-gray-400 font-bold">/ {t('auPair.payment.month')}</span>
-                </h3>
-                <p className="text-sm text-gray-500 font-medium">{t('auPair.payment.scanToSubscribe')}</p>
+        <div className="max-w-xl mx-auto">
+          <GlassCard className="p-8 md:p-10 bg-white/85 border-green-200/60 shadow-xl">
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wide">
+                <Smartphone size={14} />
+                {t('payment.wechatOnly') || 'WeChat Pay'}
               </div>
+              <p className="mt-5 text-4xl font-black text-gray-900">
+                100 CNY <span className="text-lg text-gray-500 font-semibold">/ month</span>
+              </p>
+              <p className="mt-2 text-sm text-gray-500">
+                {t('payment.unlockContact') || 'Unlock communication with au pairs after admin approval.'}
+              </p>
+            </div>
 
-              <div className="bg-white p-4 rounded-3xl shadow-lg border border-gray-100 mb-8 transform hover:scale-105 transition-transform duration-300">
-                 {/* Replace with actual QR Code */}
-                 <div className="w-80 h-auto bg-gray-100 rounded-2xl flex items-center justify-center overflow-hidden relative">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Smartphone className="w-16 h-16 text-green-500 opacity-20" />
-                    </div>
-                    {/* Placeholder for QR Code */}
-                    <img 
-                        src="/wechat-payment-qr.jpg" 
-                        alt="WeChat Pay QR Code" 
-                        className="w-full h-full object-contain relative z-10"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.parentElement?.classList.add('border-2', 'border-red-400', 'border-dashed', 'h-64');
-                          const msg = document.getElementById('qr-missing-msg');
-                          if (msg) msg.style.display = 'flex';
-                        }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ display: 'none' }} id="qr-missing-msg">
-                       <p className="text-xs text-red-500 font-bold px-4 text-center">
-                         Image missing.<br/>
-                         Save "wechat-payment-qr.jpg"<br/>
-                         to /public folder
-                       </p>
-                    </div>
-                 </div>
-                 <p className="mt-3 text-xs font-bold text-gray-400 uppercase tracking-widest">Scan with WeChat</p>
-              </div>
+            <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <img
+                src="/wechat-payment-qr.jpg"
+                alt="WeChat payment QR"
+                className="mx-auto w-full max-w-[280px] rounded-xl bg-white p-2"
+              />
+              <p className="mt-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {t('payment.scanAndUpload') || 'Scan, pay, then upload your proof'}
+              </p>
+            </div>
 
-              <div className="space-y-4 w-full">
-                <div className="text-left bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <h4 className="font-bold text-gray-900 text-sm mb-2">{t('paymentWechat.payment.instructionsTitle')}</h4>
-                    <ol className="text-xs text-gray-600 space-y-1.5 list-decimal pl-4">
-                        <li>{t('paymentWechat.payment.instruction1')}</li>
-                        <li>{t('paymentWechat.payment.instruction2')}</li>
-                        <li>{t('paymentWechat.payment.instruction3')}</li>
-                        <li>{t('paymentWechat.payment.instruction4')}</li>
-                        <li>{t('paymentWechat.payment.instruction5')}</li>
-                        <li>{t('paymentWechat.payment.instruction6')}</li>
-                    </ol>
-                </div>
+            <div className="mt-6">{statusPanel()}</div>
 
-                {submissionStatus === 'pending' ? (
-                  <div className="flex flex-col gap-3">
-                    <div className="w-full p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                      <div className="flex items-center justify-center gap-2 text-yellow-700 font-bold mb-1">
-                        <Sparkles size={18} />
-                        <p className="uppercase tracking-widest text-sm">{t('auPair.payment.pendingTitle') || 'Under Review'}</p>
-                      </div>
-                      <p className="text-xs text-yellow-600">
-                        {t('auPair.payment.pendingDesc') || 'Admin is verifying your proof. Typically takes 24-48 hours.'}
-                      </p>
-                    </div>
-                    <Button
-                        onClick={() => setShowUploadModal(true)}
-                        variant="outline"
-                        className="w-full h-12 text-sm font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2"
-                      >
-                        <CheckCircle size={18} />
-                        {t('paymentWechat.payment.reuploadProof') || 'Upload Proof Again'}
-                      </Button>
-                  </div>
-                ) : (
-                  <>
-                    {submissionStatus === 'rejected' && (
-                      <div className="w-full p-4 bg-red-50 border border-red-200 rounded-xl mb-4 text-left">
-                        <div className="flex items-center gap-2 text-red-700 font-bold mb-1">
-                          <XCircle size={18} />
-                          <p className="uppercase tracking-widest text-sm">{t('auPair.payment.rejectedTitle') || 'REJECTED'}</p>
-                        </div>
-                        <p className="text-xs text-red-600">
-                          {latestSubmission?.admin_notes || 'Please provide a clearer proof of payment.'}
-                        </p>
-                      </div>
-                    )}
-                    <Button
-                      onClick={() => setShowUploadModal(true)}
-                      className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle size={18} />
-                      {submissionStatus === 'rejected' ? t('paymentWechat.payment.reuploadProof') : t('paymentWechat.payment.iHavePaid')}
-                    </Button>
-                  </>
-                )}
-              </div>
+            {blockedStateFromRoute && blockedStateFromRoute !== currentStatus && (
+              <p className="mt-3 text-xs text-amber-700">
+                {t('payment.accessRechecked') || 'Access state was rechecked with backend data.'}
+              </p>
+            )}
 
-            </GlassCard>
-          </motion.div>
-        </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {canSubmitPayment && (
+                <Button
+                  onClick={() =>
+                    openUploadModal(
+                      currentStatus === 'rejected'
+                        ? 'resubmit'
+                        : currentStatus === 'premium_expired'
+                          ? 'renew'
+                          : 'submit'
+                    )
+                  }
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Upload size={16} className="mr-2" />
+                  {currentStatus === 'premium_expired'
+                    ? (t('payment.renewNow') || 'Renew now')
+                    : currentStatus === 'rejected'
+                      ? (t('payment.resubmitProof') || 'Resubmit proof')
+                      : (t('payment.submitProof') || 'Submit payment proof')}
+                </Button>
+              )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16">
-          {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 + index * 0.1 }}
-            >
-              <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all text-center h-full">
-                <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center mb-4 mx-auto text-pink-600">
-                  <feature.icon size={20} />
-                </div>
-                <h4 className="text-xs font-bold text-gray-900 mb-1 uppercase tracking-wide">{feature.title}</h4>
-              </div>
-            </motion.div>
-          ))}
+              <Button variant="outline" onClick={() => navigate('/account?section=billing')}>
+                {t('payment.backToBilling') || 'Back to account billing'}
+              </Button>
+            </div>
+          </GlassCard>
         </div>
       </div>
 
       <Modal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
-        title={t('paymentWechat.payment.uploadProofTitle')}
+        title={t('payment.uploadProofTitle') || 'Upload Payment Proof'}
       >
-        <div className="space-y-6">
-            <p className="text-sm text-gray-600">
-                {t('paymentWechat.payment.uploadProofDesc')}
-            </p>
+        <div className="space-y-5">
+          <p className="text-sm text-gray-600">
+            {uploadMode === 'renew'
+              ? (t('payment.uploadRenewalProofDesc') || 'Upload your renewal payment proof (100 CNY monthly).')
+              : uploadMode === 'resubmit'
+                ? (t('payment.uploadResubmitProofDesc') || 'Upload a clearer proof image to resubmit your payment.')
+                : (t('payment.uploadSubmitProofDesc') || 'Upload your payment proof to submit for admin approval.')}
+          </p>
 
-            <div 
-                className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors cursor-pointer ${selectedFile ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-gray-400'}`}
-                onClick={() => fileInputRef.current?.click()}
-            >
-                <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    className="hidden" 
-                    accept="image/png, image/jpeg, image/jpg"
-                    onChange={handleFileChange}
-                />
-                
-                {selectedFile ? (
-                    <div className="flex flex-col items-center">
-                        <CheckCircle className="w-10 h-10 text-green-500 mb-2" />
-                        <p className="text-sm font-bold text-green-700">{selectedFile.name}</p>
-                        <p className="text-xs text-green-600 mt-1">{t('paymentWechat.payment.clickToChange')}</p>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center">
-                        <Upload className="w-10 h-10 text-gray-400 mb-2" />
-                        <p className="text-sm font-medium text-gray-700">{t('paymentWechat.payment.clickToUpload')}</p>
-                        <p className="text-xs text-gray-400 mt-1">{t('paymentWechat.payment.formats')}</p>
-                    </div>
-                )}
-            </div>
+          <div
+            className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors cursor-pointer ${
+              selectedFile ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-gray-400'
+            }`}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/png, image/jpeg, image/jpg"
+              onChange={onFileChange}
+            />
 
-            {error && (
-                <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg text-sm">
-                    <XCircle size={16} />
-                    {error}
-                </div>
+            {selectedFile ? (
+              <div className="flex flex-col items-center">
+                <CheckCircle className="w-10 h-10 text-green-500 mb-2" />
+                <p className="text-sm font-semibold text-green-700">{selectedFile.name}</p>
+                <p className="text-xs text-green-600 mt-1">{t('payment.clickToChange') || 'Click to change image'}</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                <p className="text-sm font-medium text-gray-700">{t('payment.clickToUpload') || 'Click to upload proof'}</p>
+                <p className="text-xs text-gray-400 mt-1">{t('payment.formats') || 'JPG, JPEG, PNG'}</p>
+              </div>
             )}
+          </div>
 
-            <div className="flex justify-end gap-3">
-                <Button variant="ghost" onClick={() => setShowUploadModal(false)}>{t('common.cancel')}</Button>
-                <Button 
-                    onClick={handleUploadProof} 
-                    disabled={!selectedFile || loading}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                    {loading ? t('common.upload.uploading') : t('auPair.payment.submitProof')}
-                </Button>
+          {error && (
+            <div className="flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded-lg text-sm">
+              <XCircle size={16} />
+              {error}
             </div>
+          )}
+
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setShowUploadModal(false)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              onClick={submitProof}
+              disabled={!selectedFile || uploading}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {uploading ? (t('common.upload.uploading') || 'Uploading...') : (t('payment.submitProof') || 'Submit payment proof')}
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>

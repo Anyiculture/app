@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { notificationService } from './notificationService';
+import { auPairService } from './auPairService';
 
 export interface Meeting {
   id: string;
@@ -212,6 +213,13 @@ export const messagingService = {
 
     let { otherUserId, contextType, contextId, relatedItemTitle, initialMessage, profileType } = params;
 
+    if (contextType === 'aupair') {
+      const access = await auPairService.canSendMessage('aupair');
+      if (!access.allowed) {
+        throw new Error(`Messaging not allowed: ${access.reason || 'not_premium'}`);
+      }
+    }
+
     // Resolve recipient if dealing with aupair profiles and no otherUserId provided
     if (contextType === 'aupair' && !otherUserId && contextId && profileType) {
       const resolvedUserId = await this.resolveRecipientForProfile(profileType, contextId);
@@ -271,6 +279,21 @@ export const messagingService = {
   ): Promise<Message> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
+
+    if (messageType === 'user') {
+      const { data: conversation } = await supabase
+        .from('conversations')
+        .select('context_type')
+        .eq('id', conversationId)
+        .maybeSingle();
+
+      if (conversation?.context_type === 'aupair') {
+        const access = await auPairService.canSendMessage('aupair');
+        if (!access.allowed) {
+          throw new Error(`Messaging not allowed: ${access.reason || 'not_premium'}`);
+        }
+      }
+    }
 
     // Prepare message object
     const messageData = {

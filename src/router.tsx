@@ -37,7 +37,6 @@ import { BrowseFamiliesPage } from './pages/BrowseFamiliesPage';
 import { BrowseAuPairsPage } from './pages/BrowseAuPairsPage';
 import { AuPairPaymentPage } from './pages/AuPairPaymentPage';
 import { AuPairPaymentSuccessPage } from './pages/AuPairPaymentSuccessPage';
-import { SubscriptionManagementPage } from './pages/SubscriptionManagementPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { MessagingPage } from './pages/MessagingPage';
 import { AdminPortalPage } from './pages/AdminPortalPage';
@@ -438,7 +437,7 @@ export const router = createBrowserRouter([
         path: 'au-pair/subscription',
         element: (
           <ProtectedRoute>
-            <SubscriptionManagementPage />
+            <Navigate to="/account?section=billing" replace />
           </ProtectedRoute>
         ),
         errorElement: <ErrorBoundary />,
@@ -474,7 +473,7 @@ export const router = createBrowserRouter([
       {
         path: 'messages',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requirePaymentApproval>
             <MessagingPage />
           </ProtectedRoute>
         ),

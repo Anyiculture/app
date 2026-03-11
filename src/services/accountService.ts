@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { auPairService, type UserSubscriptionStatus } from './auPairService';
+import { hostFamilySubscriptionService, type HostFamilySubscriptionState } from './hostFamilySubscriptionService';
 import type { Profile } from './profileService';
 
 export type AccountRole = 'general' | 'host_family' | 'au_pair' | 'employer' | 'job_seeker';
@@ -34,7 +35,7 @@ export interface AccountState {
   stripeSubscription: Record<string, any> | null;
   messagingAccess: {
     allowed: boolean;
-    reason?: 'not_premium' | 'onboarding_incomplete' | 'not_authenticated' | 'payment_pending' | 'payment_rejected';
+    reason?: 'not_premium' | 'onboarding_incomplete' | 'not_authenticated' | 'payment_pending' | 'payment_rejected' | 'subscription_expired';
   } | null;
   profileCompletion: number | null;
   approvalStatus: string | null;
@@ -51,12 +52,6 @@ const normalizeRole = (value: string | null | undefined): AccountRole | null => 
   if (value === 'job_seeker') return 'job_seeker';
   if (value === 'general') return 'general';
   return null;
-};
-
-const toIsoFromEpochSeconds = (value: number | string | null | undefined): string | null => {
-  if (typeof value !== 'number') return null;
-  if (!Number.isFinite(value)) return null;
-  return new Date(value * 1000).toISOString();
 };
 
 const computeProfileCompletion = (profile: (Profile & Record<string, any>) | null): number | null => {
@@ -112,6 +107,8 @@ export const accountService = {
         .from('payment_submissions')
         .select('*')
         .eq('user_id', userId)
+        .eq('plan_type', 'host_family_premium')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -159,11 +156,20 @@ export const accountService = {
 
     let subscription: UserSubscriptionStatus | null = null;
     let messagingAccess: AccountState['messagingAccess'] = null;
+    let hostFamilySubscriptionState: HostFamilySubscriptionState | null = null;
 
     try {
       subscription = await auPairService.getUserSubscriptionStatus();
     } catch (error) {
       console.warn('Failed to load subscription status for account page:', error);
+    }
+
+    if (orderedRoles.includes('host_family')) {
+      try {
+        hostFamilySubscriptionState = await hostFamilySubscriptionService.getState(userId);
+      } catch (error) {
+        console.warn('Failed to load host family subscription state for account page:', error);
+      }
     }
 
     try {
@@ -172,48 +178,48 @@ export const accountService = {
       console.warn('Failed to load messaging access for account page:', error);
     }
 
-    const hostFamilyStatus = hostFamilyProfile?.profile_status ?? null;
+    const isHostFamilyUser = orderedRoles.includes('host_family');
+    const hostFamilyStatus = hostFamilySubscriptionState?.subscription_status ?? hostFamilyProfile?.profile_status ?? null;
     const auPairStatus = auPairProfile?.profile_status ?? null;
-    const approvalStatus = orderedRoles.includes('host_family') ? hostFamilyStatus : orderedRoles.includes('au_pair') ? auPairStatus : null;
+    const approvalStatus = isHostFamilyUser ? hostFamilyStatus : orderedRoles.includes('au_pair') ? auPairStatus : null;
 
     const subscriptionStatus =
-      subscription?.subscriptionStatus ??
-      (orderedRoles.includes('host_family') ? (profile?.host_family_subscription_status ?? null) : null);
+      isHostFamilyUser
+        ? (hostFamilySubscriptionState?.subscription_status ?? profile?.host_family_subscription_status ?? null)
+        : null;
 
-    const currentPlan: 'free' | 'premium' | null = subscriptionStatus === 'premium' ? 'premium' : subscriptionStatus === 'free' ? 'free' : null;
+    const currentPlan: 'free' | 'premium' | null = isHostFamilyUser
+      ? (hostFamilySubscriptionState?.subscription_plan === 'premium' ? 'premium' : 'free')
+      : null;
 
     const subscriptionStartDate =
+      hostFamilySubscriptionState?.approved_at ??
       profile?.host_family_subscription_start ??
-      toIsoFromEpochSeconds(stripeSubscription?.current_period_start) ??
       null;
 
     const subscriptionEndDate =
+      hostFamilySubscriptionState?.expires_at ??
       profile?.host_family_subscription_end ??
-      subscription?.subscriptionExpiresAt ??
-      toIsoFromEpochSeconds(stripeSubscription?.current_period_end) ??
       null;
 
-    const renewalDate =
-      stripeSubscription?.subscription_status === 'active'
-        ? toIsoFromEpochSeconds(stripeSubscription?.current_period_end)
-        : subscriptionEndDate;
+    const renewalDate = subscriptionEndDate;
 
     const paymentStatus =
-      latestPaymentSubmission?.status ??
-      (hostFamilyStatus === 'pending_payment' ? 'pending' : null);
-
-    const approvalDate =
-      latestPaymentSubmission?.status === 'approved'
-        ? (latestPaymentSubmission.reviewed_at ?? latestPaymentSubmission.updated_at ?? null)
+      isHostFamilyUser
+        ? (hostFamilySubscriptionState?.payment_status ?? latestPaymentSubmission?.status ?? 'not_submitted')
         : null;
 
-    const pendingPayment =
-      hostFamilyStatus === 'pending_payment' ||
-      paymentStatus === 'pending';
+    const approvalDate =
+      isHostFamilyUser
+        ? (hostFamilySubscriptionState?.approved_at ??
+          (latestPaymentSubmission?.status === 'approved'
+            ? (latestPaymentSubmission.reviewed_at ?? latestPaymentSubmission.updated_at ?? null)
+            : null))
+        : null;
 
-    const pendingApproval =
-      hostFamilyStatus === 'pending_approval' ||
-      (hostFamilyStatus !== 'pending_payment' && paymentStatus === 'pending');
+    const pendingPayment = Boolean(isHostFamilyUser && paymentStatus === 'not_submitted');
+
+    const pendingApproval = Boolean(isHostFamilyUser && subscriptionStatus === 'pending_approval');
 
     return {
       profile,
@@ -239,7 +245,9 @@ export const accountService = {
         subscriptionEndDate,
         renewalDate,
         approvalDate,
-        contactAccessEnabled: messagingAccess?.allowed ?? false,
+        contactAccessEnabled: isHostFamilyUser
+          ? Boolean(hostFamilySubscriptionState?.contact_access_enabled)
+          : (messagingAccess?.allowed ?? false),
         pendingApproval,
         pendingPayment,
       },

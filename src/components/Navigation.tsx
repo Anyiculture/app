@@ -52,7 +52,7 @@ const Navigation = () => {
     { name: t('nav.visa'), path: '/visa', icon: Plane },
     { name: t('nav.events'), path: '/events', icon: Calendar },
     { name: t('nav.messaging'), path: '/messages', icon: MessageCircle, badge: unreadCount },
-    { name: t('nav.subscription'), path: '/subscription', icon: Crown },
+    { name: t('nav.subscription'), path: '/account?section=billing', icon: Crown },
     { name: t('nav.lifestyle'), path: '/lifestyle', icon: Heart },
     { name: t('nav.marketplace'), path: '/marketplace', icon: ShoppingBag }
   ];

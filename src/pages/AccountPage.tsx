@@ -82,11 +82,14 @@ const approvalLabel = (status: string | null, t: (key: string) => string) => {
   switch (status) {
     case 'active':
     case 'approved':
+    case 'premium_active':
       return t('account.status.approved') || 'Approved';
     case 'pending_approval':
       return t('account.status.pendingApproval') || 'Pending approval';
     case 'pending_payment':
       return t('account.status.pendingPayment') || 'Pending payment';
+    case 'premium_expired':
+      return t('account.status.expired') || 'Expired';
     case 'rejected':
       return t('account.status.rejected') || 'Rejected';
     default:
@@ -95,6 +98,7 @@ const approvalLabel = (status: string | null, t: (key: string) => string) => {
 };
 
 const paymentLabel = (status: string | null, t: (key: string) => string) => {
+  if (!status) return '-';
   switch (status) {
     case 'approved':
       return t('account.status.paymentApproved') || 'Approved';
@@ -102,8 +106,27 @@ const paymentLabel = (status: string | null, t: (key: string) => string) => {
       return t('account.status.paymentPending') || 'Pending';
     case 'rejected':
       return t('account.status.paymentRejected') || 'Rejected';
-    default:
+    case 'not_submitted':
       return t('account.status.paymentNotSubmitted') || 'Not submitted';
+    default:
+      return status;
+  }
+};
+
+const subscriptionStatusLabel = (status: string | null, t: (key: string) => string) => {
+  switch (status) {
+    case 'premium_active':
+      return t('account.status.premiumActive') || 'Premium active';
+    case 'pending_approval':
+      return t('account.status.pendingApproval') || 'Pending approval';
+    case 'premium_expired':
+      return t('account.status.expired') || 'Premium expired';
+    case 'rejected':
+      return t('account.status.rejected') || 'Rejected';
+    case 'free':
+      return t('settings.billing.freePlan') || 'Free Plan';
+    default:
+      return '-';
   }
 };
 
@@ -119,6 +142,8 @@ const messagingLabel = (state: AccountState | null, t: (key: string) => string) 
       return t('account.messaging.paymentPending') || 'Messaging locked while payment is under review';
     case 'payment_rejected':
       return t('account.messaging.paymentRejected') || 'Messaging locked due to rejected payment';
+    case 'subscription_expired':
+      return t('account.messaging.subscriptionExpired') || 'Messaging locked because your subscription expired';
     default:
       return t('account.messaging.locked') || 'Messaging currently locked';
   }
@@ -257,14 +282,20 @@ export function AccountPage() {
   const renderOverview = () => {
     if (!accountState) return null;
     const billing = accountState.billing;
+    const isHostFamily = accountState.roles.includes('host_family');
     const summary = [
       { label: t('account.overview.roles') || 'Account roles', value: accountState.roles.map((role) => roleLabel(role, t)).join(', ') || '-' },
       { label: t('account.overview.approvalStatus') || 'Approval status', value: approvalLabel(accountState.approvalStatus, t) },
-      { label: t('account.overview.subscriptionStatus') || 'Subscription status', value: billing.subscriptionStatus ? billing.subscriptionStatus.toUpperCase() : '-' },
-      { label: t('account.overview.paymentStatus') || 'Payment status', value: paymentLabel(billing.paymentStatus, t) },
-      { label: t('account.overview.nextBillingDate') || 'Next billing / plan end', value: formatDate(billing.renewalDate || billing.subscriptionEndDate) },
       { label: t('account.overview.profileCompletion') || 'Profile completion', value: accountState.profileCompletion !== null ? `${accountState.profileCompletion}%` : '-' },
     ];
+
+    if (isHostFamily) {
+      summary.splice(2, 0,
+        { label: t('account.overview.subscriptionStatus') || 'Subscription status', value: subscriptionStatusLabel(billing.subscriptionStatus, t) },
+        { label: t('account.overview.paymentStatus') || 'Payment status', value: paymentLabel(billing.paymentStatus, t) },
+        { label: t('account.overview.nextBillingDate') || 'Next billing / plan end', value: formatDate(billing.renewalDate || billing.subscriptionEndDate) }
+      );
+    }
 
     return (
       <div className="space-y-6">
@@ -388,12 +419,35 @@ export function AccountPage() {
   const renderBilling = () => {
     if (!accountState) return null;
     const billing = accountState.billing;
+    const isHostFamily = accountState.roles.includes('host_family');
+
+    if (!isHostFamily) {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
+            <p className="text-sm font-semibold text-gray-900">{t('account.billing.notApplicableTitle') || 'No host-family subscription on this account'}</p>
+            <p className="mt-2 text-sm text-gray-600">
+              {t('account.billing.notApplicableDesc') || 'Host Family Premium billing (100 CNY/month) applies only to users with the Host Family role.'}
+            </p>
+            <div className="mt-4">
+              <Button size="sm" variant="outline" onClick={() => setSection('roles')}>
+                {t('account.actions.manageRole') || 'Manage roles'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     const planText =
       billing.currentPlan === 'premium'
         ? (t('settings.billing.premiumPlan') || 'Premium Plan')
         : billing.currentPlan === 'free'
           ? (t('settings.billing.freePlan') || 'Free Plan')
           : '-';
+
+    const statusText = subscriptionStatusLabel(billing.subscriptionStatus, t);
+    const rejectionReason = accountState.latestPaymentSubmission?.admin_notes || null;
 
     return (
       <div className="space-y-6">
@@ -405,6 +459,10 @@ export function AccountPage() {
           <div className="rounded-xl border border-gray-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('account.billing.paymentStatus') || 'Payment status'}</p>
             <p className="mt-2 text-lg font-semibold text-gray-900">{paymentLabel(billing.paymentStatus, t)}</p>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('account.billing.subscriptionStatus') || 'Subscription status'}</p>
+            <p className="mt-2 text-lg font-semibold text-gray-900">{statusText}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('account.billing.subscriptionStart') || 'Subscription start date'}</p>
@@ -424,20 +482,38 @@ export function AccountPage() {
               {billing.contactAccessEnabled ? (t('account.billing.contactEnabled') || 'Enabled') : (t('account.billing.contactLocked') || 'Locked')}
             </p>
           </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('account.billing.price') || 'Price'}</p>
+            <p className="mt-2 text-base font-semibold text-gray-900">100 CNY / month</p>
+          </div>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-700">
-            {billing.pendingApproval
-              ? (t('account.billing.pendingApprovalHint') || 'Your account is pending approval. Messaging remains locked until approval.')
-              : billing.pendingPayment
-                ? (t('account.billing.pendingPaymentHint') || 'Payment proof is required to activate premium access.')
-                : (t('account.billing.activeHint') || 'Billing and subscription data is up to date.')}
+            {billing.subscriptionStatus === 'premium_active'
+              ? ((t('account.billing.activeUntilHint') || 'Premium active until {{date}}. You can contact au pairs.')
+                .replace('{{date}}', formatDate(billing.subscriptionEndDate)))
+              : billing.subscriptionStatus === 'pending_approval'
+                ? (t('account.billing.pendingApprovalHint') || 'Payment submitted, awaiting admin approval. You remain on the Free Plan until approval.')
+                : billing.subscriptionStatus === 'premium_expired'
+                  ? (t('account.billing.expiredHint') || 'Subscription expired, you are now on the Free Plan. Renew to continue contacting au pairs.')
+                  : billing.subscriptionStatus === 'rejected'
+                    ? (t('account.billing.rejectedHint') || 'Payment was rejected. Submit a new payment proof to request approval again.')
+                    : (t('account.billing.pendingPaymentHint') || 'You are on the Free Plan. Submit payment proof to activate Premium.')}
           </p>
+          {billing.subscriptionStatus === 'rejected' && rejectionReason && (
+            <p className="mt-2 text-sm text-red-700">
+              {t('account.billing.rejectionReason') || 'Rejection reason'}: {rejectionReason}
+            </p>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => navigate('/au-pair/payment')}>{t('account.actions.managePayment') || 'Manage payment'}</Button>
-            <Button size="sm" variant="outline" onClick={() => navigate('/au-pair/subscription')}>
-              {t('account.actions.manageSubscription') || 'Manage subscription'}
+            {billing.subscriptionStatus !== 'premium_active' && (
+              <Button size="sm" onClick={() => navigate('/au-pair/payment')}>
+                {t('account.actions.managePayment') || 'Manage payment'}
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={() => navigate('/account?section=overview')}>
+              {t('account.actions.viewOverview') || 'View overview'}
             </Button>
           </div>
         </div>

@@ -2590,7 +2590,16 @@
     "match": "匹配度",
     "recommendedFamilies": "推荐家庭",
     "recommendedEvents": "推荐活动",
-    "recommendedItems": "推荐商品"
+    "recommendedItems": "推荐商品",
+    "membershipStatus": "寄宿家庭会员状态",
+    "premiumActiveUntil": "高级会员有效期至 {{date}}",
+    "paymentAwaitingApproval": "付款已提交，等待管理员审核。审核通过前您仍为免费方案。",
+    "subscriptionExpiredRenew": "订阅已过期，您已恢复为免费方案。续费后可继续联系互惠生。",
+    "paymentRejectedResubmit": "付款被拒绝，请重新提交付款凭证。",
+    "viewPaymentStatus": "查看付款状态",
+    "viewBilling": "查看账单",
+    "freePlanUpgradePrompt": "您当前为免费方案，升级高级方案后可联系互惠生。",
+    "resubmitPayment": "重新提交付款凭证"
   },
   "settings": {
     "title": "账户设置",
@@ -2713,6 +2722,8 @@
       "approved": "Approved",
       "pendingApproval": "Pending approval",
       "pendingPayment": "Pending payment",
+      "premiumActive": "高级会员有效",
+      "expired": "已过期",
       "rejected": "Rejected",
       "notRequired": "Not required",
       "paymentApproved": "Approved",
@@ -2726,19 +2737,28 @@
       "notPremium": "Messaging locked until premium activation",
       "paymentPending": "Messaging locked while payment is under review",
       "paymentRejected": "Messaging locked due to rejected payment",
+      "subscriptionExpired": "订阅已过期，消息功能已锁定",
       "locked": "Messaging currently locked"
     },
     "billing": {
       "currentPlan": "Current plan",
       "paymentStatus": "Payment status",
+      "subscriptionStatus": "Subscription status",
       "subscriptionStart": "Subscription start date",
       "subscriptionEnd": "Subscription end / renewal date",
       "approvalDate": "Approval date",
       "contactAccess": "Contact access",
       "contactEnabled": "Enabled",
       "contactLocked": "Locked",
+      "price": "Price",
+      "notApplicableTitle": "此账户不适用寄宿家庭订阅",
+      "notApplicableDesc": "寄宿家庭高级订阅（100 CNY/月）仅适用于拥有寄宿家庭角色的用户。",
       "pendingApprovalHint": "Your account is pending approval. Messaging remains locked until approval.",
       "pendingPaymentHint": "Payment proof is required to activate premium access.",
+      "activeUntilHint": "高级会员有效期至 {{date}}，您可以联系互惠生。",
+      "expiredHint": "订阅已过期，您已恢复为免费方案。续费后可继续联系互惠生。",
+      "rejectedHint": "付款被拒绝，请重新提交付款凭证申请审核。",
+      "rejectionReason": "拒绝原因",
       "activeHint": "Billing and subscription data is up to date."
     },
     "security": {
@@ -2761,7 +2781,8 @@
       "manageRole": "Manage role",
       "editPersonalInfo": "Edit personal info",
       "managePayment": "Manage payment",
-      "manageSubscription": "Manage subscription"
+      "manageSubscription": "Manage subscription",
+      "viewOverview": "查看概览"
     }
   },
   "profilePage": {
@@ -3937,6 +3958,8 @@
       "start": "开始日期"
     },
     "aboutMe": "关于我",
+    "education": "教育",
+    "languages": "语言",
     "preferences": "偏好",
     "preferredLocation": "首选地点",
     "duration": "期限",
@@ -3971,7 +3994,8 @@
       "swimming": "游泳",
       "driversLicense": "驾驶执照",
       "specialNeeds": "特殊需求",
-      "available": "可联系"
+      "available": "可联系",
+      "contactInquiry": "你好！我对你的资料很感兴趣。"
     },
     "payment": {
       "unlockTitle": "解锁联系方式",
@@ -4004,6 +4028,11 @@
       "pendingDesc": "管理员正在核实您的凭证。通常需要 24-48 小时。",
       "approvedTitle": "账户已通过审核！",
       "approvedDesc": "您的寄宿家庭账户已通过审核。您现在可以联系互惠生。",
+      "activeUntil": "高级会员有效期至 {{date}}",
+      "expiredDesc": "您的订阅已过期。续费后可继续联系互惠生。",
+      "rejectedDesc": "您之前提交的付款凭证被拒绝。请在付款页面重新上传新的凭证。",
+      "renewNow": "立即续费",
+      "viewPaymentStatus": "查看付款状态",
       "success": {
         "title": "成功！",
         "subtitle": "提交已收到",
@@ -4426,6 +4455,43 @@
       "joinCommunity": "加入社区",
       "auPair": "互惠生项目"
     }
+  },
+  "payment": {
+    "hostFamilyOnly": "只有寄宿家庭账户可以访问此付款页面。",
+    "hostFamilyPremiumTitle": "寄宿家庭高级方案",
+    "hostFamilyPremiumSubtitle": "仅面向寄宿家庭的高级沟通权限。",
+    "wechatOnly": "微信支付",
+    "unlockContact": "管理员审核通过后即可解锁与互惠生沟通权限。",
+    "scanAndUpload": "扫码付款后上传凭证",
+    "active": "高级方案已生效",
+    "activeUntil": "您的高级订阅已生效，有效期至 {{date}}。",
+    "noDuplicateWhileActive": "您的高级订阅仍在有效期内，暂不可重复付款。",
+    "pendingApproval": "付款已提交，等待管理员审核",
+    "pendingApprovalDescription": "审核通过前您仍为免费方案，且不能重复提交。",
+    "expired": "订阅已过期，您已恢复为免费方案",
+    "expiredDescription": "续费后可继续联系互惠生。",
+    "rejected": "付款被拒绝",
+    "rejectedDescription": "您的付款凭证被拒绝，请重新提交新的凭证。",
+    "freePlan": "免费方案",
+    "freeDescription": "提交付款凭证后，审核通过即可激活高级方案并联系互惠生。",
+    "renewNow": "立即续费",
+    "resubmitProof": "重新提交凭证",
+    "submitProof": "提交付款凭证",
+    "backToBilling": "返回账户账单",
+    "uploadProofTitle": "上传付款凭证",
+    "uploadRenewalProofDesc": "请上传续费付款凭证（100 CNY/月）。",
+    "uploadResubmitProofDesc": "请上传更清晰的付款凭证图片以重新提交审核。",
+    "uploadSubmitProofDesc": "请上传付款凭证，提交给管理员审核。",
+    "clickToChange": "点击更换图片",
+    "clickToUpload": "点击上传凭证",
+    "formats": "支持 JPG、JPEG、PNG",
+    "accessRechecked": "访问状态已根据后端数据重新校验。",
+    "successApprovedTitle": "高级方案已激活",
+    "successApprovedDesc": "您的高级方案有效期至 {{date}}。",
+    "successPendingTitle": "付款已提交",
+    "successPendingDesc": "付款已提交，等待管理员审核。审核通过前您仍为免费方案。",
+    "successPendingContactLocked": "在审核通过之前，联系/消息功能将保持锁定。",
+    "viewBillingStatus": "查看账单状态"
   },
   "paymentWechat": {
     "payment": {

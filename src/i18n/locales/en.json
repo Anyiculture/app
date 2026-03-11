@@ -2491,7 +2491,16 @@
     "match": "Match",
     "recommendedFamilies": "Recommended Families",
     "recommendedEvents": "Recommended Events",
-    "recommendedItems": "Recommended Items"
+    "recommendedItems": "Recommended Items",
+    "membershipStatus": "Host Family Membership",
+    "premiumActiveUntil": "Premium active until {{date}}",
+    "paymentAwaitingApproval": "Payment submitted, awaiting admin approval. You remain on Free Plan until approved.",
+    "subscriptionExpiredRenew": "Subscription expired. You are now on Free Plan. Renew to continue contacting au pairs.",
+    "paymentRejectedResubmit": "Payment was rejected. Please resubmit your payment proof.",
+    "viewPaymentStatus": "View payment status",
+    "viewBilling": "View billing",
+    "freePlanUpgradePrompt": "You are on Free Plan. Upgrade to Premium to contact au pairs.",
+    "resubmitPayment": "Resubmit payment proof"
   },
   "settings": {
     "title": "Account Settings",
@@ -2614,6 +2623,8 @@
       "approved": "Approved",
       "pendingApproval": "Pending approval",
       "pendingPayment": "Pending payment",
+      "premiumActive": "Premium active",
+      "expired": "Expired",
       "rejected": "Rejected",
       "notRequired": "Not required",
       "paymentApproved": "Approved",
@@ -2627,19 +2638,28 @@
       "notPremium": "Messaging locked until premium activation",
       "paymentPending": "Messaging locked while payment is under review",
       "paymentRejected": "Messaging locked due to rejected payment",
+      "subscriptionExpired": "Messaging locked because your subscription expired",
       "locked": "Messaging currently locked"
     },
     "billing": {
       "currentPlan": "Current plan",
       "paymentStatus": "Payment status",
+      "subscriptionStatus": "Subscription status",
       "subscriptionStart": "Subscription start date",
       "subscriptionEnd": "Subscription end / renewal date",
       "approvalDate": "Approval date",
       "contactAccess": "Contact access",
       "contactEnabled": "Enabled",
       "contactLocked": "Locked",
+      "price": "Price",
+      "notApplicableTitle": "No host-family subscription on this account",
+      "notApplicableDesc": "Host Family Premium billing (100 CNY/month) applies only to users with the Host Family role.",
       "pendingApprovalHint": "Your account is pending approval. Messaging remains locked until approval.",
       "pendingPaymentHint": "Payment proof is required to activate premium access.",
+      "activeUntilHint": "Premium active until {{date}}. You can contact au pairs.",
+      "expiredHint": "Subscription expired, you are now on the Free Plan. Renew to continue contacting au pairs.",
+      "rejectedHint": "Payment was rejected. Submit a new payment proof to request approval again.",
+      "rejectionReason": "Rejection reason",
       "activeHint": "Billing and subscription data is up to date."
     },
     "security": {
@@ -2662,7 +2682,8 @@
       "manageRole": "Manage role",
       "editPersonalInfo": "Edit personal info",
       "managePayment": "Manage payment",
-      "manageSubscription": "Manage subscription"
+      "manageSubscription": "Manage subscription",
+      "viewOverview": "View overview"
     }
   },
   "profilePage": {
@@ -3822,13 +3843,15 @@
       "locationNA": "Location N/A",
       "start": "Start Date"
     },
-    "aboutMe": "About Me",
-      "preferences": "Preferences",
-      "preferredLocation": "Preferred Location",
-      "duration": "Duration",
-      "startDate": "Start Date",
-      "ageGroups": "Age Groups Worked With",
-      "profile": {
+      "aboutMe": "About Me",
+    "education": "Education",
+    "languages": "Languages",
+    "preferences": "Preferences",
+    "preferredLocation": "Preferred Location",
+    "duration": "Duration",
+    "startDate": "Start Date",
+    "ageGroups": "Age Groups Worked With",
+    "profile": {
         "unlockContact": "Unlock Contact Details",
         "contactAuPair": "Contact Au Pair",
         "personalDetails": "Personal Details",
@@ -3857,9 +3880,10 @@
         "swimming": "Swimming",
         "driversLicense": "Driving License",
         "specialNeeds": "Special Needs",
-        "available": "Available"
+        "available": "Available",
+        "contactInquiry": "Hello! I'm interested in your profile."
       },
-      "payment": {
+    "payment": {
         "unlockTitle": "Unlock Contact",
         "unlockDescription": "Complete your premium registration to start contacting au pairs directly.",
         "submitProof": "Upload Payment Proof",
@@ -3890,6 +3914,11 @@
         "pendingDesc": "Admin is verifying your proof. Typically takes 24-48 hours.",
         "approvedTitle": "Account Approved!",
         "approvedDesc": "Your host family account has been approved. You can now contact au pairs.",
+        "activeUntil": "Premium active until {{date}}",
+        "expiredDesc": "Your subscription expired. Renew to continue contacting au pairs.",
+        "rejectedDesc": "Your previous payment proof was rejected. Please upload a new proof on the payment page.",
+        "renewNow": "Renew subscription",
+        "viewPaymentStatus": "View payment status",
         "success": {
           "title": "SUCCESS!",
           "subtitle": "Submission Received",
@@ -4312,6 +4341,43 @@
       "joinCommunity": "Join Community",
       "auPair": "Au Pair Program"
     }
+  },
+  "payment": {
+    "hostFamilyOnly": "Only Host Family accounts can access this payment page.",
+    "hostFamilyPremiumTitle": "Host Family Premium",
+    "hostFamilyPremiumSubtitle": "Premium communication access for Host Families only.",
+    "wechatOnly": "WeChat Pay",
+    "unlockContact": "Unlock communication with au pairs after admin approval.",
+    "scanAndUpload": "Scan, pay, then upload your proof",
+    "active": "Premium Plan is active",
+    "activeUntil": "You already have an active premium subscription until {{date}}.",
+    "noDuplicateWhileActive": "You already have an active subscription and cannot pay again yet.",
+    "pendingApproval": "Payment submitted, awaiting admin approval",
+    "pendingApprovalDescription": "You remain on the Free Plan until approval. Duplicate submissions are blocked.",
+    "expired": "Subscription expired, you are now on the Free Plan",
+    "expiredDescription": "Renew to continue contacting au pairs.",
+    "rejected": "Payment rejected",
+    "rejectedDescription": "Your payment proof was rejected. Please submit a new proof.",
+    "freePlan": "Free Plan",
+    "freeDescription": "Submit payment proof to activate Premium Plan and contact au pairs.",
+    "renewNow": "Renew now",
+    "resubmitProof": "Resubmit proof",
+    "submitProof": "Submit payment proof",
+    "backToBilling": "Back to account billing",
+    "uploadProofTitle": "Upload Payment Proof",
+    "uploadRenewalProofDesc": "Upload your renewal payment proof (100 CNY monthly).",
+    "uploadResubmitProofDesc": "Upload a clearer proof image to resubmit your payment.",
+    "uploadSubmitProofDesc": "Upload your payment proof to submit for admin approval.",
+    "clickToChange": "Click to change image",
+    "clickToUpload": "Click to upload proof",
+    "formats": "JPG, JPEG, PNG",
+    "accessRechecked": "Access state was rechecked with backend data.",
+    "successApprovedTitle": "Premium activated",
+    "successApprovedDesc": "Your premium plan is active until {{date}}.",
+    "successPendingTitle": "Payment submitted",
+    "successPendingDesc": "Payment submitted, awaiting admin approval. You remain on the Free Plan until approval.",
+    "successPendingContactLocked": "Messaging/contact with au pairs stays locked until approval.",
+    "viewBillingStatus": "View billing status"
   },
   "paymentWechat": {
     "payment": {

@@ -105,6 +105,10 @@ export function AuPairProfilePage() {
         } else if (reason === 'not_premium') {
           navigate('/au-pair/payment');
           return;
+        } else if (reason === 'subscription_expired') {
+          alert(t('auPair.payment.expiredDesc') || 'Your subscription expired. Renew to continue contacting au pairs.');
+          navigate('/au-pair/payment');
+          return;
         } else if (reason === 'onboarding_incomplete') {
           alert(t('auPair.profile.completeOnboardingPrompt') || 'Please complete your onboarding to contact users.');
           navigate('/onboarding');
@@ -188,6 +192,11 @@ export function AuPairProfilePage() {
     return [];
   };
 
+  const hostFamilyState = subscriptionStatus?.hostFamilyState;
+  const hostFamilySubscriptionStatus = hostFamilyState?.subscription_status || 'free';
+  const canContactAsHostFamily = subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin;
+  const isPendingApproval = hostFamilySubscriptionStatus === 'pending_approval';
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-6">
@@ -203,19 +212,19 @@ export function AuPairProfilePage() {
         </Button>
 
         {/* Status Banner for Host Families */}
-        {!subscriptionLoading && subscriptionStatus?.role === 'host_family' && latestSubmission?.status && (
+        {!subscriptionLoading && subscriptionStatus?.role === 'host_family' && (
           <div className={`mb-6 p-4 rounded-xl border flex items-center gap-4 ${
-            latestSubmission?.status === 'approved'
+            hostFamilySubscriptionStatus === 'premium_active'
               ? 'bg-green-50 border-green-200 text-green-800'
-              : latestSubmission?.status === 'pending' 
+              : hostFamilySubscriptionStatus === 'pending_approval'
                 ? 'bg-amber-50 border-amber-200 text-amber-800' 
                 : 'bg-red-50 border-red-200 text-red-800'
           }`}>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-              latestSubmission?.status === 'approved' ? 'bg-green-100' :
-              latestSubmission?.status === 'pending' ? 'bg-amber-100' : 'bg-red-100'
+              hostFamilySubscriptionStatus === 'premium_active' ? 'bg-green-100' :
+              hostFamilySubscriptionStatus === 'pending_approval' ? 'bg-amber-100' : 'bg-red-100'
             }`}>
-              {latestSubmission?.status === 'approved' ? (
+              {hostFamilySubscriptionStatus === 'premium_active' ? (
                 <CheckCircle className="w-6 h-6" />
               ) : (
                 <AlertCircle className="w-6 h-6" />
@@ -223,18 +232,21 @@ export function AuPairProfilePage() {
             </div>
             <div>
               <h3 className="font-semibold">
-                {latestSubmission?.status === 'approved'
+                {hostFamilySubscriptionStatus === 'premium_active'
                   ? t('auPair.payment.approvedTitle')
-                  : latestSubmission?.status === 'pending' 
+                  : hostFamilySubscriptionStatus === 'pending_approval'
                     ? t('auPair.payment.pendingTitle') 
                     : t('auPair.payment.rejectedTitle')}
               </h3>
               <p className="text-sm opacity-90">
-                {latestSubmission?.status === 'approved'
-                  ? t('auPair.payment.approvedDesc')
-                  : latestSubmission?.status === 'pending' 
-                    ? t('auPair.payment.pendingDesc') 
-                    : latestSubmission?.admin_notes || t('auPair.payment.reuploadDesc')}
+                {hostFamilySubscriptionStatus === 'premium_active'
+                  ? ((t('auPair.payment.activeUntil') || 'Premium active until {{date}}')
+                    .replace('{{date}}', hostFamilyState?.expires_at ? new Date(hostFamilyState.expires_at).toLocaleDateString() : '-'))
+                  : hostFamilySubscriptionStatus === 'pending_approval'
+                    ? (t('auPair.payment.pendingDesc') || 'Payment submitted, awaiting admin approval.')
+                    : hostFamilySubscriptionStatus === 'premium_expired'
+                      ? (t('auPair.payment.expiredDesc') || 'Subscription expired. Renew to continue contacting au pairs.')
+                      : hostFamilyState?.rejection_reason || latestSubmission?.admin_notes || t('auPair.payment.reuploadDesc')}
               </p>
             </div>
           </div>
@@ -281,40 +293,42 @@ export function AuPairProfilePage() {
                     <div className="flex flex-col gap-2">
                       <Button 
                         onClick={handleContact}
-                        disabled={!(subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin) && latestSubmission?.status === 'pending'}
+                        disabled={!canContactAsHostFamily && isPendingApproval}
                         className={`${
-                          subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin 
+                          canContactAsHostFamily
                             ? 'bg-pink-600 hover:bg-pink-700' 
-                            : latestSubmission?.status === 'pending'
+                            : isPendingApproval
                               ? 'bg-amber-500 cursor-not-allowed opacity-80'
                               : 'bg-gray-600 hover:bg-gray-700'
                         } text-white flex items-center gap-2 transition-colors`}
                       >
-                        {subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin ? (
+                        {canContactAsHostFamily ? (
                           <MessageCircle size={16} />
-                        ) : latestSubmission?.status === 'pending' ? (
+                        ) : isPendingApproval ? (
                           <Loading size="sm" />
                         ) : (
                           <Lock size={16} />
                         )}
-                        {latestSubmission?.status === 'pending' && !(subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin)
+                        {isPendingApproval && !canContactAsHostFamily
                           ? (t('auPair.payment.pending') || 'Pending Approval')
-                          : (subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin)
+                          : canContactAsHostFamily
                             ? (t('auPair.profile.contactAuPair') || 'Contact Au Pair')
                             : (t('auPair.profile.unlockContact') || 'Unlock Contact Details')}
                       </Button>
 
                       {/* Show Upload Proof button for Host Families who are not fully approved */}
-                      {!isAdmin && subscriptionStatus?.role === 'host_family' && latestSubmission?.status !== 'approved' && (
+                      {!isAdmin && subscriptionStatus?.role === 'host_family' && hostFamilySubscriptionStatus !== 'premium_active' && (
                         <Button
                           onClick={() => navigate('/au-pair/payment')}
                           className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 transition-colors text-sm py-2"
                         >
                           <Shield size={16} />
-                          {latestSubmission?.status === 'pending'
-                            ? (t('auPair.payment.updateProof') || 'Update Payment Proof')
-                            : latestSubmission?.status === 'rejected' 
+                          {hostFamilySubscriptionStatus === 'pending_approval'
+                            ? (t('auPair.payment.viewPaymentStatus') || 'View Payment Status')
+                            : hostFamilySubscriptionStatus === 'rejected'
                               ? (t('paymentWechat.payment.reuploadProof') || 'Re-upload Proof')
+                              : hostFamilySubscriptionStatus === 'premium_expired'
+                                ? (t('auPair.payment.renewNow') || 'Renew Subscription')
                               : (t('auPair.payment.submitProof') || 'Upload Payment Proof')}
                         </Button>
                       )}

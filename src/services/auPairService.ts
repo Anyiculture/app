@@ -1,4 +1,8 @@
 import { supabase } from '../lib/supabase';
+import {
+  hostFamilySubscriptionService,
+  type HostFamilySubscriptionState,
+} from './hostFamilySubscriptionService';
 
 export interface AuPairProfile {
   id: string;
@@ -142,6 +146,7 @@ export interface UserSubscriptionStatus {
   subscriptionExpiresAt: string | null;
   messageCount: number;
   onboardingCompleted: boolean;
+  hostFamilyState?: HostFamilySubscriptionState | null;
   latestSubmission?: {
     status: string;
     id: string;
@@ -162,11 +167,11 @@ export const auPairService = {
           subscriptionExpiresAt: null,
           messageCount: 0,
           onboardingCompleted: false,
+          hostFamilyState: null,
           latestSubmission: null
         };
       }
 
-      // Fetch both old and new subscription columns
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('au_pair_role, au_pair_subscription_status, au_pair_message_count, au_pair_onboarding_completed, host_family_subscription_status, host_family_subscription_end')
@@ -181,6 +186,7 @@ export const auPairService = {
           subscriptionExpiresAt: null,
           messageCount: 0,
           onboardingCompleted: false,
+          hostFamilyState: null,
           latestSubmission: null
         };
       }
@@ -224,28 +230,26 @@ export const auPairService = {
         .from('payment_submissions')
         .select('*')
         .eq('user_id', user.id)
+        .eq('plan_type', 'host_family_premium')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      const { data: subscription } = await supabase
-        .from('au_pair_subscriptions')
-        .select('end_date, status')
-        .eq('user_id', user.id)
-        .order('end_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      // Check new host_family_subscription_status column
-      let subscriptionStatus = profile?.au_pair_subscription_status;
-      if (role === 'host_family' && profile?.host_family_subscription_status) {
-        subscriptionStatus = profile.host_family_subscription_status;
+      let hostFamilyState: HostFamilySubscriptionState | null = null;
+      if (role === 'host_family') {
+        hostFamilyState = await hostFamilySubscriptionService.getState(user.id);
       }
 
-      // Get subscription end date from new column
-      let subscriptionExpiresAt = subscription?.status === 'active' ? (subscription?.end_date || null) : null;
-      if (role === 'host_family' && profile?.host_family_subscription_end) {
-        subscriptionExpiresAt = profile.host_family_subscription_end;
+      let subscriptionStatus: 'free' | 'premium' | null = profile?.au_pair_subscription_status || null;
+      let subscriptionExpiresAt: string | null = null;
+
+      if (role === 'host_family') {
+        subscriptionStatus = hostFamilyState?.subscription_status === 'premium_active' ? 'premium' : 'free';
+        subscriptionExpiresAt = hostFamilyState?.expires_at || null;
+      } else if (role === 'au_pair') {
+        subscriptionStatus = profile?.au_pair_subscription_status || null;
+        subscriptionExpiresAt = null;
       }
 
       return {
@@ -254,6 +258,7 @@ export const auPairService = {
         subscriptionExpiresAt,
         messageCount: profile?.au_pair_message_count || 0,
         onboardingCompleted: profile?.au_pair_onboarding_completed || false,
+        hostFamilyState,
         latestSubmission
       };
     } catch (error) {
@@ -265,6 +270,7 @@ export const auPairService = {
         subscriptionExpiresAt: null,
         messageCount: 0,
         onboardingCompleted: false,
+        hostFamilyState: null,
         latestSubmission: null
       };
     }
@@ -294,6 +300,8 @@ export const auPairService = {
             email: user.email || '',
             au_pair_role: role,
             au_pair_subscription_status: role === 'host_family' ? 'free' : null,
+            host_family_subscription_status: role === 'host_family' ? 'free' : null,
+            host_family_subscription_plan: role === 'host_family' ? 'free' : null,
             au_pair_message_count: 0,
             au_pair_onboarding_completed: false
           });
@@ -311,6 +319,8 @@ export const auPairService = {
 
         if (role === 'host_family') {
           updates.au_pair_subscription_status = 'free';
+          updates.host_family_subscription_status = 'free';
+          updates.host_family_subscription_plan = 'free';
           updates.au_pair_message_count = 0;
         }
 
@@ -604,7 +614,7 @@ export const auPairService = {
 
   async canSendMessage(contextType?: string): Promise<{ 
     allowed: boolean; 
-    reason?: 'not_premium' | 'onboarding_incomplete' | 'not_authenticated' | 'payment_pending' | 'payment_rejected' 
+    reason?: 'not_premium' | 'onboarding_incomplete' | 'not_authenticated' | 'payment_pending' | 'payment_rejected' | 'subscription_expired' 
   }> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { allowed: false, reason: 'not_authenticated' };
@@ -616,24 +626,31 @@ export const auPairService = {
 
     const status = await this.getUserSubscriptionStatus();
     
-    if (!status.onboardingCompleted) {
-      return { allowed: false, reason: 'onboarding_incomplete' };
+    if (status.role === 'host_family') {
+      const hostFamilyState =
+        status.hostFamilyState ?? (await hostFamilySubscriptionService.getState());
+
+      if (hostFamilyState.subscription_status === 'premium_active') {
+        return { allowed: true };
+      }
+
+      if (hostFamilyState.subscription_status === 'pending_approval') {
+        return { allowed: false, reason: 'payment_pending' };
+      }
+
+      if (hostFamilyState.subscription_status === 'rejected') {
+        return { allowed: false, reason: 'payment_rejected' };
+      }
+
+      if (hostFamilyState.subscription_status === 'premium_expired') {
+        return { allowed: false, reason: 'subscription_expired' };
+      }
+
+      return { allowed: false, reason: 'not_premium' };
     }
 
-    if (status.role === 'host_family' && status.subscriptionStatus !== 'premium') {
-      // Check for pending or rejected payment submission
-      const latestSubmission = await this.getLatestPaymentSubmission();
-      
-      if (latestSubmission) {
-        if (latestSubmission.status === 'pending') {
-          return { allowed: false, reason: 'payment_pending' };
-        }
-        if (latestSubmission.status === 'rejected') {
-          return { allowed: false, reason: 'payment_rejected' };
-        }
-      }
-      
-      return { allowed: false, reason: 'not_premium' };
+    if (status.role === 'au_pair' && !status.onboardingCompleted) {
+      return { allowed: false, reason: 'onboarding_incomplete' };
     }
 
     return { allowed: true };
@@ -647,6 +664,8 @@ export const auPairService = {
       .from('payment_submissions')
       .select('*')
       .eq('user_id', user.id)
+      .eq('plan_type', 'host_family_premium')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

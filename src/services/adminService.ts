@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase';
-import { notificationService } from './notificationService';
 
 export interface AdminRole {
   id: string;
@@ -772,16 +771,7 @@ export const adminService = {
   },
 
   async updatePaymentSubmissionStatus(id: string, status: string, notes?: string) {
-    // 1. Get the submission to know the user_id
-    const { data: submission, error: fetchError } = await supabase
-      .from('payment_submissions')
-      .select('user_id')
-      .eq('id', id)
-      .single();
-    
-    if (fetchError) throw fetchError;
-
-    // 2. Use the RPC function for safe processing (updating subscription etc.)
+    // Use the RPC function for safe processing (updates subscription state transactionally).
     const { data, error } = await supabase.rpc('review_payment_submission', {
       submission_id: id,
       new_status: status,
@@ -791,24 +781,7 @@ export const adminService = {
     if (error) throw error;
     if (data && !data.success) throw new Error(data.message);
     
-    // 3. Notify the user
-    try {
-      const title = status === 'approved' ? 'Payment Approved!' : 'Payment Proof Rejected';
-      const message = status === 'approved' 
-        ? 'Your payment has been approved. You can now contact au pairs!' 
-        : `Your payment proof was rejected. Reason: ${notes || 'Please provide a clearer image'}`;
-      
-      await notificationService.createNotification(
-        submission.user_id,
-        'payment_update',
-        title,
-        message,
-        status === 'approved' ? '/au-pairs' : '/au-pair/payment'
-      );
-    } catch (notifyError) {
-      console.error('Failed to send notification:', notifyError);
-      // Don't throw here, as the payment update was successful
-    }
+    // Notifications are emitted by DB functions/triggers as the source of truth.
 
     await this.logActivity('review_payment', 'payment_submissions', id, { status, notes });
   },

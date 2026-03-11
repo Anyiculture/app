@@ -1,118 +1,95 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Loader2, Sparkles, ArrowRight, PartyPopper } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { GlassCard } from '../components/ui/GlassCard';
-import { BackgroundBlobs } from '../components/ui';
+import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useI18n } from '../contexts/I18nContext';
+import { useAuth } from '../contexts/AuthContext';
+import { BackgroundBlobs } from '../components/ui';
+import { GlassCard } from '../components/ui/GlassCard';
+import { Button } from '../components/ui/Button';
+import { Loading } from '../components/ui/Loading';
+import { hostFamilySubscriptionService, type HostFamilySubscriptionState } from '../services/hostFamilySubscriptionService';
+
+const formatDate = (value: string | null) => {
+  if (!value) return '-';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '-';
+  return parsed.toLocaleDateString();
+};
 
 export function AuPairPaymentSuccessPage() {
-  const navigate = useNavigate();
   const { t } = useI18n();
-  const [verifying, setVerifying] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [loadingState, setLoadingState] = useState(true);
+  const [state, setState] = useState<HostFamilySubscriptionState | null>(null);
 
   useEffect(() => {
-    const verifyAndActivate = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
+    const run = async () => {
+      if (!user?.id) return;
+      setLoadingState(true);
       try {
-        // 1. Update Host Family Profile Status to Active
-        await supabase
-          .from('host_family_profiles')
-          .update({ profile_status: 'active' })
-          .eq('user_id', user.id);
-
-        // 2. Update Subscription Status in Profiles
-        await supabase
-          .from('profiles')
-          .update({ 
-            au_pair_subscription_status: 'premium',
-            au_pair_onboarding_completed: true
-          })
-          .eq('id', user.id);
-
-        setVerifying(false);
-      } catch (err) {
-        console.error('Activation failed:', err);
-        setVerifying(false);
+        const subscriptionState = await hostFamilySubscriptionService.getState(user.id);
+        setState(subscriptionState);
+      } catch (error) {
+        console.error('Failed to load host family subscription state on success page:', error);
+      } finally {
+        setLoadingState(false);
       }
     };
 
-    verifyAndActivate();
-  }, []);
+    if (!authLoading && !user) {
+      navigate('/signin?redirect=/au-pair/payment');
+      return;
+    }
+    if (user) void run();
+  }, [authLoading, user?.id, navigate]);
+
+  if (authLoading || loadingState) return <Loading />;
+
+  const isActive = state?.subscription_status === 'premium_active';
 
   return (
-    <div className="min-h-screen bg-white font-sans relative overflow-hidden flex items-center justify-center">
+    <div className="min-h-screen bg-white font-sans relative overflow-hidden flex items-center justify-center px-6">
       <BackgroundBlobs />
-      
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-2xl w-full px-6 relative z-10"
-      >
-        <GlassCard className="p-16 border-white/60 bg-white/80 backdrop-blur-3xl text-center shadow-2xl rounded-[3rem] overflow-hidden relative">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500" />
-          
-          {verifying ? (
-            <div className="flex flex-col items-center">
-               <motion.div 
-                 animate={{ rotate: 360 }}
-                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                 className="w-24 h-24 bg-pink-50 rounded-[2rem] flex items-center justify-center mb-10 border border-pink-100 shadow-xl"
-               >
-                 <Loader2 className="text-pink-600" size={40} />
-               </motion.div>
-               <h2 className="text-4xl font-black text-gray-900 mb-4 uppercase tracking-tight">Confirming Payment</h2>
-               <p className="text-[12px] text-gray-400 font-bold uppercase tracking-widest">Please wait while we activate your account</p>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center">
-               <motion.div 
-                 initial={{ scale: 0, rotate: -45 }}
-                 animate={{ scale: 1, rotate: 0 }}
-                 className="w-24 h-24 bg-green-50 rounded-[2rem] flex items-center justify-center mb-10 border border-green-100 shadow-xl relative"
-               >
-                 <div className="absolute inset-0 bg-green-400 blur-2xl opacity-20 animate-pulse" />
-                 <CheckCircle className="text-green-600 relative z-10" size={40} />
-               </motion.div>
-               <h2 className="text-5xl font-black text-gray-900 mb-6 uppercase tracking-tight">{t('auPair.payment.success.title') || 'Success!'}</h2>
-               <p className="text-xl text-gray-400 font-black uppercase tracking-widest mb-12 max-w-sm mx-auto leading-relaxed pt-6 border-t border-gray-100">
-                 {t('auPair.payment.success.desc') || 'Your proof is under review.'}
-               </p>
-               
-               <motion.button 
-                 whileHover={{ scale: 1.05 }}
-                 whileTap={{ scale: 0.95 }}
-                 onClick={() => navigate('/dashboard')} 
-                 className="group w-full h-16 bg-gray-900 text-white rounded-[1.5rem] text-[12px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-gray-800 transition-all flex items-center justify-center gap-4"
-               >
-                 <PartyPopper size={20} className="group-hover:rotate-12 transition-transform" />
-                 {t('auPair.payment.success.explore') || 'Explore Dashboard'}
-                 <ArrowRight size={20} />
-               </motion.button>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-2xl">
+        <GlassCard className="p-10 md:p-12 bg-white/85 border-white/70 shadow-2xl text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+            {isActive ? (
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            ) : (
+              <Clock className="h-8 w-8 text-blue-600" />
+            )}
+          </div>
+
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tight">
+            {isActive
+              ? (t('payment.successApprovedTitle') || 'Premium activated')
+              : (t('payment.successPendingTitle') || 'Payment submitted')}
+          </h1>
+
+          <p className="mt-4 text-base text-gray-600">
+            {isActive
+              ? (t('payment.successApprovedDesc') || `Your premium plan is active until ${formatDate(state?.expires_at || null)}.`)
+              : (t('payment.successPendingDesc') || 'Payment submitted, awaiting admin approval. You remain on the Free Plan until approval.')}
+          </p>
+
+          {!isActive && (
+            <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 flex items-center gap-2 justify-center">
+              <AlertCircle size={16} />
+              {t('payment.successPendingContactLocked') || 'Messaging/contact with au pairs stays locked until approval.'}
             </div>
           )}
+
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Button onClick={() => navigate('/account?section=billing')}>
+              {t('payment.viewBillingStatus') || 'View billing status'}
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>
+              {t('dashboard.backToDashboard') || 'Back to dashboard'}
+            </Button>
+          </div>
         </GlassCard>
-        
-        {!verifying && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="mt-12 flex justify-center gap-8"
-          >
-             <div className="flex items-center gap-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                <Sparkles size={14} className="text-pink-500" />
-                Premium Member
-             </div>
-             <div className="flex items-center gap-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                <PartyPopper size={14} className="text-purple-500" />
-                Welcome Aboard
-             </div>
-          </motion.div>
-        )}
       </motion.div>
     </div>
   );

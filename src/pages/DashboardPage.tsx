@@ -6,15 +6,15 @@ import { useI18n } from '../contexts/I18nContext';
 import { supabase } from '../lib/supabase';
 import { GeneralOnboarding } from '../components/GeneralOnboarding';
 import { HeroCarousel } from '../components/HeroCarousel';
-import { ChevronRight, Loader2, ShoppingBag, Briefcase, Calendar, GraduationCap, Users, Sparkles, ShieldCheck, Baby, TrendingUp, MessageSquare, Upload } from 'lucide-react';
+import { ChevronRight, Loader2, ShoppingBag, Briefcase, Calendar, GraduationCap, Users, Sparkles, ShieldCheck, Baby, TrendingUp, MessageSquare, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { MarketplaceCard } from '../components/marketplace/MarketplaceCard';
 import { EventCard } from '../components/events/EventCard';
 import { ProfileCard } from '../components/aupair/ProfileCard';
 import { EducationCard } from '../components/education/EducationCard';
 import { BackgroundBlobs, GlassCard, Button } from '../components/ui';
 import { motion } from 'framer-motion';
-import { auPairService, UserSubscriptionStatus } from '../services/auPairService';
-import { isAfter, differenceInDays } from 'date-fns';
+import { hostFamilySubscriptionService, type HostFamilySubscriptionState } from '../services/hostFamilySubscriptionService';
+import { differenceInDays } from 'date-fns';
 
 interface Profile {
   id: string;
@@ -23,6 +23,7 @@ interface Profile {
   is_first_login: boolean;
   interested_modules: string[];
   primary_interest: string;
+  au_pair_role?: string | null;
 }
 
 export function DashboardPage() {
@@ -33,8 +34,7 @@ export function DashboardPage() {
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isPendingPayment, setIsPendingPayment] = useState(false);
-  const [subStatus, setSubStatus] = useState<UserSubscriptionStatus | null>(null);
+  const [hostFamilySubscription, setHostFamilySubscription] = useState<HostFamilySubscriptionState | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -50,7 +50,7 @@ export function DashboardPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, display_name, onboarding_completed, is_first_login, interested_modules, primary_interest')
+        .select('id, display_name, onboarding_completed, is_first_login, interested_modules, primary_interest, au_pair_role')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -73,24 +73,39 @@ export function DashboardPage() {
         .select('role')
         .eq('user_id', user.id);
       
-      const roles = rolesData?.map((r: { role: string }) => r.role) || [];
-      setUserRoles(roles);
+      const roleSet = new Set<string>(rolesData?.map((r: { role: string }) => r.role) || []);
 
-      // Check Host Family Payment Status
-      if (roles.includes('host_family')) {
-        const { data: hfProfile } = await supabase
+      if (data?.au_pair_role === 'host_family' || data?.au_pair_role === 'au_pair') {
+        roleSet.add(data.au_pair_role);
+      }
+
+      if (!roleSet.has('host_family')) {
+        const { data: hostFamilyProfile } = await supabase
           .from('host_family_profiles')
-          .select('profile_status')
+          .select('id')
           .eq('user_id', user.id)
           .maybeSingle();
-        
-        // Fetch Detailed Subscription Status for Timer
-        const subscription = await auPairService.getUserSubscriptionStatus();
-        setSubStatus(subscription);
+        if (hostFamilyProfile) roleSet.add('host_family');
+      }
 
-        if (hfProfile?.profile_status === 'pending_payment' || subscription?.latestSubmission?.status === 'pending') {
-           setIsPendingPayment(true);
-        }
+      if (!roleSet.has('au_pair')) {
+        const { data: auPairProfile } = await supabase
+          .from('au_pair_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (auPairProfile) roleSet.add('au_pair');
+      }
+
+      const roles = Array.from(roleSet);
+      setUserRoles(roles);
+
+      // Load host-family subscription state from canonical backend source
+      if (roles.includes('host_family')) {
+        const subscriptionState = await hostFamilySubscriptionService.getState(user.id);
+        setHostFamilySubscription(subscriptionState);
+      } else {
+        setHostFamilySubscription(null);
       }
 
     } catch (error) {
@@ -204,90 +219,85 @@ export function DashboardPage() {
           )}
         </div>
 
-        {/* Pending Payment Banner */}
-        {isHostFamily && isPendingPayment && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
-          >
-            <GlassCard className="p-4 sm:p-6 border-l-4 border-l-amber-500 bg-amber-50/40">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4 text-center sm:text-left">
-                  <div className="p-3 rounded-2xl bg-amber-100 text-amber-600 shrink-0">
-                    <Upload size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">
-                      {t('dashboard.pendingPayment') || 'Payment Required'}
-                    </h3>
-                    <p className="text-sm text-gray-500 font-medium">
-                      {t('dashboard.pendingPaymentDesc') || 'Upload your payment proof to activate your subscription and access all features.'}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => navigate('/au-pair/payment')}
-                  className="bg-amber-500 hover:bg-amber-600 text-white shrink-0 flex items-center gap-2"
-                >
-                  <Upload size={16} />
-                  {t('dashboard.uploadProof') || 'Upload Proof'}
-                </Button>
-              </div>
-            </GlassCard>
-          </motion.div>
-        )}
-
-        {/* Subscription Timer Banner */}
-        {isHostFamily && subStatus?.subscriptionExpiresAt && (
+        {isHostFamily && hostFamilySubscription && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <GlassCard className={`p-4 sm:p-6 border-l-4 ${
-              isAfter(new Date(subStatus.subscriptionExpiresAt), new Date()) 
-                ? 'border-l-emerald-500 bg-emerald-50/30' 
-                : 'border-l-rose-500 bg-rose-50/30'
-            }`}>
+            <GlassCard
+              className={`p-4 sm:p-6 border-l-4 ${
+                hostFamilySubscription.subscription_status === 'premium_active'
+                  ? 'border-l-emerald-500 bg-emerald-50/30'
+                  : hostFamilySubscription.subscription_status === 'pending_approval'
+                    ? 'border-l-amber-500 bg-amber-50/40'
+                    : 'border-l-rose-500 bg-rose-50/30'
+              }`}
+            >
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4 text-center sm:text-left">
-                  <div className={`p-3 rounded-2xl ${
-                    isAfter(new Date(subStatus.subscriptionExpiresAt), new Date())
-                      ? 'bg-emerald-100 text-emerald-600'
-                      : 'bg-rose-100 text-rose-600'
-                  }`}>
-                    <Calendar size={24} />
+                  <div
+                    className={`p-3 rounded-2xl ${
+                      hostFamilySubscription.subscription_status === 'premium_active'
+                        ? 'bg-emerald-100 text-emerald-600'
+                        : hostFamilySubscription.subscription_status === 'pending_approval'
+                          ? 'bg-amber-100 text-amber-600'
+                          : 'bg-rose-100 text-rose-600'
+                    }`}
+                  >
+                    {hostFamilySubscription.subscription_status === 'premium_active' ? (
+                      <CheckCircle size={24} />
+                    ) : hostFamilySubscription.subscription_status === 'pending_approval' ? (
+                      <Upload size={24} />
+                    ) : (
+                      <AlertCircle size={24} />
+                    )}
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">
-                      {t('dashboard.subscriptionTimer')}
+                      {t('dashboard.membershipStatus') || 'Host Family Membership'}
                     </h3>
                     <p className="text-sm text-gray-500 font-medium">
-                      {isAfter(new Date(subStatus.subscriptionExpiresAt), new Date())
-                        ? t('dashboard.daysRemaining', { days: differenceInDays(new Date(subStatus.subscriptionExpiresAt), new Date()) })
-                        : t('dashboard.expired')}
+                      {hostFamilySubscription.subscription_status === 'premium_active'
+                        ? ((t('dashboard.premiumActiveUntil') || 'Premium active until {{date}}')
+                          .replace('{{date}}', hostFamilySubscription.expires_at ? new Date(hostFamilySubscription.expires_at).toLocaleDateString() : '-'))
+                        : hostFamilySubscription.subscription_status === 'pending_approval'
+                          ? (t('dashboard.paymentAwaitingApproval') || 'Payment submitted, awaiting admin approval. You remain on Free Plan until approved.')
+                          : hostFamilySubscription.subscription_status === 'premium_expired'
+                            ? (t('dashboard.subscriptionExpiredRenew') || 'Subscription expired. You are now on Free Plan. Renew to continue contacting au pairs.')
+                            : hostFamilySubscription.subscription_status === 'rejected'
+                              ? (t('dashboard.paymentRejectedResubmit') || 'Payment was rejected. Please resubmit your payment proof.')
+                              : (t('dashboard.freePlanUpgradePrompt') || 'You are on Free Plan. Upgrade to Premium to contact au pairs.')}
                     </p>
+                    {hostFamilySubscription.subscription_status === 'premium_active' && hostFamilySubscription.expires_at && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {t('dashboard.daysRemaining', {
+                          days: Math.max(0, differenceInDays(new Date(hostFamilySubscription.expires_at), new Date()))
+                        })}
+                      </p>
+                    )}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
-                  {!isAfter(new Date(subStatus.subscriptionExpiresAt), new Date()) && (
-                    <Button 
-                      onClick={() => navigate('/au-pair/plans')}
+                  {hostFamilySubscription.subscription_status !== 'premium_active' ? (
+                    <Button
+                      onClick={() => navigate('/au-pair/payment')}
                       className="bg-vibrant-purple text-white hover:bg-vibrant-purple/90"
                     >
-                      {t('dashboard.renewSubscription')}
+                      {hostFamilySubscription.subscription_status === 'premium_expired'
+                        ? (t('dashboard.renewSubscription') || 'Renew subscription')
+                        : hostFamilySubscription.subscription_status === 'rejected'
+                          ? (t('dashboard.resubmitPayment') || 'Resubmit payment proof')
+                          : hostFamilySubscription.subscription_status === 'pending_approval'
+                            ? (t('dashboard.viewPaymentStatus') || 'View payment status')
+                            : (t('dashboard.uploadProof') || 'Upload payment proof')}
+                    </Button>
+                  ) : (
+                    <Button variant="outline" onClick={() => navigate('/account?section=billing')}>
+                      {t('dashboard.viewBilling') || 'View billing'}
                     </Button>
                   )}
-                  <div className="text-right hidden sm:block">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                      {t('settings.billing.expiresOn')}
-                    </p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {new Date(subStatus.subscriptionExpiresAt).toLocaleDateString()}
-                    </p>
-                  </div>
                 </div>
               </div>
             </GlassCard>
