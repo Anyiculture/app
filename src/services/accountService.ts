@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { auPairService, type UserSubscriptionStatus } from './auPairService';
 import { hostFamilySubscriptionService, type HostFamilySubscriptionState } from './hostFamilySubscriptionService';
+import { accessControlService, type EffectiveAccessRole, type MessagingDeniedReason } from './accessControlService';
 import type { Profile } from './profileService';
 
 export type AccountRole = 'general' | 'host_family' | 'au_pair' | 'employer' | 'job_seeker';
@@ -27,6 +28,8 @@ export interface AccountBillingState {
 
 export interface AccountState {
   profile: (Profile & Record<string, any>) | null;
+  isAdmin: boolean;
+  effectiveRole: EffectiveAccessRole | null;
   roles: AccountRole[];
   roleProfiles: AccountRoleProfiles;
   userServices: string[];
@@ -35,7 +38,7 @@ export interface AccountState {
   stripeSubscription: Record<string, any> | null;
   messagingAccess: {
     allowed: boolean;
-    reason?: 'not_premium' | 'onboarding_incomplete' | 'not_authenticated' | 'payment_pending' | 'payment_rejected' | 'subscription_expired';
+    reason?: MessagingDeniedReason;
   } | null;
   profileCompletion: number | null;
   approvalStatus: string | null;
@@ -96,6 +99,8 @@ export const accountService = {
       jobSeekerProfileResult,
       latestPaymentSubmissionResult,
       stripeSubscriptionResult,
+      accessContext,
+      messagingAccessResolution,
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
       supabase.from('user_services').select('role, service_type').eq('user_id', userId),
@@ -117,6 +122,14 @@ export const accountService = {
         .select('*')
         .limit(1)
         .maybeSingle(),
+      accessControlService.getCurrentUserAccessContext(userId).catch((error) => {
+        console.warn('Failed to resolve access context for account page:', error);
+        return null;
+      }),
+      accessControlService.resolveMessagingAccess(userId).catch((error) => {
+        console.warn('Failed to resolve messaging access for account page:', error);
+        return { allowed: false, state: 'unauthorized' as const, context: null, reason: 'not_authenticated' as const };
+      }),
     ]);
 
     if (profileResult.error && !isNoRowsError(profileResult.error)) throw profileResult.error;
@@ -136,6 +149,7 @@ export const accountService = {
     const jobSeekerProfile = (jobSeekerProfileResult.data as Record<string, any> | null) ?? null;
     const latestPaymentSubmission = (latestPaymentSubmissionResult.data as Record<string, any> | null) ?? null;
     const stripeSubscription = (stripeSubscriptionResult.data as Record<string, any> | null) ?? null;
+    const isAdmin = Boolean(accessContext?.isAdmin);
 
     const roles = new Set<AccountRole>(['general']);
     const addRole = (value: string | null | undefined) => {
@@ -155,7 +169,10 @@ export const accountService = {
     const orderedRoles = ROLE_ORDER.filter((role) => roles.has(role));
 
     let subscription: UserSubscriptionStatus | null = null;
-    let messagingAccess: AccountState['messagingAccess'] = null;
+    let messagingAccess: AccountState['messagingAccess'] = {
+      allowed: messagingAccessResolution.allowed,
+      reason: messagingAccessResolution.reason,
+    };
     let hostFamilySubscriptionState: HostFamilySubscriptionState | null = null;
 
     try {
@@ -164,24 +181,27 @@ export const accountService = {
       console.warn('Failed to load subscription status for account page:', error);
     }
 
-    if (orderedRoles.includes('host_family')) {
-      try {
-        hostFamilySubscriptionState = await hostFamilySubscriptionService.getState(userId);
-      } catch (error) {
-        console.warn('Failed to load host family subscription state for account page:', error);
+    if (orderedRoles.includes('host_family') && !isAdmin) {
+      hostFamilySubscriptionState = accessContext?.hostFamilyState ?? null;
+      if (!hostFamilySubscriptionState) {
+        try {
+          hostFamilySubscriptionState = await hostFamilySubscriptionService.getState(userId);
+        } catch (error) {
+          console.warn('Failed to load host family subscription state for account page:', error);
+        }
       }
     }
 
-    try {
-      messagingAccess = await auPairService.canSendMessage();
-    } catch (error) {
-      console.warn('Failed to load messaging access for account page:', error);
-    }
-
-    const isHostFamilyUser = orderedRoles.includes('host_family');
+    const isHostFamilyUser = orderedRoles.includes('host_family') && !isAdmin;
     const hostFamilyStatus = hostFamilySubscriptionState?.subscription_status ?? hostFamilyProfile?.profile_status ?? null;
     const auPairStatus = auPairProfile?.profile_status ?? null;
-    const approvalStatus = isHostFamilyUser ? hostFamilyStatus : orderedRoles.includes('au_pair') ? auPairStatus : null;
+    const approvalStatus = isAdmin
+      ? 'admin_access'
+      : isHostFamilyUser
+        ? hostFamilyStatus
+        : orderedRoles.includes('au_pair')
+          ? auPairStatus
+          : null;
 
     const subscriptionStatus =
       isHostFamilyUser
@@ -223,6 +243,8 @@ export const accountService = {
 
     return {
       profile,
+      isAdmin,
+      effectiveRole: accessContext?.effectiveRole ?? null,
       roles: orderedRoles,
       roleProfiles: {
         host_family: hostFamilyProfile,
@@ -238,18 +260,20 @@ export const accountService = {
       profileCompletion: computeProfileCompletion(profile),
       approvalStatus,
       billing: {
-        currentPlan,
-        paymentStatus,
-        subscriptionStatus,
-        subscriptionStartDate,
-        subscriptionEndDate,
-        renewalDate,
-        approvalDate,
-        contactAccessEnabled: isHostFamilyUser
-          ? Boolean(hostFamilySubscriptionState?.contact_access_enabled)
-          : (messagingAccess?.allowed ?? false),
-        pendingApproval,
-        pendingPayment,
+        currentPlan: isAdmin ? null : currentPlan,
+        paymentStatus: isAdmin ? null : paymentStatus,
+        subscriptionStatus: isAdmin ? null : subscriptionStatus,
+        subscriptionStartDate: isAdmin ? null : subscriptionStartDate,
+        subscriptionEndDate: isAdmin ? null : subscriptionEndDate,
+        renewalDate: isAdmin ? null : renewalDate,
+        approvalDate: isAdmin ? null : approvalDate,
+        contactAccessEnabled: isAdmin
+          ? true
+          : isHostFamilyUser
+            ? Boolean(hostFamilySubscriptionState?.contact_access_enabled)
+            : (messagingAccess?.allowed ?? false),
+        pendingApproval: isAdmin ? false : pendingApproval,
+        pendingPayment: isAdmin ? false : pendingPayment,
       },
     };
   },

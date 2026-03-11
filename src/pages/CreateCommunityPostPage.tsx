@@ -3,6 +3,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { ArrowLeft, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/ui/Toast';
+import { communityService } from '../services/communityService';
 
 export function CreateCommunityPostPage() {
   const { t } = useI18n();
@@ -18,12 +19,26 @@ export function CreateCommunityPostPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const normalizedTitle = formData.title.trim();
+      const normalizedContent = formData.content.trim();
+      const fullContent = normalizedTitle
+        ? `${normalizedTitle}\n\n${normalizedContent}`
+        : normalizedContent;
+
+      await communityService.createPost({
+        content: fullContent,
+        category: formData.category || 'general',
+      });
+
       setLoading(false);
       showToast('success', t('community.createPost.success') || 'Post created successfully');
       navigate('/community');
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to create community post:', error);
+      setLoading(false);
+      showToast('error', t('community.createPost.error') || 'Failed to create post');
+    }
   };
 
   return (

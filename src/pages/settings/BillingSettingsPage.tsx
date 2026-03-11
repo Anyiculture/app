@@ -35,7 +35,7 @@ export function BillingSettingsPage() {
             <CreditCard className="text-gray-700" size={32} />
             {t('settings.billingPlans')}
         </h2>
-        <p className="text-gray-500 mt-2 text-md">{t('settings.billing.desc')}</p>
+        <p className="text-gray-500 mt-2 text-md">{t('settings.billing.description')}</p>
       </div>
 
       <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 text-white relative overflow-hidden">
@@ -48,7 +48,7 @@ export function BillingSettingsPage() {
                       <p className="text-3xl font-bold capitalize">{status?.subscriptionStatus === 'premium' ? t('settings.billing.premiumPlan') : t('settings.billing.freePlan')}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${status?.subscriptionStatus === 'premium' ? 'bg-amber-500/20 text-amber-300' : 'bg-white/20'}`}>
-                    {status?.subscriptionStatus === 'premium' ? t('settings.billing.premium') : t('settings.billing.active')}
+                    {status?.subscriptionStatus === 'premium' ? t('settings.billing.premiumPlan') : t('settings.billing.active')}
                   </span>
               </div>
 
@@ -64,7 +64,7 @@ export function BillingSettingsPage() {
                   {status?.subscriptionStatus === 'premium' && (
                     <div className="flex items-center gap-3">
                         <div className="p-1 bg-green-500/20 rounded-full text-green-400"><Check size={14} /></div>
-                        <span className="text-gray-300">{t('settings.billing.features.premiumSupport')}</span>
+                        <span className="text-gray-300">{t('settings.billing.features.prioritySupport')}</span>
                     </div>
                   )}
               </div>

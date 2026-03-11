@@ -229,7 +229,8 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
       setShowDeleteModal(false);
     } catch (error) {
       console.error('Failed to delete conversation:', error);
-      alert('Failed to delete conversation');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete conversation';
+      alert(errorMessage);
     } finally {
       setDeletingConversation(false);
     }

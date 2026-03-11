@@ -74,6 +74,13 @@ export interface CreateConversationParams {
 }
 
 export const messagingService = {
+  isUuidLike(value?: string | null): boolean {
+    if (!value) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value
+    );
+  },
+
   /**
    * Get all conversations for current user using SQL function
    */
@@ -138,7 +145,7 @@ export const messagingService = {
       
       const { data, error } = await supabase
         .from(tableName)
-        .select('created_by, owner_admin_id, owner_user_id')
+        .select('created_by, owner_admin_id, owner_user_id, user_id')
         .eq('id', profileId)
         .maybeSingle();
 
@@ -152,6 +159,10 @@ export const messagingService = {
         return data.owner_admin_id;
       } else if (data.created_by === 'self' && data.owner_user_id) {
         return data.owner_user_id;
+      }
+
+      if (data.user_id) {
+        return data.user_id;
       }
 
       console.warn(`Profile ${profileId} has invalid ownership data:`, data);
@@ -220,8 +231,14 @@ export const messagingService = {
       }
     }
 
-    // Resolve recipient if dealing with aupair profiles and no otherUserId provided
-    if (contextType === 'aupair' && !otherUserId && contextId && profileType) {
+    const shouldResolveFromProfile =
+      contextType === 'aupair' &&
+      contextId &&
+      profileType &&
+      (!this.isUuidLike(otherUserId || null));
+
+    // Resolve recipient if dealing with aupair profiles and recipient is missing/invalid
+    if (shouldResolveFromProfile) {
       const resolvedUserId = await this.resolveRecipientForProfile(profileType, contextId);
       if (!resolvedUserId) {
         throw new Error(`Failed to resolve recipient for ${profileType} profile ${contextId}`);
@@ -583,12 +600,43 @@ export const messagingService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { error } = await supabase
+    type ArchiveConversationResult = {
+      success?: boolean;
+      message?: string;
+    };
+
+    const { data: archiveResult, error: archiveError } = await supabase.rpc('archive_conversation', {
+      conversation_id_param: conversationId,
+    });
+
+    if (!archiveError) {
+      const result = (archiveResult ?? {}) as ArchiveConversationResult;
+      if (result.success === false) {
+        throw new Error(result.message || 'Failed to archive conversation');
+      }
+      return;
+    }
+
+    // Backward-compatible fallback for environments that do not yet have the RPC.
+    const rpcMissing =
+      archiveError.code === 'PGRST202' ||
+      archiveError.code === '42883' ||
+      /archive_conversation/i.test(archiveError.message || '');
+
+    if (!rpcMissing) {
+      throw archiveError;
+    }
+
+    const { data: updatedRows, error: fallbackError } = await supabase
       .from('conversation_participants')
       .update({ is_archived: true })
       .eq('conversation_id', conversationId)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .select('conversation_id');
 
-    if (error) throw error;
+    if (fallbackError) throw fallbackError;
+    if (!updatedRows || updatedRows.length === 0) {
+      throw new Error('Conversation not found or already archived');
+    }
   },
 };

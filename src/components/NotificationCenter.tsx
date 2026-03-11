@@ -1,11 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, Trash2, X } from 'lucide-react';
+import { Bell, Check, CreditCard, MessageSquare, Trash2, Users, X } from 'lucide-react';
 import { notificationService, Notification } from '../services/notificationService';
 import { Button } from './ui/Button';
 import localizationUtils from '../utils/localization';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
+
+function translateText(t: (key: string) => string, value?: string | null): string {
+  if (!value) return '';
+  const translated = t(value);
+  return translated === value ? value : translated;
+}
+
+function NotificationTypeIcon({ type }: { type: string }) {
+  if (type === 'messages') return <MessageSquare className="h-4 w-4 text-blue-600" />;
+  if (type === 'payment_update') return <CreditCard className="h-4 w-4 text-emerald-600" />;
+  if (type === 'subscription_update') return <CreditCard className="h-4 w-4 text-purple-600" />;
+  if (type === 'community_post') return <Users className="h-4 w-4 text-pink-600" />;
+  return <Bell className="h-4 w-4 text-gray-500" />;
+}
 
 export function NotificationCenter() {
   const { t } = useI18n();
@@ -19,23 +33,23 @@ export function NotificationCenter() {
 
   useEffect(() => {
     if (user) {
-      loadNotifications();
-      loadUnreadCount();
+      void loadNotifications();
+      void loadUnreadCount();
     } else {
       setNotifications([]);
       setUnreadCount(0);
     }
 
     const subscription = user
-      ? notificationService.subscribeToNotifications((_payload) => {
-          loadNotifications();
-          loadUnreadCount();
+      ? notificationService.subscribeToNotifications(() => {
+          void loadNotifications();
+          void loadUnreadCount();
         })
       : null;
 
     const interval = setInterval(() => {
       if (user) {
-        loadUnreadCount();
+        void loadUnreadCount();
       }
     }, 30000);
 
@@ -140,19 +154,6 @@ export function NotificationCenter() {
     setIsOpen(false);
   };
 
-  const getNotificationIcon = (type: string) => {
-    const icons: Record<string, string> = {
-      messages: '💬',
-      applications: '📄',
-      events: '📅',
-      marketplace: '🛒',
-      visa_updates: '✈️',
-      au_pair_matches: '👶',
-      system: '🔔',
-    };
-    return icons[type] || '🔔';
-  };
-
   return (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -161,7 +162,7 @@ export function NotificationCenter() {
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
+          <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full border border-white" />
         )}
       </button>
 
@@ -171,20 +172,12 @@ export function NotificationCenter() {
             <h3 className="font-semibold text-gray-900">{t('notifications.title')}</h3>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleMarkAllAsRead}
-                  disabled={loading}
-                >
+                <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead} disabled={loading}>
                   <Check className="w-4 h-4 mr-1" />
                   {t('notifications.markAllRead')}
                 </Button>
               )}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
+              <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-gray-100 rounded">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -207,13 +200,13 @@ export function NotificationCenter() {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <span className="text-2xl flex-shrink-0">
-                        {getNotificationIcon(notification.type)}
+                      <span className="mt-0.5 flex-shrink-0">
+                        <NotificationTypeIcon type={notification.type} />
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-1">
                           <h4 className="font-medium text-gray-900 text-sm">
-                            {t(notification.title) || notification.title}
+                            {translateText(t, notification.title)}
                           </h4>
                           <button
                             onClick={(e) => handleDelete(notification.id, e)}
@@ -223,7 +216,7 @@ export function NotificationCenter() {
                           </button>
                         </div>
                         <p className="text-sm text-gray-600 mb-2">
-                          {t(notification.message) || notification.message}
+                          {translateText(t, notification.message)}
                         </p>
                         <p className="text-xs text-gray-500">
                           {localizationUtils.formatRelativeTime(notification.created_at)}

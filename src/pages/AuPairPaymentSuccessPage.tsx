@@ -9,6 +9,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { Button } from '../components/ui/Button';
 import { Loading } from '../components/ui/Loading';
 import { hostFamilySubscriptionService, type HostFamilySubscriptionState } from '../services/hostFamilySubscriptionService';
+import { accessControlService } from '../services/accessControlService';
 
 const formatDate = (value: string | null) => {
   if (!value) return '-';
@@ -23,6 +24,7 @@ export function AuPairPaymentSuccessPage() {
   const navigate = useNavigate();
   const [loadingState, setLoadingState] = useState(true);
   const [state, setState] = useState<HostFamilySubscriptionState | null>(null);
+  const [isAdminAccount, setIsAdminAccount] = useState(false);
 
   const t = (key: string, options?: Record<string, any>) => {
     const value = i18nT(key, options);
@@ -34,10 +36,19 @@ export function AuPairPaymentSuccessPage() {
       if (!user?.id) return;
       setLoadingState(true);
       try {
+        const context = await accessControlService.getCurrentUserAccessContext(user.id);
+        const isAdmin = Boolean(context?.isAdmin);
+        setIsAdminAccount(isAdmin);
+        if (isAdmin) {
+          navigate('/account?section=billing', { replace: true });
+          return;
+        }
+
         const subscriptionState = await hostFamilySubscriptionService.getState(user.id);
         setState(subscriptionState);
       } catch (error) {
         console.error('Failed to load host family subscription state on success page:', error);
+        setIsAdminAccount(false);
       } finally {
         setLoadingState(false);
       }
@@ -51,6 +62,8 @@ export function AuPairPaymentSuccessPage() {
   }, [authLoading, user?.id, navigate]);
 
   if (authLoading || loadingState) return <Loading />;
+
+  if (isAdminAccount) return <Loading />;
 
   const isActive = state?.subscription_status === 'premium_active';
 
@@ -75,7 +88,7 @@ export function AuPairPaymentSuccessPage() {
 
           <p className="mt-4 text-base text-gray-600">
             {isActive
-              ? (t('payment.successApprovedDesc') || `Your premium plan is active until ${formatDate(state?.expires_at || null)}.`)
+              ? (t('payment.successApprovedDesc', { date: formatDate(state?.expires_at || null) }) || `Your premium plan is active until ${formatDate(state?.expires_at || null)}.`)
               : (t('payment.successPendingDesc') || 'Payment submitted, awaiting admin approval. You remain on the Free Plan until approval.')}
           </p>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -17,10 +17,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { Loading } from '../components/ui/Loading';
 import { Button } from '../components/ui/Button';
-import { AuPairProfile, auPairService, UserSubscriptionStatus } from '../services/auPairService';
+import { AuPairProfile, auPairService } from '../services/auPairService';
 import { Lock } from 'lucide-react';
 import { messagingService } from '../services/messagingService';
-import { adminService } from '../services/adminService';
+import {
+  accessControlService,
+  type AuPairContactAccessResolution,
+} from '../services/accessControlService';
 import { COUNTRIES } from '../components/ui/LocationCascade';
 
 export function AuPairProfilePage() {
@@ -30,39 +33,76 @@ export function AuPairProfilePage() {
   const { t, language } = useI18n();
   const [profile, setProfile] = useState<AuPairProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<UserSubscriptionStatus | null>(null);
+  const [accessLoading, setAccessLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [contactAccess, setContactAccess] = useState<AuPairContactAccessResolution | null>(null);
   const [latestSubmission, setLatestSubmission] = useState<any>(null);
 
+  const tr = (key: string, fallback: string, options?: Record<string, any>) => {
+    const value = t(key, options);
+    return value === key ? fallback : value;
+  };
+
+  const isUuidLike = (value: string | null | undefined) =>
+    Boolean(
+      value &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        value
+      )
+    );
+
+  const isValidRecipientId = (value: string | null | undefined) => isUuidLike(value);
+
   useEffect(() => {
-    if (id) {
-      loadProfile();
-      checkSubscription();
-    }
+    if (id) void loadProfile();
   }, [id]);
 
-  const checkSubscription = async () => {
-    try {
-      // Check Admin
-      const adminStatus = await adminService.checkIsAdmin();
-      setIsAdmin(adminStatus);
-      
-      // Check User Subscription
-      if (user) {
-        const [status, submission] = await Promise.all([
-          auPairService.getUserSubscriptionStatus(),
-          auPairService.getLatestPaymentSubmission()
-        ]);
-        setSubscriptionStatus(status);
-        setLatestSubmission(submission);
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveAccess = async () => {
+      if (!profile) {
+        setAccessLoading(false);
+        setContactAccess(null);
+        setLatestSubmission(null);
+        return;
       }
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-    } finally {
-      setSubscriptionLoading(false);
-    }
-  };
+
+      const targetUserId = isValidRecipientId(profile.user_id) ? profile.user_id : null;
+      setAccessLoading(true);
+
+      try {
+        const access = await accessControlService.resolveAuPairContactAccess({
+          targetUserId,
+        });
+        if (cancelled) return;
+        setContactAccess(access);
+
+        if (
+          access.context?.effectiveRole === 'host_family' &&
+          !access.context?.isAdmin
+        ) {
+          const submission = await auPairService.getLatestPaymentSubmission();
+          if (!cancelled) setLatestSubmission(submission);
+        } else if (!cancelled) {
+          setLatestSubmission(null);
+        }
+      } catch (error) {
+        console.error('Failed to resolve au pair contact access:', error);
+        if (!cancelled) {
+          setContactAccess(null);
+          setLatestSubmission(null);
+        }
+      } finally {
+        if (!cancelled) setAccessLoading(false);
+      }
+    };
+
+    void resolveAccess();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.user_id, user?.id]);
 
   const loadProfile = async () => {
     try {
@@ -90,39 +130,42 @@ export function AuPairProfilePage() {
 
     if (!profile) return;
 
+    setActionLoading(true);
     try {
-      // First check if user can send messages
-      const { allowed, reason } = await auPairService.canSendMessage();
-      
-      if (!allowed) {
-        if (reason === 'payment_pending') {
-          alert(t('auPair.payment.pendingApproval') || 'Your payment proof is under review. Please wait for admin approval.');
-          return;
-        } else if (reason === 'payment_rejected') {
-          alert(t('auPair.payment.rejectedDesc') || 'Your previous payment proof was rejected. Please upload a new proof on the payment page.');
-          navigate('/au-pair/payment');
-          return;
-        } else if (reason === 'not_premium') {
-          navigate('/au-pair/payment');
-          return;
-        } else if (reason === 'subscription_expired') {
-          alert(t('auPair.payment.expiredDesc') || 'Your subscription expired. Renew to continue contacting au pairs.');
-          navigate('/au-pair/payment');
-          return;
-        } else if (reason === 'onboarding_incomplete') {
-          alert(t('auPair.profile.completeOnboardingPrompt') || 'Please complete your onboarding to contact users.');
-          navigate('/onboarding');
-          return;
-        }
+      const fallbackRecipientId = isValidRecipientId(profile.user_id) ? profile.user_id : undefined;
+      const resolvedAccess = await accessControlService.resolveAuPairContactAccess({
+        targetUserId: fallbackRecipientId ?? null,
+      });
+      setContactAccess(resolvedAccess);
+      const action = accessControlService.getAuPairContactActionPresentation(resolvedAccess);
+
+      if (action.primaryAction === 'navigate' && action.redirectTo) {
+        navigate(action.redirectTo);
+        return;
       }
 
-      // Use the correct messaging service method
+      if (resolvedAccess.state === 'pending_approval') {
+        alert(
+          tr(
+            'auPair.payment.pendingApproval',
+            'Your payment proof is under review. Please wait for admin approval.'
+          )
+        );
+        return;
+      }
+
+      if (!resolvedAccess.allowed || action.primaryAction !== 'start_conversation') {
+        if (action.redirectTo) navigate(action.redirectTo);
+        return;
+      }
+
       const result = await messagingService.createConversationWithMessage({
-        otherUserId: profile.user_id,
+        otherUserId: fallbackRecipientId,
         contextType: 'aupair',
         contextId: profile.id,
+        profileType: 'au_pair',
         relatedItemTitle: `Au Pair ${profile.display_name}`,
-        initialMessage: t('auPair.profile.contactInquiry') || `Hello! I'm interested in your profile.`
+        initialMessage: tr('auPair.profile.contactInquiry', `Hello! I'm interested in your profile.`),
       });
       
       if (result.conversationId) {
@@ -133,8 +176,7 @@ export function AuPairProfilePage() {
     } catch (error: any) {
       console.error('Failed to start conversation:', error);
       
-      // Provide more detailed error message
-      let errorMessage = t('admin.common.failedToStartChat') || 'Failed to start conversation. Please try again.';
+      let errorMessage = tr('admin.common.failedToStartChat', 'Failed to start conversation. Please try again.');
       
       if (error?.message?.includes('Not authenticated')) {
         errorMessage = 'Please sign in to contact au pairs.';
@@ -146,12 +188,40 @@ export function AuPairProfilePage() {
       }
       
       alert(errorMessage);
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const getCountryLabel = (countryName: string) => {
     const country = COUNTRIES.find(c => c.value === countryName || c.label_en === countryName);
     return country ? (language === 'zh' ? country.label_zh : country.label_en) : countryName;
+  };
+
+  const contactPresentation = useMemo(() => {
+    if (accessLoading || !contactAccess) return null;
+    return accessControlService.getAuPairContactActionPresentation(contactAccess);
+  }, [accessLoading, contactAccess]);
+
+  const viewerContext = contactAccess?.context;
+  const isHostFamilyViewer = viewerContext?.effectiveRole === 'host_family' && !viewerContext?.isAdmin;
+  const hostFamilyState = viewerContext?.hostFamilyState;
+  const hostFamilySubscriptionStatus = hostFamilyState?.subscription_status || 'free';
+
+  const contactButtonClass = () => {
+    if (accessLoading) return 'bg-gray-500 cursor-not-allowed opacity-80';
+    switch (contactPresentation?.tone) {
+      case 'contact':
+        return 'bg-pink-600 hover:bg-pink-700';
+      case 'upgrade':
+        return 'bg-gray-700 hover:bg-gray-800';
+      case 'warning':
+        return 'bg-amber-500 cursor-not-allowed opacity-80';
+      case 'danger':
+        return 'bg-red-600 hover:bg-red-700';
+      default:
+        return 'bg-gray-600 hover:bg-gray-700';
+    }
   };
 
   if (loading) {
@@ -192,11 +262,6 @@ export function AuPairProfilePage() {
     return [];
   };
 
-  const hostFamilyState = subscriptionStatus?.hostFamilyState;
-  const hostFamilySubscriptionStatus = hostFamilyState?.subscription_status || 'free';
-  const canContactAsHostFamily = subscriptionStatus?.subscriptionStatus === 'premium' || isAdmin;
-  const isPendingApproval = hostFamilySubscriptionStatus === 'pending_approval';
-
   return (
     <div className="min-h-screen bg-gray-50 font-sans py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-6">
@@ -212,7 +277,7 @@ export function AuPairProfilePage() {
         </Button>
 
         {/* Status Banner for Host Families */}
-        {!subscriptionLoading && subscriptionStatus?.role === 'host_family' && (
+        {!accessLoading && isHostFamilyViewer && (
           <div className={`mb-6 p-4 rounded-xl border flex items-center gap-4 ${
             hostFamilySubscriptionStatus === 'premium_active'
               ? 'bg-green-50 border-green-200 text-green-800'
@@ -233,20 +298,20 @@ export function AuPairProfilePage() {
             <div>
               <h3 className="font-semibold">
                 {hostFamilySubscriptionStatus === 'premium_active'
-                  ? t('auPair.payment.approvedTitle')
+                  ? tr('auPair.payment.approvedTitle', 'Premium approved')
                   : hostFamilySubscriptionStatus === 'pending_approval'
-                    ? t('auPair.payment.pendingTitle') 
-                    : t('auPair.payment.rejectedTitle')}
+                    ? tr('auPair.payment.pendingTitle', 'Payment pending approval')
+                    : tr('auPair.payment.rejectedTitle', 'Payment rejected')}
               </h3>
               <p className="text-sm opacity-90">
                 {hostFamilySubscriptionStatus === 'premium_active'
-                  ? ((t('auPair.payment.activeUntil') || 'Premium active until {{date}}')
+                  ? (tr('auPair.payment.activeUntil', 'Premium active until {{date}}')
                     .replace('{{date}}', hostFamilyState?.expires_at ? new Date(hostFamilyState.expires_at).toLocaleDateString() : '-'))
                   : hostFamilySubscriptionStatus === 'pending_approval'
-                    ? (t('auPair.payment.pendingDesc') || 'Payment submitted, awaiting admin approval.')
+                    ? tr('auPair.payment.pendingDesc', 'Payment submitted, awaiting admin approval.')
                     : hostFamilySubscriptionStatus === 'premium_expired'
-                      ? (t('auPair.payment.expiredDesc') || 'Subscription expired. Renew to continue contacting au pairs.')
-                      : hostFamilyState?.rejection_reason || latestSubmission?.admin_notes || t('auPair.payment.reuploadDesc')}
+                      ? tr('auPair.payment.expiredDesc', 'Subscription expired. Renew to continue contacting au pairs.')
+                      : hostFamilyState?.rejection_reason || latestSubmission?.admin_notes || tr('auPair.payment.reuploadDesc', 'Please re-upload payment proof.')}
               </p>
             </div>
           </div>
@@ -288,52 +353,58 @@ export function AuPairProfilePage() {
             </div>
 
             <div className="flex-shrink-0">
-                 {/* Hide contact button if admin is viewing admin-created listing */}
-                 {isAdmin && profile.user_id === 'admin' ? null : (
-                    <div className="flex flex-col gap-2">
-                      <Button 
-                        onClick={handleContact}
-                        disabled={!canContactAsHostFamily && isPendingApproval}
-                        className={`${
-                          canContactAsHostFamily
-                            ? 'bg-pink-600 hover:bg-pink-700' 
-                            : isPendingApproval
-                              ? 'bg-amber-500 cursor-not-allowed opacity-80'
-                              : 'bg-gray-600 hover:bg-gray-700'
-                        } text-white flex items-center gap-2 transition-colors`}
-                      >
-                        {canContactAsHostFamily ? (
-                          <MessageCircle size={16} />
-                        ) : isPendingApproval ? (
-                          <Loading size="sm" />
-                        ) : (
-                          <Lock size={16} />
-                        )}
-                        {isPendingApproval && !canContactAsHostFamily
-                          ? (t('auPair.payment.pending') || 'Pending Approval')
-                          : canContactAsHostFamily
-                            ? (t('auPair.profile.contactAuPair') || 'Contact Au Pair')
-                            : (t('auPair.profile.unlockContact') || 'Unlock Contact Details')}
-                      </Button>
-
-                      {/* Show Upload Proof button for Host Families who are not fully approved */}
-                      {!isAdmin && subscriptionStatus?.role === 'host_family' && hostFamilySubscriptionStatus !== 'premium_active' && (
-                        <Button
-                          onClick={() => navigate('/au-pair/payment')}
-                          className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 transition-colors text-sm py-2"
-                        >
-                          <Shield size={16} />
-                          {hostFamilySubscriptionStatus === 'pending_approval'
-                            ? (t('auPair.payment.viewPaymentStatus') || 'View Payment Status')
-                            : hostFamilySubscriptionStatus === 'rejected'
-                              ? (t('paymentWechat.payment.reuploadProof') || 'Re-upload Proof')
-                              : hostFamilySubscriptionStatus === 'premium_expired'
-                                ? (t('auPair.payment.renewNow') || 'Renew Subscription')
-                              : (t('auPair.payment.submitProof') || 'Upload Payment Proof')}
-                        </Button>
+              <div className="flex flex-col gap-2 min-w-[220px]">
+                <Button
+                  onClick={handleContact}
+                  disabled={
+                    accessLoading ||
+                    actionLoading ||
+                    !contactPresentation ||
+                    contactPresentation.disabled
+                  }
+                  className={`${contactButtonClass()} text-white flex items-center gap-2 transition-colors`}
+                >
+                  {accessLoading || actionLoading ? (
+                    <Loading size="sm" />
+                  ) : contactPresentation?.tone === 'contact' ? (
+                    <MessageCircle size={16} />
+                  ) : contactPresentation?.tone === 'upgrade' || contactPresentation?.tone === 'danger' ? (
+                    <Lock size={16} />
+                  ) : contactPresentation?.tone === 'warning' ? (
+                    <AlertCircle size={16} />
+                  ) : (
+                    <Lock size={16} />
+                  )}
+                  {accessLoading
+                    ? tr('common.loading', 'Checking access...')
+                    : tr(
+                        contactPresentation?.labelKey || 'auPair.profile.contactUnavailable',
+                        contactPresentation?.labelFallback || 'Contact unavailable'
                       )}
-                    </div>
-                 )}
+                </Button>
+
+                {!accessLoading && contactPresentation?.helperKey && (
+                  <p className="text-xs text-gray-600">
+                    {tr(contactPresentation.helperKey, contactPresentation.helperFallback || '')}
+                  </p>
+                )}
+
+                {isHostFamilyViewer && hostFamilySubscriptionStatus !== 'premium_active' && (
+                  <Button
+                    onClick={() => navigate('/au-pair/payment')}
+                    className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 transition-colors text-sm py-2"
+                  >
+                    <Shield size={16} />
+                    {hostFamilySubscriptionStatus === 'pending_approval'
+                      ? tr('auPair.payment.viewPaymentStatus', 'View Payment Status')
+                      : hostFamilySubscriptionStatus === 'rejected'
+                        ? tr('payment.resubmitProof', 'Resubmit Payment Proof')
+                        : hostFamilySubscriptionStatus === 'premium_expired'
+                          ? tr('auPair.payment.renewNow', 'Renew Subscription')
+                          : tr('auPair.payment.submitProof', 'Upload Payment Proof')}
+                  </Button>
+                )}
+              </div>
             </div>
         </div>
 

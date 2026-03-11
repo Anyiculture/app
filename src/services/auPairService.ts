@@ -3,6 +3,8 @@ import {
   hostFamilySubscriptionService,
   type HostFamilySubscriptionState,
 } from './hostFamilySubscriptionService';
+import { accessControlService } from './accessControlService';
+import { adminService } from './adminService';
 
 export interface AuPairProfile {
   id: string;
@@ -152,6 +154,7 @@ export interface UserSubscriptionStatus {
     id: string;
     admin_notes?: string;
   } | null;
+  isAdmin?: boolean;
 }
 
 export const auPairService = {
@@ -172,11 +175,16 @@ export const auPairService = {
         };
       }
 
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('au_pair_role, au_pair_subscription_status, au_pair_message_count, au_pair_onboarding_completed, host_family_subscription_status, host_family_subscription_end')
-        .eq('id', user.id)
-        .maybeSingle();
+      const [isAdminUser, profileResult] = await Promise.all([
+        adminService.checkIsAdmin(),
+        supabase
+          .from('profiles')
+          .select('au_pair_role, au_pair_subscription_status, au_pair_message_count, au_pair_onboarding_completed, host_family_subscription_status, host_family_subscription_end')
+          .eq('id', user.id)
+          .maybeSingle(),
+      ]);
+
+      const { data: profile, error } = profileResult;
 
       if (error) {
         console.warn('Profile fetch failed:', error);
@@ -188,6 +196,19 @@ export const auPairService = {
           onboardingCompleted: false,
           hostFamilyState: null,
           latestSubmission: null
+        };
+      }
+
+      if (isAdminUser) {
+        return {
+          role: null,
+          subscriptionStatus: null,
+          subscriptionExpiresAt: null,
+          messageCount: profile?.au_pair_message_count || 0,
+          onboardingCompleted: true,
+          hostFamilyState: null,
+          latestSubmission: null,
+          isAdmin: true,
         };
       }
 
@@ -259,7 +280,8 @@ export const auPairService = {
         messageCount: profile?.au_pair_message_count || 0,
         onboardingCompleted: profile?.au_pair_onboarding_completed || false,
         hostFamilyState,
-        latestSubmission
+        latestSubmission,
+        isAdmin: false,
       };
     } catch (error) {
       console.error('getUserSubscriptionStatus failed:', error);
@@ -616,44 +638,20 @@ export const auPairService = {
     allowed: boolean; 
     reason?: 'not_premium' | 'onboarding_incomplete' | 'not_authenticated' | 'payment_pending' | 'payment_rejected' | 'subscription_expired' 
   }> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { allowed: false, reason: 'not_authenticated' };
+    const access = await accessControlService.resolveMessagingAccess();
 
-    // Always allow messages to admin/support
     if (contextType === 'support' || contextType === 'admin') {
       return { allowed: true };
     }
 
-    const status = await this.getUserSubscriptionStatus();
-    
-    if (status.role === 'host_family') {
-      const hostFamilyState =
-        status.hostFamilyState ?? (await hostFamilySubscriptionService.getState());
-
-      if (hostFamilyState.subscription_status === 'premium_active') {
-        return { allowed: true };
-      }
-
-      if (hostFamilyState.subscription_status === 'pending_approval') {
-        return { allowed: false, reason: 'payment_pending' };
-      }
-
-      if (hostFamilyState.subscription_status === 'rejected') {
-        return { allowed: false, reason: 'payment_rejected' };
-      }
-
-      if (hostFamilyState.subscription_status === 'premium_expired') {
-        return { allowed: false, reason: 'subscription_expired' };
-      }
-
-      return { allowed: false, reason: 'not_premium' };
+    if (access.allowed || access.state === 'admin_access') {
+      return { allowed: true };
     }
 
-    if (status.role === 'au_pair' && !status.onboardingCompleted) {
-      return { allowed: false, reason: 'onboarding_incomplete' };
-    }
-
-    return { allowed: true };
+    return {
+      allowed: false,
+      reason: access.reason || accessControlService.mapMessagingStateToReason(access.state, Boolean(access.context)) || 'not_premium',
+    };
   },
 
   async getLatestPaymentSubmission() {

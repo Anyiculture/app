@@ -10,6 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Loading } from '../components/ui/Loading';
 import { hostFamilySubscriptionService, type HostFamilySubscriptionState } from '../services/hostFamilySubscriptionService';
+import { accessControlService } from '../services/accessControlService';
 
 type UploadMode = 'submit' | 'renew' | 'resubmit';
 
@@ -35,6 +36,7 @@ export function AuPairPaymentPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [subscriptionState, setSubscriptionState] = useState<HostFamilySubscriptionState | null>(null);
+  const [isAdminAccount, setIsAdminAccount] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadMode, setUploadMode] = useState<UploadMode>('submit');
@@ -44,6 +46,17 @@ export function AuPairPaymentPage() {
     if (!user?.id) return;
     setLoadingState(true);
     try {
+      const context = await accessControlService.getCurrentUserAccessContext(user.id);
+      const isAdmin = Boolean(context?.isAdmin);
+      setIsAdminAccount(isAdmin);
+
+      if (isAdmin) {
+        setSubscriptionState(null);
+        setError(t('payment.adminBypass') || 'Admin account detected. Subscription payment is not required for administrators.');
+        navigate('/account?section=billing', { replace: true });
+        return;
+      }
+
       const state = await hostFamilySubscriptionService.getState(user.id);
       setSubscriptionState(state);
 
@@ -56,6 +69,7 @@ export function AuPairPaymentPage() {
     } catch (err: any) {
       console.error('Failed to load host family subscription state:', err);
       setError(err?.message || 'Failed to load subscription status.');
+      setIsAdminAccount(false);
     } finally {
       setLoadingState(false);
     }
@@ -76,6 +90,10 @@ export function AuPairPaymentPage() {
   }
 
   if (!user) {
+    return <Loading />;
+  }
+
+  if (isAdminAccount) {
     return <Loading />;
   }
 
@@ -247,7 +265,7 @@ export function AuPairPaymentPage() {
                 {t('payment.wechatOnly') || 'WeChat Pay'}
               </div>
               <p className="mt-5 text-4xl font-black text-gray-900">
-                100 CNY <span className="text-lg text-gray-500 font-semibold">/ month</span>
+                100 CNY <span className="text-lg text-gray-500 font-semibold">{t('payment.perMonth') || '/ month'}</span>
               </p>
               <p className="mt-2 text-sm text-gray-500">
                 {t('payment.unlockContact') || 'Unlock communication with au pairs after admin approval.'}
@@ -257,7 +275,7 @@ export function AuPairPaymentPage() {
             <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
               <img
                 src="/wechat-payment-qr.jpg"
-                alt="WeChat payment QR"
+                alt={t('payment.wechatQrAlt') || 'WeChat payment QR'}
                 className="mx-auto w-full max-w-[280px] rounded-xl bg-white p-2"
               />
               <p className="mt-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">

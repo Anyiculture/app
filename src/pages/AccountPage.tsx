@@ -70,6 +70,11 @@ const normalizeStatus = (value: string | null | undefined) => {
   return value.replace(/_/g, ' ');
 };
 
+const text = (t: (key: string) => string, key: string, fallback: string) => {
+  const value = t(key);
+  return value === key ? fallback : value;
+};
+
 const roleLabel = (role: AccountRole, t: (key: string) => string) => {
   if (role === 'general') return t('account.roles.general') || 'General User';
   if (role === 'host_family') return t('settings.roles.hostFamily') || 'Host Family';
@@ -132,6 +137,7 @@ const subscriptionStatusLabel = (status: string | null, t: (key: string) => stri
 
 const messagingLabel = (state: AccountState | null, t: (key: string) => string) => {
   if (!state) return '-';
+  if (state.isAdmin) return text(t, 'account.admin.accessSummary', 'Administrator access: full platform messaging and management enabled');
   if (state.billing.contactAccessEnabled) return t('account.messaging.enabled') || 'Messaging and contact access enabled';
   switch (state.messagingAccess?.reason) {
     case 'onboarding_incomplete':
@@ -282,12 +288,24 @@ export function AccountPage() {
   const renderOverview = () => {
     if (!accountState) return null;
     const billing = accountState.billing;
-    const isHostFamily = accountState.roles.includes('host_family');
+    const isHostFamily = accountState.roles.includes('host_family') && !accountState.isAdmin;
     const summary = [
       { label: t('account.overview.roles') || 'Account roles', value: accountState.roles.map((role) => roleLabel(role, t)).join(', ') || '-' },
-      { label: t('account.overview.approvalStatus') || 'Approval status', value: approvalLabel(accountState.approvalStatus, t) },
+      {
+        label: t('account.overview.approvalStatus') || 'Approval status',
+        value: accountState.isAdmin
+          ? text(t, 'account.admin.accessLevel', 'Administrator')
+          : approvalLabel(accountState.approvalStatus, t),
+      },
       { label: t('account.overview.profileCompletion') || 'Profile completion', value: accountState.profileCompletion !== null ? `${accountState.profileCompletion}%` : '-' },
     ];
+
+    if (accountState.isAdmin) {
+      summary.splice(2, 0, {
+        label: text(t, 'account.admin.controls', 'Admin controls'),
+        value: text(t, 'account.admin.fullAccess', 'Full access across account, messaging, approvals, and admin portal'),
+      });
+    }
 
     if (isHostFamily) {
       summary.splice(2, 0,
@@ -317,6 +335,31 @@ export function AccountPage() {
 
   const renderRoleProfiles = () => {
     if (!user || !accountState) return null;
+
+    if (accountState.isAdmin) {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-5">
+            <p className="text-sm font-semibold text-indigo-900">{text(t, 'account.admin.accessLevel', 'Administrator')}</p>
+            <p className="mt-2 text-sm text-indigo-800">
+              {text(
+                t,
+                'account.admin.roleProfileDesc',
+                'This account has full admin permissions and is not subject to host-family subscription restrictions.'
+              )}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => navigate('/admin')}>
+                {text(t, 'account.admin.openPortal', 'Open admin portal')}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setSection('personal')}>
+                {t('account.actions.editPersonalInfo') || 'Edit personal info'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     const cards = accountState.roles
       .filter((role): role is Exclude<AccountRole, 'general'> => role !== 'general')
@@ -419,7 +462,29 @@ export function AccountPage() {
   const renderBilling = () => {
     if (!accountState) return null;
     const billing = accountState.billing;
-    const isHostFamily = accountState.roles.includes('host_family');
+    const isHostFamily = accountState.roles.includes('host_family') && !accountState.isAdmin;
+
+    if (accountState.isAdmin) {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-5">
+            <p className="text-sm font-semibold text-indigo-900">{text(t, 'account.admin.billingTitle', 'Admin Billing Exemption')}</p>
+            <p className="mt-2 text-sm text-indigo-800">
+              {text(
+                t,
+                'account.admin.billingDesc',
+                'Administrator accounts bypass Host Family Premium payments, approvals, proof uploads, and messaging locks.'
+              )}
+            </p>
+            <div className="mt-4">
+              <Button size="sm" onClick={() => navigate('/admin')}>
+                {text(t, 'account.admin.openPortal', 'Open admin portal')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     if (!isHostFamily) {
       return (
@@ -687,15 +752,21 @@ export function AccountPage() {
             <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-gray-600">
               <span className="inline-flex items-center gap-2">
                 <CheckCircle2 size={14} className="text-green-600" />
-                {approvalLabel(accountState?.approvalStatus || null, t)}
+                {accountState?.isAdmin
+                  ? text(t, 'account.admin.accessLevel', 'Administrator')
+                  : approvalLabel(accountState?.approvalStatus || null, t)}
               </span>
               <span className="inline-flex items-center gap-2">
                 <CreditCard size={14} className="text-blue-600" />
-                {paymentLabel(accountState?.billing.paymentStatus || null, t)}
+                {accountState?.isAdmin
+                  ? text(t, 'account.admin.noPaymentRequired', 'No payment required')
+                  : paymentLabel(accountState?.billing.paymentStatus || null, t)}
               </span>
               <span className="inline-flex items-center gap-2">
                 <CalendarClock size={14} className="text-purple-600" />
-                {formatDate(accountState?.billing.subscriptionEndDate)}
+                {accountState?.isAdmin
+                  ? text(t, 'account.admin.fullAccess', 'Full access')
+                  : formatDate(accountState?.billing.subscriptionEndDate)}
               </span>
             </div>
           </div>

@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Loading } from './ui/Loading';
-import { hostFamilySubscriptionService } from '../services/hostFamilySubscriptionService';
+import { accessControlService } from '../services/accessControlService';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -18,6 +18,13 @@ export function ProtectedRoute({ children, requirePaymentApproval = false }: Pro
   useEffect(() => {
     let cancelled = false;
 
+    const withRedirect = (basePath: string, redirectPath: string) => {
+      if (!basePath) return redirectPath;
+      if (/[?&]redirect=/.test(basePath)) return basePath;
+      const separator = basePath.includes('?') ? '&' : '?';
+      return `${basePath}${separator}redirect=${encodeURIComponent(redirectPath)}`;
+    };
+
     const verifyPaymentAccess = async () => {
       if (!requirePaymentApproval || !user?.id) {
         setCheckingPaymentAccess(false);
@@ -27,12 +34,13 @@ export function ProtectedRoute({ children, requirePaymentApproval = false }: Pro
 
       setCheckingPaymentAccess(true);
       try {
-        const state = await hostFamilySubscriptionService.getState(user.id);
+        const access = await accessControlService.resolveMessagingAccess(user.id);
         if (cancelled) return;
 
-        if (state.role === 'host_family' && state.subscription_status !== 'premium_active') {
+        if (!access.allowed) {
           const currentPath = `${location.pathname}${location.search}`;
-          const redirectPath = `/au-pair/payment?state=${state.subscription_status}&redirect=${encodeURIComponent(currentPath)}`;
+          const fallback = `/au-pair/payment?state=free`;
+          const redirectPath = withRedirect(access.redirectTo || fallback, currentPath);
           setBlockedRedirect(redirectPath);
           return;
         }

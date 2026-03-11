@@ -101,7 +101,7 @@ export function DashboardPage() {
       setUserRoles(roles);
 
       // Load host-family subscription state from canonical backend source
-      if (roles.includes('host_family')) {
+      if (roles.includes('host_family') && !isAdminUser) {
         const subscriptionState = await hostFamilySubscriptionService.getState(user.id);
         setHostFamilySubscription(subscriptionState);
       } else {
@@ -160,7 +160,7 @@ export function DashboardPage() {
   }
 
   const isAuPair = userRoles.includes('au_pair');
-  const isHostFamily = userRoles.includes('host_family');
+  const isHostFamily = userRoles.includes('host_family') && !isAdmin;
 
   const LogoText = t('dashboard.title');
 
