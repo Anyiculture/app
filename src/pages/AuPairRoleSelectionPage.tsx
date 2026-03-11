@@ -8,10 +8,15 @@ import { BackgroundBlobs } from '../components/ui';
 import { motion } from 'framer-motion';
 
 export function AuPairRoleSelectionPage() {
-  const { t } = useI18n();
+  const { t: i18nT } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  const t = (key: string, options?: Record<string, any>) => {
+    const value = i18nT(key, options);
+    return value === key ? '' : value;
+  };
 
   const handleRoleSelect = async (role: 'host_family' | 'au_pair') => {
     if (!user) {

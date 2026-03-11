@@ -21,10 +21,15 @@ const formatDate = (value: string | null) => {
 };
 
 export function AuPairPaymentPage() {
-  const { t } = useI18n();
+  const { t: i18nT } = useI18n();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  const t = (key: string, options?: Record<string, any>) => {
+    const value = i18nT(key, options);
+    return value === key ? '' : value;
+  };
 
   const [loadingState, setLoadingState] = useState(true);
   const [uploading, setUploading] = useState(false);
