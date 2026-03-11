@@ -176,15 +176,14 @@ export function AuPairProfilePage() {
     } catch (error: any) {
       console.error('Failed to start conversation:', error);
       
-      let errorMessage = tr('admin.common.failedToStartChat', 'Failed to start conversation. Please try again.');
+      let errorMessage = messagingService.getConversationErrorMessage(
+        error,
+        tr('admin.common.failedToStartChat', 'Failed to start conversation. Please try again.')
+      );
       
       if (error?.message?.includes('Not authenticated')) {
         errorMessage = 'Please sign in to contact au pairs.';
         navigate('/signin');
-      } else if (error?.message?.includes('RLS') || error?.message?.includes('permission')) {
-        errorMessage = 'Permission denied. Please ensure your account is approved.';
-      } else if (error?.message?.includes('conversation')) {
-        errorMessage = 'Could not start conversation. This might be due to messaging restrictions.';
       }
       
       alert(errorMessage);

@@ -2742,6 +2742,8 @@
     },
     "billing": {
       "currentPlan": "当前计划",
+      "currentPlanPremium": "高级计划",
+      "currentPlanFree": "免费计划",
       "paymentStatus": "付款状态",
       "subscriptionStatus": "订阅状态",
       "subscriptionStart": "订阅开始日期",
@@ -4486,6 +4488,7 @@
   },
   "payment": {
     "hostFamilyOnly": "仅寄宿家庭账号可以访问此支付页面。",
+    "contactAdmin": "联系管理员",
     "active": "高级计划已生效",
     "activeUntil": "您的高级订阅已生效至 {{date}}。",
     "noDuplicateWhileActive": "您当前已有有效订阅，暂时无法重复支付。",

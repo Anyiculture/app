@@ -473,7 +473,7 @@ export const router = createBrowserRouter([
       {
         path: 'messages',
         element: (
-          <ProtectedRoute requirePaymentApproval>
+          <ProtectedRoute>
             <MessagingPage />
           </ProtectedRoute>
         ),

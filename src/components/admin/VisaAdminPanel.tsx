@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { visaService, VisaApplication } from '../../services/visaService';
+import { messagingService } from '../../services/messagingService';
 import { StartConversationButton } from './ui/StartConversationButton';
 import { Button, Modal } from '../ui';
 import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -251,9 +252,29 @@ export function VisaAdminPanel() {
                 history={selectedAppHistory}
                 onBack={() => setSelectedApp(null)}
                 onNavigateToMessages={() => {
-                    if (selectedApp.conversation_id) {
-                        navigate(`/admin/messages?conversation=${selectedApp.conversation_id}`);
-                    }
+                    if (!selectedApp.user_id) return;
+
+                    void messagingService
+                      .startAdminConversation(
+                        selectedApp.user_id,
+                        'visa',
+                        t('admin.visa.initialMessage', {
+                          name: selectedApp.full_name || 'Applicant',
+                          type: selectedApp.visa_type
+                        })
+                      )
+                      .then((conversationId) => {
+                        navigate(`/admin?tab=messaging&conversation=${conversationId}`);
+                      })
+                      .catch((error) => {
+                        console.error('Failed to open admin visa conversation:', error);
+                        alert(
+                          messagingService.getConversationErrorMessage(
+                            error,
+                            'Failed to open conversation'
+                          )
+                        );
+                      });
                 }}
             />
             

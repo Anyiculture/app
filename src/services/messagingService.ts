@@ -1,6 +1,20 @@
 import { supabase } from '../lib/supabase';
 import { notificationService } from './notificationService';
-import { auPairService } from './auPairService';
+
+export type ConversationContextType =
+  | 'job'
+  | 'aupair'
+  | 'visa'
+  | 'event'
+  | 'marketplace'
+  | 'community'
+  | 'lifestyle'
+  | 'education'
+  | 'support'
+  | 'violation'
+  | 'account'
+  | 'payment'
+  | 'general';
 
 export interface Meeting {
   id: string;
@@ -65,20 +79,154 @@ export interface Message {
 
 export interface CreateConversationParams {
   otherUserId?: string; // Made optional - will be resolved from profile if not provided
-  contextType: 'job' | 'aupair' | 'visa' | 'event' | 'marketplace' | 'community' | 'lifestyle' | 'education' | 'support' | 'violation' | 'account';
+  contextType: ConversationContextType;
   contextId?: string;
   relatedItemTitle?: string;
   initialMessage?: string;
-  messageType?: 'user' | 'system';
+  messageType?: 'user' | 'system' | 'admin';
   profileType?: 'au_pair' | 'family'; // Used with contextType 'aupair' to resolve recipient
+  useAdminTarget?: boolean;
 }
 
 export const messagingService = {
+  getConversationErrorMessage(error: unknown, fallback = 'Failed to start conversation'): string {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (((error as { code?: unknown }).code === 'PGRST202') ||
+        ((error as { code?: unknown }).code === '42883')) &&
+      'message' in error &&
+      typeof (error as { message?: unknown }).message === 'string'
+    ) {
+      const message = (error as { message: string }).message;
+      if (
+        /get_or_create_direct_conversation|get_support_admin_user_id|create_new_conversation/i.test(
+          message
+        )
+      ) {
+        return 'Database migration missing for conversation creation. Run the messaging SQL and reload the Supabase schema cache.';
+      }
+    }
+
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    if (error && typeof error === 'object' && 'message' in error) {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === 'string' && message.trim()) {
+        return message;
+      }
+    }
+
+    return fallback;
+  },
+
   isUuidLike(value?: string | null): boolean {
     if (!value) return false;
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
       value
     );
+  },
+
+  isMissingRpcError(error: unknown, rpcName: string): boolean {
+    if (!error || typeof error !== 'object') return false;
+
+    const code = 'code' in error ? (error as { code?: unknown }).code : undefined;
+    const message = 'message' in error ? (error as { message?: unknown }).message : undefined;
+
+    if (code !== 'PGRST202' && code !== '42883') {
+      return false;
+    }
+
+    return typeof message === 'string' && new RegExp(rpcName, 'i').test(message);
+  },
+
+  async resolveSupportAdminTarget(): Promise<string> {
+    const { data, error } = await supabase.rpc('get_support_admin_user_id');
+
+    if (error) {
+      if (this.isMissingRpcError(error, 'get_support_admin_user_id')) {
+        throw new Error(
+          'Database migration missing for support chat routing. Run the conversation creation SQL and reload the Supabase schema cache.'
+        );
+      }
+
+      throw error;
+    }
+
+    if (!data || typeof data !== 'string') {
+      throw new Error('No admin account is configured for support conversations');
+    }
+
+    return data;
+  },
+
+  async createConversationWithLegacyRpc(params: {
+    otherUserId?: string;
+    contextType: ConversationContextType;
+    contextId?: string;
+    relatedItemTitle?: string;
+    initialMessage?: string;
+    messageType?: 'user' | 'system' | 'admin';
+    useAdminTarget?: boolean;
+  }): Promise<{ conversationId: string; messageId?: string }> {
+    let targetUserId = params.otherUserId;
+
+    if (!targetUserId && params.useAdminTarget) {
+      targetUserId = await this.resolveSupportAdminTarget();
+    }
+
+    if (!targetUserId) {
+      throw new Error('Target user could not be resolved for conversation creation');
+    }
+
+    const inlineInitialMessage =
+      (params.messageType || 'user') === 'user' ? params.initialMessage || null : null;
+
+    const { data, error } = await supabase.rpc('create_new_conversation', {
+      p_other_user_id: targetUserId,
+      p_context_type: params.contextType,
+      p_context_id: params.contextId || null,
+      p_related_title: params.relatedItemTitle || null,
+      p_initial_message: inlineInitialMessage,
+    });
+
+    if (error) {
+      if (this.isMissingRpcError(error, 'create_new_conversation')) {
+        throw new Error(
+          'Database migration missing for conversation creation. Run the messaging SQL and reload the Supabase schema cache.'
+        );
+      }
+
+      throw error;
+    }
+
+    const conversationId =
+      data && typeof data === 'object' && 'conversation_id' in data
+        ? (data as { conversation_id?: string }).conversation_id
+        : undefined;
+
+    if (!conversationId) {
+      throw new Error('Legacy conversation RPC did not return a conversation ID');
+    }
+
+    let messageId =
+      data && typeof data === 'object' && 'message_id' in data
+        ? (data as { message_id?: string }).message_id
+        : undefined;
+
+    if (!inlineInitialMessage && params.initialMessage?.trim()) {
+      const sentMessage = await this.sendMessage(
+        conversationId,
+        params.initialMessage.trim(),
+        params.messageType || 'user'
+      );
+      messageId = sentMessage.id;
+    }
+
+    return { conversationId, messageId };
   },
 
   /**
@@ -198,7 +346,7 @@ export const messagingService = {
    */
   async startAdminConversation(
     userId: string,
-    contextType: 'visa' | 'support' | 'violation' | 'account' = 'support',
+    contextType: ConversationContextType = 'support',
     systemMessage?: string
   ): Promise<string> {
     const { data: { user } } = await supabase.auth.getUser();
@@ -209,7 +357,26 @@ export const messagingService = {
       otherUserId: userId,
       contextType: contextType,
       initialMessage: systemMessage,
-      messageType: 'system' // Important: Mark as system message
+      messageType: 'system'
+    });
+
+    return result.conversationId;
+  },
+
+  async contactAdmin(params?: {
+    contextType?: ConversationContextType;
+    contextId?: string;
+    relatedItemTitle?: string;
+    initialMessage?: string;
+    messageType?: 'user' | 'system' | 'admin';
+  }): Promise<string> {
+    const result = await this.createConversationWithMessage({
+      contextType: params?.contextType || 'support',
+      contextId: params?.contextId,
+      relatedItemTitle: params?.relatedItemTitle,
+      initialMessage: params?.initialMessage,
+      messageType: params?.messageType || 'user',
+      useAdminTarget: true,
     });
 
     return result.conversationId;
@@ -222,14 +389,7 @@ export const messagingService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    let { otherUserId, contextType, contextId, relatedItemTitle, initialMessage, profileType } = params;
-
-    if (contextType === 'aupair') {
-      const access = await auPairService.canSendMessage('aupair');
-      if (!access.allowed) {
-        throw new Error(`Messaging not allowed: ${access.reason || 'not_premium'}`);
-      }
-    }
+    let { otherUserId, contextType, contextId, relatedItemTitle, initialMessage, profileType, messageType, useAdminTarget } = params;
 
     const shouldResolveFromProfile =
       contextType === 'aupair' &&
@@ -246,41 +406,43 @@ export const messagingService = {
       otherUserId = resolvedUserId;
     }
 
-    if (!otherUserId) {
+    if (!otherUserId && !useAdminTarget) {
       throw new Error('otherUserId is required or must be resolvable from profile');
     }
 
-    // First, check if conversation already exists
-    const existingConvId = await this.findExistingConversation(user.id, otherUserId, contextType);
-    
-    if (existingConvId) {
-      // If there's an initial message, send it to the existing conversation
-      if (initialMessage) {
-        try {
-          const message = await this.sendMessage(existingConvId, initialMessage);
-          return { conversationId: existingConvId, messageId: message.id };
-        } catch (err) {
-          console.error('Failed to send message to existing conversation:', err);
-        }
-      }
-      return { conversationId: existingConvId };
-    }
-
-    // Use the new Secure RPC function to create new conversation
-    const { data, error } = await supabase.rpc('create_new_conversation', {
-      p_other_user_id: otherUserId,
+    const { data, error } = await supabase.rpc('get_or_create_direct_conversation', {
+      p_target_user_id: otherUserId || null,
       p_context_type: contextType,
-      p_context_id: contextId,
-      p_related_title: relatedItemTitle,
-      p_initial_message: initialMessage
+      p_context_id: contextId || null,
+      p_related_title: relatedItemTitle || null,
+      p_initial_message: initialMessage || null,
+      p_initial_message_type: messageType || 'user',
+      p_resolve_admin_target: Boolean(useAdminTarget),
     });
 
     if (error) {
-      console.error('RPC create_new_conversation failed:', error);
+      console.error('RPC get_or_create_direct_conversation failed:', error);
+
+      if (this.isMissingRpcError(error, 'get_or_create_direct_conversation')) {
+        return this.createConversationWithLegacyRpc({
+          otherUserId,
+          contextType,
+          contextId,
+          relatedItemTitle,
+          initialMessage,
+          messageType,
+          useAdminTarget,
+        });
+      }
+
       throw error;
     }
 
-    return { conversationId: data.conversation_id };
+    if (!data?.conversation_id) {
+      throw new Error('Conversation could not be created');
+    }
+
+    return { conversationId: data.conversation_id, messageId: data.message_id || undefined };
   },
 
   /**
@@ -296,21 +458,6 @@ export const messagingService = {
   ): Promise<Message> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
-
-    if (messageType === 'user') {
-      const { data: conversation } = await supabase
-        .from('conversations')
-        .select('context_type')
-        .eq('id', conversationId)
-        .maybeSingle();
-
-      if (conversation?.context_type === 'aupair') {
-        const access = await auPairService.canSendMessage('aupair');
-        if (!access.allowed) {
-          throw new Error(`Messaging not allowed: ${access.reason || 'not_premium'}`);
-        }
-      }
-    }
 
     // Prepare message object
     const messageData = {
@@ -334,9 +481,15 @@ export const messagingService = {
 
     if (error) throw error;
 
-    // Trigger update on conversation (last_message_at)
-    // We do this to ensure conversation list is updated
-    await supabase.rpc('update_conversation_timestamp', { conversation_id: conversationId });
+    // Message creation is the primary operation. Conversation activity refresh is best-effort
+    // because older deployments may not expose the callable RPC signature yet.
+    const { error: timestampError } = await supabase.rpc('update_conversation_timestamp', {
+      conversation_id: conversationId,
+    });
+
+    if (timestampError) {
+      console.warn('Non-blocking conversation timestamp refresh failed:', timestampError);
+    }
 
     // Send notification to the recipient
     // We run this asynchronously to not block the response
@@ -567,7 +720,7 @@ export const messagingService = {
   ): Promise<string> {
     const result = await this.createConversationWithMessage({
       otherUserId,
-      contextType: (contextType as any) || 'support',
+      contextType: (contextType as ConversationContextType) || 'support',
       contextId,
       relatedItemTitle,
     });

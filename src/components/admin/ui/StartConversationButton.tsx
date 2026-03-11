@@ -38,28 +38,24 @@ export function StartConversationButton({
     setLoading(true);
     try {
       const systemMessage = `[System Message] Admin initiated contact regarding ${sourceContext || contextType}.`;
-      
-      // Fallback mapping for context types if DB constraints haven't been updated
-      // Original allowed types: job_application, interview, support, general
-      const allowedTypes = ['job_application', 'interview', 'support', 'general'];
-      let safeContextType = contextType;
-      
-      if (!allowedTypes.includes(contextType as string)) {
-          // Map unknown types to 'support' to avoid constraint violation
-          safeContextType = 'support' as any;
-      }
 
       const conversationId = await messagingService.startAdminConversation(
         userId,
-        safeContextType as any,
+        contextType as any,
         systemMessage
       );
 
       showToast('success', t('admin.messages.conversationStarted') || 'Conversation started');
-      navigate(`/messages?conversation=${conversationId}`);
+      navigate(`/admin?tab=messaging&conversation=${conversationId}`);
     } catch (error) {
       console.error('Failed to start conversation:', error);
-      showToast('error', t('admin.messages.startError') || 'Failed to start conversation');
+      showToast(
+        'error',
+        messagingService.getConversationErrorMessage(
+          error,
+          t('admin.messages.startError') || 'Failed to start conversation'
+        )
+      );
     } finally {
       setLoading(false);
     }

@@ -52,6 +52,16 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
 
+  const updateConversationSearchParam = (conversationId: string | null) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (conversationId) {
+      nextParams.set('conversation', conversationId);
+    } else {
+      nextParams.delete('conversation');
+    }
+    setSearchParams(nextParams);
+  };
+
   // Initial Load
   useEffect(() => {
     mountedRef.current = true;
@@ -224,7 +234,7 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
       setConversations(prev => prev.filter(c => c.id !== selectedConversationId));
       setFilteredConversations(prev => prev.filter(c => c.id !== selectedConversationId));
       setSelectedConversationId(null);
-      setSearchParams({});
+      updateConversationSearchParam(null);
       setShowMobileChat(false);
       setShowDeleteModal(false);
     } catch (error) {
@@ -260,6 +270,7 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
       // Restore state on error
       setNewMessage(content);
       setAttachments(currentAttachments);
+      alert(messagingService.getConversationErrorMessage(err, 'Failed to send message'));
     } finally {
       setSending(false);
     }
@@ -522,7 +533,7 @@ export function MessagingPage({ embedded = false }: { embedded?: boolean }) {
                   key={conv.id}
                   onClick={() => {
                     setSelectedConversationId(conv.id);
-                    setSearchParams({ conversation: conv.id });
+                    updateConversationSearchParam(conv.id);
                     setShowMobileChat(true);
                   }}
                   className={`w-full p-3 md:p-4 flex gap-3 md:gap-4 rounded-2xl transition-all duration-300 group animate-in fade-in slide-in-from-left-2`}

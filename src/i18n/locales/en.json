@@ -2646,6 +2646,8 @@
     },
     "billing": {
       "currentPlan": "Current plan",
+      "currentPlanPremium": "Premium active",
+      "currentPlanFree": "Free Plan",
       "paymentStatus": "Payment status",
       "subscriptionStatus": "Subscription status",
       "subscriptionStart": "Subscription start date",
@@ -4375,6 +4377,7 @@
   },
   "payment": {
     "hostFamilyOnly": "Only Host Family accounts can access this payment page.",
+    "contactAdmin": "Contact Admin",
     "active": "Premium Plan is active",
     "activeUntil": "You already have an active premium subscription until {{date}}.",
     "noDuplicateWhileActive": "You already have an active subscription and cannot pay again yet.",

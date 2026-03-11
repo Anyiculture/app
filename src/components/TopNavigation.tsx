@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GlobalSearch } from './GlobalSearch';
 import { NotificationCenter } from './NotificationCenter';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,9 +17,11 @@ import {
   ChevronDown,
   MessageSquare,
   Shield,
-  Globe
+  Globe,
+  Loader2
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { messagingService } from '../services/messagingService';
 
 // Custom rich icon wrappers with gradients/colors - Smaller Size
 const NavIcon = ({ icon: Icon, colorClass }: { icon: any, colorClass: string }) => (
@@ -32,9 +34,11 @@ export function TopNavigation() {
   const { user, signOut } = useAuth();
   const { t, language, setLanguage } = useI18n();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isContactingAdmin, setIsContactingAdmin] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
@@ -134,6 +138,36 @@ export function TopNavigation() {
   const handleSignOut = async () => {
     await signOut();
     setIsProfileMenuOpen(false);
+  };
+
+  const handleContactAdmin = async () => {
+    if (isContactingAdmin) return;
+
+    setIsContactingAdmin(true);
+    try {
+      const conversationId = await messagingService.contactAdmin({
+        contextType: 'support',
+        relatedItemTitle: 'Account support',
+        initialMessage: 'Hello, I need help with my account.',
+      });
+
+      setIsProfileMenuOpen(false);
+      navigate(`/messages?conversation=${conversationId}`);
+    } catch (error) {
+      const errorMessage = messagingService.getConversationErrorMessage(
+        error,
+        'Failed to contact admin'
+      );
+
+      if (/not authenticated/i.test(errorMessage)) {
+        const redirectPath = `${window.location.pathname}${window.location.search}`;
+        navigate(`/signin?redirect=${encodeURIComponent(redirectPath)}`);
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsContactingAdmin(false);
+    }
   };
 
   return (
@@ -245,6 +279,21 @@ export function TopNavigation() {
                         <Settings size={16} />
                         {t('common.account') || 'Account'}
                       </Link>
+                      {!isAdmin && (
+                        <button
+                          type="button"
+                          onClick={handleContactAdmin}
+                          disabled={isContactingAdmin}
+                          className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isContactingAdmin ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <MessageSquare size={16} />
+                          )}
+                          {t('payment.contactAdmin') || 'Contact Admin'}
+                        </button>
+                      )}
                       {isAdmin && (
                         <Link 
                           to="/admin" 

@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService } from '../services/adminService';
+import { messagingService } from '../services/messagingService';
 import { visaService, VisaApplication, VisaDocument } from '../services/visaService';
 import { notificationService } from '../services/notificationService';
 import { Modal } from '../components/ui/Modal';
-import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Loading } from '../components/ui/Loading';
 import { Select } from '../components/ui/Select';
@@ -147,28 +147,19 @@ export function VisaAdminReviewPage() {
     
     try {
       setProcessing(true);
-      let conversationId = selectedApp.conversation_id;
+      const conversationId = await messagingService.startAdminConversation(
+        selectedApp.user_id,
+        'visa',
+        t('admin.visa.initialMessage', {
+          name: selectedApp.full_name || 'Applicant',
+          type: selectedApp.visa_type
+        })
+      );
 
-      if (!conversationId) {
-        // Create new conversation if none exists
-        const { data, error } = await supabase.rpc('create_new_conversation', {
-           p_other_user_id: selectedApp.user_id,
-           p_initial_message: t('admin.visa.initialMessage', {
-             name: selectedApp.full_name || 'Applicant',
-             type: selectedApp.visa_type
-           })
-        });
-
-        if (error) throw error;
-        conversationId = data;
-      } else {
-        await adminService.assignAdminToConversation(conversationId);
-      }
-
-      navigate(`/messages?conversation=${conversationId}`);
+      navigate(`/admin?tab=messaging&conversation=${conversationId}`);
     } catch (err) {
       console.error('Failed to join conversation:', err);
-      setError('Failed to open conversation');
+      setError(messagingService.getConversationErrorMessage(err, 'Failed to open conversation'));
       setProcessing(false);
     }
   };

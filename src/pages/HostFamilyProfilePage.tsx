@@ -73,7 +73,7 @@ export function HostFamilyProfilePage() {
       navigate(`/messages?conversation=${conversationId}`);
     } catch (error) {
       console.error('Failed to start conversation:', error);
-      alert('Failed to start conversation. Please try again.');
+      alert(messagingService.getConversationErrorMessage(error, 'Failed to start conversation. Please try again.'));
     }
   };
 

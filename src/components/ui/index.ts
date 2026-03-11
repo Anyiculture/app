@@ -7,4 +7,5 @@ export * from './Input';
 export * from './Textarea';
 export * from './Modal';
 export * from './TranslateWrapper';
+export * from './ContactAdminButton';
 // Add others as needed

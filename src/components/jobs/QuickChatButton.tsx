@@ -44,7 +44,12 @@ export function QuickChatButton({
       if (error.message?.includes('Not authenticated')) {
         navigate('/login', { state: { from: window.location.pathname } });
       } else {
-        alert(t('common.failedToStartChat') || 'Failed to start conversation. Please try again.');
+        alert(
+          messagingService.getConversationErrorMessage(
+            error,
+            t('common.failedToStartChat') || 'Failed to start conversation. Please try again.'
+          )
+        );
       }
     } finally {
       setLoading(false);

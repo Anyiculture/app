@@ -49,7 +49,7 @@ export function CandidateProfilePage() {
       navigate(`/messages?conversation=${conversationId}`);
     } catch (error) {
       console.error('Failed to start conversation:', error);
-      showToast('error', 'Failed to start conversation');
+      showToast('error', messagingService.getConversationErrorMessage(error, 'Failed to start conversation'));
     } finally {
       setLoading(false);
     }

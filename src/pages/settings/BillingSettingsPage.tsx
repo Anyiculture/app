@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { Button } from '../../components/ui/Button';
+import { ContactAdminButton } from '../../components/ui/ContactAdminButton';
 import { CreditCard, Check } from 'lucide-react';
 import { auPairService, UserSubscriptionStatus } from '../../services/auPairService';
 
@@ -70,10 +71,29 @@ export function BillingSettingsPage() {
               </div>
 
               {status?.subscriptionStatus !== 'premium' && (
-                 <Button className="bg-white text-gray-900 hover:bg-gray-100 border-0 w-full md:w-auto">
-                    <CreditCard size={16} className="mr-2" />
-                    {t('settings.billing.upgradePlan')}
-                 </Button>
+                 <div className="flex flex-wrap gap-3">
+                    <Button className="bg-white text-gray-900 hover:bg-gray-100 border-0 w-full md:w-auto">
+                      <CreditCard size={16} className="mr-2" />
+                      {t('settings.billing.upgradePlan')}
+                    </Button>
+                    <ContactAdminButton
+                      contextType="payment"
+                      relatedItemTitle="Billing settings support"
+                      initialMessage="Hello, I need help with my billing settings."
+                      label="Contact Admin"
+                      variant="secondary"
+                    />
+                 </div>
+              )}
+
+              {status?.subscriptionStatus === 'premium' && (
+                <ContactAdminButton
+                  contextType="payment"
+                  relatedItemTitle="Billing settings support"
+                  initialMessage="Hello, I have a billing question."
+                  label="Contact Admin"
+                  variant="secondary"
+                />
               )}
           </div>
       </div>

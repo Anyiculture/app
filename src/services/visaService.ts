@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { messagingService } from './messagingService';
 
 export type VisaType = 'work_z' | 'student_x' | 'family_q' | 'family_s' | 'business_m' | 'other';
 export type VisaStatus = 'draft' | 'submitted' | 'in_review' | 'documents_requested' | 'approved' | 'rejected';
@@ -152,32 +153,20 @@ export const visaService = {
         notes: 'Application submitted by user'
       });
 
-    // Create conversation with admin
-    const { data: conversation } = await supabase
-      .from('conversations')
-      .insert({
-        participant1_id: user.id,
-        participant2_id: '00000000-0000-0000-0000-000000000000',
-        last_message: 'Visa application submitted',
-        last_message_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+    try {
+      const conversationId = await messagingService.contactAdmin({
+        contextType: 'visa',
+        contextId: id,
+        relatedItemTitle: `Visa application ${data.visa_type}`,
+        initialMessage: `Visa application (${data.visa_type}) has been submitted and is awaiting review.`,
+      });
 
-    if (conversation) {
       await supabase
         .from('visa_applications')
-        .update({ conversation_id: conversation.id })
+        .update({ conversation_id: conversationId })
         .eq('id', id);
-
-      await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversation.id,
-          sender_id: user.id,
-          content: `Visa application (${data.visa_type}) has been submitted and is awaiting review.`,
-          is_system: true
-        });
+    } catch (conversationError) {
+      console.error('Failed to create visa support conversation:', conversationError);
     }
 
     return data;

@@ -6,7 +6,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { supabase } from '../lib/supabase';
 import { GeneralOnboarding } from '../components/GeneralOnboarding';
 import { HeroCarousel } from '../components/HeroCarousel';
-import { ChevronRight, Loader2, ShoppingBag, Briefcase, Calendar, GraduationCap, Users, Sparkles, ShieldCheck, Baby, TrendingUp, MessageSquare, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronRight, Loader2, ShoppingBag, Briefcase, Calendar, GraduationCap, Users, Sparkles, ShieldCheck, Baby, TrendingUp, Upload, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react';
 import { MarketplaceCard } from '../components/marketplace/MarketplaceCard';
 import { EventCard } from '../components/events/EventCard';
 import { ProfileCard } from '../components/aupair/ProfileCard';
@@ -48,6 +48,7 @@ export function DashboardPage() {
     if (!user?.id) return;
     
     try {
+      let resolvedIsAdmin = false;
       const { data, error } = await supabase
         .from('profiles')
         .select('id, display_name, onboarding_completed, is_first_login, interested_modules, primary_interest, au_pair_role')
@@ -60,11 +61,12 @@ export function DashboardPage() {
       // Check if user is admin
       try {
         const { adminService } = await import('../services/adminService');
-        const isAdminUser = await adminService.checkIsAdmin();
-        setIsAdmin(isAdminUser);
+        resolvedIsAdmin = await adminService.checkIsAdmin();
+        setIsAdmin(resolvedIsAdmin);
       } catch (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);
+        resolvedIsAdmin = false;
       }
 
       // Fetch user services/roles
@@ -101,7 +103,7 @@ export function DashboardPage() {
       setUserRoles(roles);
 
       // Load host-family subscription state from canonical backend source
-      if (roles.includes('host_family') && !isAdminUser) {
+      if (roles.includes('host_family') && !resolvedIsAdmin) {
         const subscriptionState = await hostFamilySubscriptionService.getState(user.id);
         setHostFamilySubscription(subscriptionState);
       } else {
@@ -161,6 +163,58 @@ export function DashboardPage() {
 
   const isAuPair = userRoles.includes('au_pair');
   const isHostFamily = userRoles.includes('host_family') && !isAdmin;
+  const hostFamilyStatusChipTone =
+    hostFamilySubscription?.subscription_status === 'premium_active'
+      ? {
+          wrap: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+          icon: 'text-emerald-600',
+        }
+      : hostFamilySubscription?.subscription_status === 'pending_approval'
+        ? {
+            wrap: 'border-amber-200 bg-amber-50 text-amber-700',
+            icon: 'text-amber-600',
+          }
+        : {
+            wrap: 'border-rose-200 bg-rose-50 text-rose-700',
+            icon: 'text-rose-600',
+          };
+  const hostFamilyStatusChipLabel =
+    hostFamilySubscription?.subscription_status === 'premium_active'
+      ? (t('account.billing.currentPlanPremium') || 'Premium active')
+      : hostFamilySubscription?.subscription_status === 'pending_approval'
+        ? (t('dashboard.viewPaymentStatus') || 'Pending approval')
+        : hostFamilySubscription?.subscription_status === 'premium_expired'
+          ? (t('dashboard.renewSubscription') || 'Expired')
+          : hostFamilySubscription?.subscription_status === 'rejected'
+            ? (t('dashboard.resubmitPayment') || 'Rejected')
+            : (t('account.billing.currentPlanFree') || 'Free Plan');
+  const hostFamilyStatusLabel =
+    hostFamilySubscription?.subscription_status === 'premium_active'
+      ? `${(t('dashboard.premiumActiveUntil') || 'Premium active until {{date}}')
+          .replace('{{date}}', hostFamilySubscription.expires_at ? new Date(hostFamilySubscription.expires_at).toLocaleDateString() : '-')} ${
+            hostFamilySubscription.expires_at
+              ? `• ${t('dashboard.daysRemaining', {
+                  days: Math.max(0, differenceInDays(new Date(hostFamilySubscription.expires_at), new Date()))
+                })}`
+              : ''
+          }`.trim()
+      : hostFamilySubscription?.subscription_status === 'pending_approval'
+        ? (t('dashboard.paymentAwaitingApproval') || 'Payment submitted, awaiting admin approval.')
+        : hostFamilySubscription?.subscription_status === 'premium_expired'
+          ? (t('dashboard.subscriptionExpiredRenew') || 'Subscription expired. Renew to continue contacting au pairs.')
+          : hostFamilySubscription?.subscription_status === 'rejected'
+            ? (t('dashboard.paymentRejectedResubmit') || 'Payment was rejected. Resubmit your payment proof.')
+            : (t('dashboard.freePlanUpgradePrompt') || 'Free Plan. Upgrade to contact au pairs.');
+  const hostFamilyStatusAction =
+    hostFamilySubscription?.subscription_status === 'premium_active'
+      ? (t('dashboard.viewBilling') || 'Billing')
+      : hostFamilySubscription?.subscription_status === 'premium_expired'
+        ? (t('dashboard.renewSubscription') || 'Renew')
+        : hostFamilySubscription?.subscription_status === 'rejected'
+          ? (t('dashboard.resubmitPayment') || 'Resubmit')
+          : hostFamilySubscription?.subscription_status === 'pending_approval'
+            ? (t('dashboard.viewPaymentStatus') || 'Status')
+            : (t('dashboard.uploadProof') || 'Upgrade');
 
   const LogoText = t('dashboard.title');
 
@@ -172,11 +226,11 @@ export function DashboardPage() {
       
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 relative z-10">
         {/* Welcome Section */}
-        <div className="mb-6 sm:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-8">
+        <div className="mb-6 sm:mb-12">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex-1"
+            className="max-w-4xl"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-vibrant-purple/10 rounded-full mb-4 ring-1 ring-vibrant-purple/20">
               <Sparkles className="w-4 h-4 text-vibrant-purple animate-pulse" />
@@ -196,113 +250,7 @@ export function DashboardPage() {
               {t('common.welcome')}, <span className="text-gray-900 font-bold underline decoration-vibrant-purple/30 underline-offset-4">{profile?.display_name}</span>. {t('dashboard.readyAdventure')}
             </p>
           </motion.div>
-
-          {isAdmin && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <Link 
-                to="/admin" 
-                className="flex items-center gap-4 p-2 pr-6 bg-white/40 backdrop-blur-xl border border-white/60 rounded-full hover:bg-white/60 transition-all shadow-xl shadow-purple-500/5 group"
-              >
-                <div className="w-12 h-12 flex items-center justify-center bg-gray-900 text-white rounded-full">
-                  <ShieldCheck size={20} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-vibrant-purple uppercase tracking-widest">{t('dashboard.masterControl')}</span>
-                  <span className="font-bold text-gray-900">{t('nav.adminPortal')}</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </motion.div>
-          )}
         </div>
-
-        {isHostFamily && hostFamilySubscription && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <GlassCard
-              className={`p-4 sm:p-6 border-l-4 ${
-                hostFamilySubscription.subscription_status === 'premium_active'
-                  ? 'border-l-emerald-500 bg-emerald-50/30'
-                  : hostFamilySubscription.subscription_status === 'pending_approval'
-                    ? 'border-l-amber-500 bg-amber-50/40'
-                    : 'border-l-rose-500 bg-rose-50/30'
-              }`}
-            >
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4 text-center sm:text-left">
-                  <div
-                    className={`p-3 rounded-2xl ${
-                      hostFamilySubscription.subscription_status === 'premium_active'
-                        ? 'bg-emerald-100 text-emerald-600'
-                        : hostFamilySubscription.subscription_status === 'pending_approval'
-                          ? 'bg-amber-100 text-amber-600'
-                          : 'bg-rose-100 text-rose-600'
-                    }`}
-                  >
-                    {hostFamilySubscription.subscription_status === 'premium_active' ? (
-                      <CheckCircle size={24} />
-                    ) : hostFamilySubscription.subscription_status === 'pending_approval' ? (
-                      <Upload size={24} />
-                    ) : (
-                      <AlertCircle size={24} />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">
-                      {t('dashboard.membershipStatus') || 'Host Family Membership'}
-                    </h3>
-                    <p className="text-sm text-gray-500 font-medium">
-                      {hostFamilySubscription.subscription_status === 'premium_active'
-                        ? ((t('dashboard.premiumActiveUntil') || 'Premium active until {{date}}')
-                          .replace('{{date}}', hostFamilySubscription.expires_at ? new Date(hostFamilySubscription.expires_at).toLocaleDateString() : '-'))
-                        : hostFamilySubscription.subscription_status === 'pending_approval'
-                          ? (t('dashboard.paymentAwaitingApproval') || 'Payment submitted, awaiting admin approval. You remain on Free Plan until approved.')
-                          : hostFamilySubscription.subscription_status === 'premium_expired'
-                            ? (t('dashboard.subscriptionExpiredRenew') || 'Subscription expired. You are now on Free Plan. Renew to continue contacting au pairs.')
-                            : hostFamilySubscription.subscription_status === 'rejected'
-                              ? (t('dashboard.paymentRejectedResubmit') || 'Payment was rejected. Please resubmit your payment proof.')
-                              : (t('dashboard.freePlanUpgradePrompt') || 'You are on Free Plan. Upgrade to Premium to contact au pairs.')}
-                    </p>
-                    {hostFamilySubscription.subscription_status === 'premium_active' && hostFamilySubscription.expires_at && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {t('dashboard.daysRemaining', {
-                          days: Math.max(0, differenceInDays(new Date(hostFamilySubscription.expires_at), new Date()))
-                        })}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {hostFamilySubscription.subscription_status !== 'premium_active' ? (
-                    <Button
-                      onClick={() => navigate('/au-pair/payment')}
-                      className="bg-vibrant-purple text-white hover:bg-vibrant-purple/90"
-                    >
-                      {hostFamilySubscription.subscription_status === 'premium_expired'
-                        ? (t('dashboard.renewSubscription') || 'Renew subscription')
-                        : hostFamilySubscription.subscription_status === 'rejected'
-                          ? (t('dashboard.resubmitPayment') || 'Resubmit payment proof')
-                          : hostFamilySubscription.subscription_status === 'pending_approval'
-                            ? (t('dashboard.viewPaymentStatus') || 'View payment status')
-                            : (t('dashboard.uploadProof') || 'Upload payment proof')}
-                    </Button>
-                  ) : (
-                    <Button variant="outline" onClick={() => navigate('/account?section=billing')}>
-                      {t('dashboard.viewBilling') || 'View billing'}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        )}
 
         {/* Dynamic Greeting & Hero */}
         <div className="mb-10 sm:mb-16 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
@@ -311,7 +259,7 @@ export function DashboardPage() {
                <HeroCarousel />
             </div>
           </div>
-          <div className="lg:col-span-4 hidden lg:flex flex-col gap-6">
+          <div className="lg:col-span-4 flex flex-col gap-6">
              <GlassCard className="flex-1 flex flex-col justify-center p-8 bg-gradient-to-br from-blue-600/10 to-purple-600/10 border-white/20">
                <div className="w-12 h-12 rounded-2xl bg-white shadow-xl flex items-center justify-center mb-6 text-blue-600">
                   <TrendingUp size={24} />
@@ -326,6 +274,50 @@ export function DashboardPage() {
                   </div>
                   <span className="text-sm font-bold text-gray-600 underline">{t('dashboard.joinMembers')}</span>
                </div>
+               {(isAdmin || (isHostFamily && hostFamilySubscription)) && (
+                 <div className="mt-6 flex flex-wrap items-center gap-2">
+                   {isAdmin && (
+                     <Link
+                       to="/admin"
+                       className="inline-flex h-8 items-center gap-2 rounded-full bg-gray-900 px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-gray-800"
+                     >
+                       <ShieldCheck size={14} />
+                       {t('nav.adminPortal')}
+                     </Link>
+                   )}
+
+                   {isHostFamily && hostFamilySubscription && (
+                     <>
+                       <span className={`inline-flex h-8 items-center gap-2 rounded-full border px-3 text-xs font-semibold ${hostFamilyStatusChipTone.wrap}`}>
+                         {hostFamilySubscription.subscription_status === 'premium_active' ? (
+                           <CheckCircle size={14} className={hostFamilyStatusChipTone.icon} />
+                         ) : hostFamilySubscription.subscription_status === 'pending_approval' ? (
+                           <Upload size={14} className={hostFamilyStatusChipTone.icon} />
+                         ) : (
+                           <AlertCircle size={14} className={hostFamilyStatusChipTone.icon} />
+                         )}
+                         {hostFamilyStatusChipLabel}
+                       </span>
+                       <button
+                         type="button"
+                         onClick={() => navigate(
+                           hostFamilySubscription.subscription_status === 'premium_active'
+                             ? '/account?section=billing'
+                             : '/au-pair/payment'
+                         )}
+                         className="inline-flex h-8 items-center rounded-full border border-white/70 bg-white/80 px-3 text-xs font-semibold text-gray-700 shadow-sm transition-colors hover:bg-white hover:text-gray-900"
+                       >
+                         {hostFamilyStatusAction}
+                       </button>
+                     </>
+                   )}
+                 </div>
+               )}
+               {isHostFamily && hostFamilySubscription && (
+                 <p className="mt-3 text-xs font-medium leading-relaxed text-gray-600">
+                   {hostFamilyStatusLabel}
+                 </p>
+               )}
              </GlassCard>
           </div>
         </div>

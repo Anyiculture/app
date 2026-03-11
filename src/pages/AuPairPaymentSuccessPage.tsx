@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { BackgroundBlobs } from '../components/ui';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Button } from '../components/ui/Button';
+import { ContactAdminButton } from '../components/ui/ContactAdminButton';
 import { Loading } from '../components/ui/Loading';
 import { hostFamilySubscriptionService, type HostFamilySubscriptionState } from '../services/hostFamilySubscriptionService';
 import { accessControlService } from '../services/accessControlService';
@@ -106,6 +107,13 @@ export function AuPairPaymentSuccessPage() {
             <Button variant="outline" onClick={() => navigate('/dashboard')}>
               {t('dashboard.backToDashboard') || 'Back to dashboard'}
             </Button>
+            <ContactAdminButton
+              contextType="payment"
+              relatedItemTitle="Payment status support"
+              initialMessage="Hello, I need help with my payment status."
+              label={t('payment.contactAdmin') || 'Contact Admin'}
+              variant="secondary"
+            />
           </div>
         </GlassCard>
       </motion.div>

@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { BackgroundBlobs } from '../components/ui';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Button } from '../components/ui/Button';
+import { ContactAdminButton } from '../components/ui/ContactAdminButton';
 import { Modal } from '../components/ui/Modal';
 import { Loading } from '../components/ui/Loading';
 import { hostFamilySubscriptionService, type HostFamilySubscriptionState } from '../services/hostFamilySubscriptionService';
@@ -317,6 +318,13 @@ export function AuPairPaymentPage() {
               <Button variant="outline" onClick={() => navigate('/account?section=billing')}>
                 {t('payment.backToBilling') || 'Back to account billing'}
               </Button>
+              <ContactAdminButton
+                contextType="payment"
+                relatedItemTitle="Host family payment support"
+                initialMessage="Hello, I need help with my host family payment approval."
+                label={t('payment.contactAdmin') || 'Contact Admin'}
+                variant="secondary"
+              />
             </div>
           </GlassCard>
         </div>
