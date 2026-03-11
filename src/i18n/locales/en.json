@@ -682,6 +682,7 @@
       "confirmDelete": "Are you sure you want to delete this redemption code?"
     },
     "settings": {
+      "permissionsPlaceholder": "Search permissions...",
     "payments": {
       "confirmDeleteTitle": "Delete Payment Submission",
       "confirmDeleteMessage": "Are you sure you want to delete this payment submission? This action will soft-delete the record and cannot be undone.",

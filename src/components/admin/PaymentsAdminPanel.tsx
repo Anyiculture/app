@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { adminService } from '../../services/adminService';
 import { StartConversationButton } from './ui/StartConversationButton';
 import { Button, Modal, ConfirmDialog } from '../ui';
-import { Eye, ChevronLeft, ChevronRight, Image as ImageIcon, Trash2, Archive, RotateCcw } from 'lucide-react';
+import { Eye, ChevronLeft, ChevronRight, Image as ImageIcon, Trash2, Archive } from 'lucide-react';
 import { format } from 'date-fns';
 
 const SimpleCard = ({ children, className = "", noPadding = false }: { children: React.ReactNode, className?: string, noPadding?: boolean }) => (
@@ -471,6 +471,8 @@ export function PaymentsAdminPanel() {
     </div>
   );
 }
+
+
 
 
 
