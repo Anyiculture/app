@@ -831,6 +831,30 @@ export const auPairService = {
     if (error) throw error;
   },
 
+  async permanentlyDeleteAdminAuPairProfile(profileId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    await this.validateOwnership(profileId, 'au_pair', 'admin', user.id);
+
+    // Try hard delete first
+    const { error } = await supabase
+      .from('au_pair_profiles')
+      .delete()
+      .eq('id', profileId);
+
+    if (error) {
+      console.warn('Hard delete failed for au pair profile, falling back to soft delete:', error.message);
+      // Fallback: soft-delete by setting profile_status to 'deleted'
+      const { error: softError } = await supabase
+        .from('au_pair_profiles')
+        .update({ profile_status: 'deleted', updated_at: new Date().toISOString() })
+        .eq('id', profileId);
+
+      if (softError) throw softError;
+    }
+  },
+
   async deleteAdminHostFamilyProfile(profileId: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
@@ -844,6 +868,30 @@ export const auPairService = {
       .eq('id', profileId);
 
     if (error) throw error;
+  },
+
+  async permanentlyDeleteAdminHostFamilyProfile(profileId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    await this.validateOwnership(profileId, 'family', 'admin', user.id);
+
+    // Try hard delete first
+    const { error } = await supabase
+      .from('host_family_profiles')
+      .delete()
+      .eq('id', profileId);
+
+    if (error) {
+      console.warn('Hard delete failed for host family profile, falling back to soft delete:', error.message);
+      // Fallback: soft-delete by setting profile_status to 'deleted'
+      const { error: softError } = await supabase
+        .from('host_family_profiles')
+        .update({ profile_status: 'deleted', updated_at: new Date().toISOString() })
+        .eq('id', profileId);
+
+      if (softError) throw softError;
+    }
   },
 
   async getAuPairProfileById(profileId: string): Promise<AuPairProfile | null> {

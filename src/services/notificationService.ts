@@ -37,6 +37,29 @@ export interface Channel {
   [key: string]: any;
 }
 
+type NotificationRow = Partial<Notification> & {
+  link?: string | null;
+  read?: boolean | null;
+};
+
+const isUndefinedColumnError = (error: any, column: string) =>
+  error?.code === '42703' &&
+  typeof error?.message === 'string' &&
+  error.message.includes(`"${column}"`);
+
+const normalizeNotification = (notification: NotificationRow): Notification => ({
+  id: notification.id || '',
+  user_id: notification.user_id || '',
+  type: notification.type || '',
+  title: notification.title || '',
+  message: notification.message || '',
+  link_url: notification.link_url ?? notification.link ?? undefined,
+  metadata: notification.metadata ?? {},
+  is_read: notification.is_read ?? notification.read ?? false,
+  read_at: notification.read_at ?? undefined,
+  created_at: notification.created_at || new Date().toISOString(),
+});
+
 export const notificationService = {
   async getNotifications(limit?: number): Promise<Notification[]> {
     const { data: { user } } = await supabase.auth.getUser();
@@ -54,45 +77,105 @@ export const notificationService = {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeNotification);
   },
 
   async getUnreadNotifications(): Promise<Notification[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('notifications')
       .select('*')
       .eq('user_id', user.id)
       .eq('is_read', false)
       .order('created_at', { ascending: false });
 
+    if (error && isUndefinedColumnError(error, 'is_read')) {
+      const fallback = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('read', false)
+        .order('created_at', { ascending: false });
+
+      data = fallback.data;
+      error = fallback.error;
+    }
+
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeNotification);
   },
 
   async getUnreadCount(): Promise<number> {
-    const { data, error } = await supabase.rpc('get_unread_count');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return 0;
+
+    let { count, error } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_read', false);
+
+    if (error && isUndefinedColumnError(error, 'is_read')) {
+      const fallback = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      count = fallback.count;
+      error = fallback.error;
+    }
 
     if (error) {
       console.error('Failed to get unread count:', error);
       return 0;
     }
 
-    return data || 0;
+    return count || 0;
   },
 
   async markAsRead(notificationId: string): Promise<void> {
-    const { error } = await supabase.rpc('mark_notification_read', {
-      notification_id: notificationId
-    });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    let { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId)
+      .eq('user_id', user.id);
+
+    if (error && isUndefinedColumnError(error, 'is_read')) {
+      const fallback = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId)
+        .eq('user_id', user.id);
+
+      error = fallback.error;
+    }
 
     if (error) throw error;
   },
 
   async markAllAsRead(): Promise<void> {
-    const { error } = await supabase.rpc('mark_all_notifications_read');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    let { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', user.id);
+
+    if (error && isUndefinedColumnError(error, 'is_read')) {
+      const fallback = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id);
+
+      error = fallback.error;
+    }
 
     if (error) throw error;
   },

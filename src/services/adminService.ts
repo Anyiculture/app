@@ -347,12 +347,57 @@ export const adminService = {
   },
 
   async deleteUser(userId: string): Promise<void> {
-    // Use the custom RPC for safe deletion
+    // Try the RPC first for a transactional delete
     const { error } = await supabase.rpc('admin_delete_user', { target_user_id: userId });
 
     if (error) {
-        console.error('Error deleting user:', error);
-        throw error;
+        console.warn('RPC admin_delete_user failed, using direct fallback:', error.message);
+
+        // Fallback: perform the soft-delete manually via direct table updates.
+        // This handles the case where the RPC doesn't exist yet or the older
+        // version tries to hard-delete auth.users (which fails on FK constraints).
+        try {
+          // 1. Soft-delete the profile
+          await supabase
+            .from('profiles')
+            .update({ deleted_at: new Date().toISOString(), is_banned: true, updated_at: new Date().toISOString() })
+            .eq('id', userId);
+
+          // 2. Mark au pair profile as deleted
+          await supabase
+            .from('au_pair_profiles')
+            .update({ profile_status: 'deleted', updated_at: new Date().toISOString() })
+            .eq('user_id', userId);
+
+          // 3. Mark host family profile as deleted
+          await supabase
+            .from('host_family_profiles')
+            .update({ profile_status: 'deleted', updated_at: new Date().toISOString() })
+            .eq('user_id', userId);
+
+          // 4. Block the email if possible (table may not exist)
+          try {
+            const { data: authUser } = await supabase
+              .from('profiles')
+              .select('email')
+              .eq('id', userId)
+              .maybeSingle();
+
+            if (authUser?.email) {
+              await supabase
+                .from('blocked_emails')
+                .upsert(
+                  { email: authUser.email, original_user_id: userId, reason: 'admin_deleted' },
+                  { onConflict: 'email' }
+                );
+            }
+          } catch {
+            // blocked_emails table might not exist; ignore
+          }
+        } catch (fallbackError) {
+          console.error('Fallback delete also failed:', fallbackError);
+          throw fallbackError;
+        }
     }
     
     await this.logActivity('delete_user', 'profiles', userId);

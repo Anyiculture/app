@@ -205,6 +205,37 @@ export const JOB_CATEGORIES: JobCategory[] = [
     ]
   },
   {
+    id: 'childcare_caregiving',
+    name_en: 'Childcare, Caregiving & Teaching',
+    name_zh: '育儿/看护/家教',
+    subcategories: [
+      {
+        id: 'nanny',
+        name_en: 'Nanny / Babysitter',
+        name_zh: '保姆/育儿嫂',
+        skills: ['Infant Care', 'Child Supervision', 'Meal Preparation', 'Bedtime Routine', 'School Pickup', 'Play-based Learning', 'First Aid', 'Household Support']
+      },
+      {
+        id: 'au_pair',
+        name_en: 'Au Pair',
+        name_zh: '互惠生',
+        skills: ['Childcare', 'Cultural Exchange', 'Language Support', 'School Drop-off', 'Homework Help', 'Light Housekeeping', 'Activity Planning', 'Communication']
+      },
+      {
+        id: 'caregiver',
+        name_en: 'Caregiver / Companion',
+        name_zh: '看护/陪护',
+        skills: ['Elder Care', 'Daily Living Assistance', 'Medication Reminders', 'Mobility Support', 'Patient Care', 'Meal Preparation', 'Companionship', 'Safety Awareness']
+      },
+      {
+        id: 'private_teacher',
+        name_en: 'Private Teacher / Tutor',
+        name_zh: '家教/私人教师',
+        skills: ['Lesson Planning', 'Homework Support', 'English Teaching', 'Early Childhood Education', 'Classroom Management', 'Curriculum Design', 'Student Assessment', 'Parent Communication']
+      }
+    ]
+  },
+  {
     id: 'healthcare',
     name_en: 'Healthcare & Medical',
     name_zh: '医疗/护理',

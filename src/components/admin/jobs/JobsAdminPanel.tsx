@@ -127,7 +127,7 @@ export function JobsAdminPanel() {
           </div>
           <div>
             <p className="font-medium text-gray-900">{job.title}</p>
-            <p className="text-xs text-gray-500">{job.employer?.full_name || 'Unknown Employer'}</p>
+            <p className="text-xs text-gray-500">{job.employer?.full_name || job.company_name || 'Unknown Employer'}</p>
           </div>
         </div>
       )
@@ -137,7 +137,9 @@ export function JobsAdminPanel() {
       accessorKey: 'location',
       className: 'hidden md:table-cell',
       cell: (job: any) => (
-        <span className="text-gray-600">{job.city}, {job.country}</span>
+        <span className="text-gray-600">
+          {job.location || [job.location_city, job.location_province, job.location_country].filter(Boolean).join(', ') || 'Unknown location'}
+        </span>
       )
     },
     {

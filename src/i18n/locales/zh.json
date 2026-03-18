@@ -403,6 +403,14 @@
         "admin": "Admin-Owned"
       },
       "confirmDelete": "Are you sure you want to delete this admin-owned listing? This action cannot be undone.",
+      "confirmBanUser": "您确定要封禁该用户吗？",
+      "confirmUnbanUser": "您确定要解除封禁该用户吗？",
+      "confirmPermanentDeleteUser": "确定要永久删除该用户账号吗？此操作无法撤销。",
+      "confirmPermanentDeleteListing": "确定要永久删除这个管理员创建的条目吗？此操作无法撤销。",
+      "permanentDelete": "永久删除",
+      "permanentDeleteError": "永久删除失败",
+      "cannotBanAdminOwned": "管理员创建的条目没有可封禁的用户账号。",
+      "updateUserError": "更新用户状态失败",
       "cannotDeleteSelfOwned": "Cannot delete self-owned listings. Only admin-owned listings can be deleted.",
       "adminMode": "Admin Mode: Creating Listing",
       "auPairs": "互惠生",
@@ -2337,7 +2345,13 @@
     "posted": "发布于",
     "expiresOn": "截止于",
     "salary": {
-      "label": "薪资"
+      "label": "薪资",
+      "currency": {
+        "CNY": "人民币 (¥)"
+      },
+      "period": {
+        "monthly": "每月"
+      }
     },
     "experience": "经验",
     "perMonth": "每月",
@@ -3217,6 +3231,23 @@
         },
         "tutoring": {
           "name": "Tutoring / Training"
+        }
+      }
+    },
+    "childcare_caregiving": {
+      "name": "育儿/看护/家教",
+      "subcategories": {
+        "nanny": {
+          "name": "保姆/育儿嫂"
+        },
+        "au_pair": {
+          "name": "互惠生"
+        },
+        "caregiver": {
+          "name": "看护/陪护"
+        },
+        "private_teacher": {
+          "name": "家教/私人教师"
         }
       }
     },

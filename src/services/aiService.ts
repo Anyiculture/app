@@ -1,5 +1,72 @@
 import { supabase } from '../lib/supabase';
 
+const PUTER_SCRIPT_SRC = 'https://js.puter.com/v2/';
+let puterScriptPromise: Promise<void> | null = null;
+
+const waitForPuter = () =>
+  new Promise<void>((resolve, reject) => {
+    const startedAt = Date.now();
+
+    const checkReady = () => {
+      if (window.puter?.ai?.txt2img) {
+        resolve();
+        return;
+      }
+
+      if (Date.now() - startedAt > 10000) {
+        reject(new Error('Puter.js failed to initialize'));
+        return;
+      }
+
+      window.setTimeout(checkReady, 100);
+    };
+
+    checkReady();
+  });
+
+const ensurePuterLoaded = async () => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    throw new Error('Puter.js is only available in the browser');
+  }
+
+  if (window.puter?.ai?.txt2img) {
+    return;
+  }
+
+  if (!puterScriptPromise) {
+    const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${PUTER_SCRIPT_SRC}"]`);
+
+    if (existingScript) {
+      puterScriptPromise = waitForPuter().catch((error) => {
+        puterScriptPromise = null;
+        throw error;
+      });
+    } else {
+      puterScriptPromise = new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = PUTER_SCRIPT_SRC;
+        script.async = true;
+        script.dataset.puterSdk = 'true';
+
+        script.addEventListener('load', () => {
+          void waitForPuter().then(resolve).catch(reject);
+        }, { once: true });
+
+        script.addEventListener('error', () => {
+          reject(new Error('Failed to load Puter.js'));
+        }, { once: true });
+
+        document.head.appendChild(script);
+      }).catch((error) => {
+        puterScriptPromise = null;
+        throw error;
+      });
+    }
+  }
+
+  await puterScriptPromise;
+};
+
 export interface AIAnalysisRequest {
   url?: string;
   text?: string;
@@ -71,7 +138,10 @@ export const aiService = {
 
   async generateImages(params: GenerateImagesParams): Promise<GeneratedImage[]> {
     try {
-      if (!window.puter) {
+      await ensurePuterLoaded();
+      const puter = window.puter;
+
+      if (!puter?.ai?.txt2img) {
         throw new Error('Puter.js not loaded');
       }
 
@@ -84,7 +154,7 @@ export const aiService = {
 
       // Generate images sequentially
       for (let i = 0; i < count; i++) {
-        const imageElement = await window.puter.ai.txt2img(params.prompt, { model, quality });
+        const imageElement = await puter.ai.txt2img(params.prompt, { model, quality });
         
         // The imageElement returned is an HTMLImageElement with a src blob/url
         if (imageElement && imageElement.src) {

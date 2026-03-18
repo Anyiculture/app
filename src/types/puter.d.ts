@@ -2,7 +2,7 @@ export {};
 
 declare global {
   interface Window {
-    puter: {
+    puter?: {
       ai: {
         txt2img: (
           prompt: string,

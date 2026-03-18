@@ -19,18 +19,26 @@ export function useFormPersistence<T>({
   onRestore,
   enableBeforeUnload = true
 }: PersistenceOptions<T>) {
-  const [data, setData] = useState<T>(() => {
+  const initialDataRef = useRef(initialData);
+
+  useEffect(() => {
+    initialDataRef.current = initialData;
+  }, [initialData]);
+
+  const loadPersistedData = useCallback((): T => {
     const saved = localStorage.getItem(key);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return { ...initialData, ...parsed };
+        return { ...initialDataRef.current, ...parsed };
       } catch (e) {
         console.error(`Error parsing persisted data for ${key}:`, e);
       }
     }
-    return initialData;
-  });
+    return initialDataRef.current;
+  }, [key]);
+
+  const [data, setData] = useState<T>(loadPersistedData);
 
   const [isDirty, setIsDirty] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -57,6 +65,27 @@ export function useFormPersistence<T>({
       return updated;
     });
   }, [saveToLocalStorage]);
+
+  const replaceData = useCallback((newData: T, persist = false) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+
+    setData(newData);
+    setIsDirty(false);
+
+    if (persist) {
+      localStorage.setItem(key, JSON.stringify(newData));
+    }
+  }, [key]);
+
+  useEffect(() => {
+    const restored = loadPersistedData();
+    setData(restored);
+    setIsDirty(false);
+    onRestore?.(restored);
+  }, [key, loadPersistedData, onRestore]);
 
   // Handle beforeunload
   useEffect(() => {
@@ -93,6 +122,7 @@ export function useFormPersistence<T>({
   return {
     data,
     setData: setPersistedData,
+    replaceData,
     isDirty,
     clearPersistence
   };

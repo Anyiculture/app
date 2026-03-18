@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User, Session, AuthChangeEvent, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { Profile } from '../services/profileService';
+import { profileService, Profile } from '../services/profileService';
 
 interface AuthContextType {
   user: User | null;
@@ -23,6 +23,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [connectionError, setConnectionError] = useState(false);
   const userRef = useRef<User | null>(null);
 
+  const getRestrictedAccountMessage = (profile: Profile | null) =>
+    profile?.deleted_at
+      ? 'This account has been deleted by an administrator.'
+      : 'This account has been disabled.';
+
+  const clearRestrictedSession = async () => {
+    await supabase.auth.signOut();
+    userRef.current = null;
+    setUser(null);
+    setProfile(null);
+  };
+
+  const signOutRestrictedUser = async (profile: Profile | null) => {
+    await clearRestrictedSession();
+    throw new Error(getRestrictedAccountMessage(profile));
+  };
+
   useEffect(() => {
     // Initial session fetch - let Supabase handle timeouts naturally
     supabase.auth.getSession()
@@ -39,12 +56,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setConnectionError(false);
           setUser(session?.user ?? null);
           if (session?.user) {
-            const { data } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .maybeSingle();
-            setProfile(data);
+            try {
+              const ensuredProfile = session.user.email
+                ? await profileService.ensureProfileExists(session.user.id, session.user.email)
+                : await profileService.getProfile(session.user.id);
+              if (profileService.isRestricted(ensuredProfile)) {
+                await clearRestrictedSession();
+                return;
+              }
+              setProfile(ensuredProfile);
+            } catch (profileError) {
+              console.error('Failed to ensure profile during session restore:', profileError);
+              const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .maybeSingle();
+              if (profileService.isRestricted(data)) {
+                await clearRestrictedSession();
+                return;
+              }
+              setProfile(data);
+            }
           }
         }
         setLoading(false);
@@ -82,6 +115,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return;
             }
             
+            if (profileService.isRestricted(profileData)) {
+              await clearRestrictedSession();
+              return;
+            }
+
             setProfile(profileData);
 
             if (!profileData) {
@@ -109,10 +147,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Sync to public.users table as well (for FKs)
             try {
+              const now = new Date().toISOString();
               const { error: userSyncError } = await supabase.from('users').upsert({
                  id: session.user.id,
                  email: session.user.email,
-                 updated_at: new Date().toISOString()
+                 updated_at: now
               });
                if (userSyncError && userSyncError.code !== '42P01' && userSyncError.code !== '42501') {
                  console.warn('Warning: Could not sync to public.users (RLS or Schema issue). Some features may be limited.', userSyncError.message);
@@ -139,12 +178,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.user) {
       // Create user record in public.users if it exists (for FK constraints)
       try {
+        const now = new Date().toISOString();
         const { error: userError } = await supabase.from('users').upsert({
           id: data.user.id,
           email: email,
-          full_name: `${firstName} ${lastName}`.trim(),
-          avatar_url: null,
-          created_at: new Date().toISOString()
+          updated_at: now,
         });
         if (userError && userError.code !== '42P01' && userError.code !== '42501') { // Ignore if table doesn't exist or RLS blocks
            console.warn('Warning: Could not sync to public.users:', userError);
@@ -169,6 +207,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Failed to restore signed-in user');
+    }
+
+    const profile = await profileService.getProfile(user.id);
+    if (profileService.isRestricted(profile)) {
+      await signOutRestrictedUser(profile);
+    }
   };
 
   const signInWithGoogle = async () => {

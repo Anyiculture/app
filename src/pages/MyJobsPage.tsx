@@ -21,10 +21,12 @@ import { analyticsService } from '../services/analyticsService';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { useToast } from '../components/ui/Toast';
 import localizationUtils from '../utils/localization';
 import { useI18n } from '../contexts/I18nContext';
 import { jobsRoleService } from '../services/jobsRoleService';
-import { savedJobsService, Job, SavedJob, JobApplication } from '../services/jobsService';
+import { jobsService, savedJobsService, Job, SavedJob, JobApplication } from '../services/jobsService';
 import { JobCard } from '../components/JobCard';
 
 // Employer Job Interface (for posted jobs)
@@ -43,6 +45,7 @@ interface DashboardStats {
 
 export default function MyJobsPage() {
   const { t } = useI18n();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -63,6 +66,7 @@ export default function MyJobsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const isEmployer = jobsRole === 'employer';
 
@@ -175,12 +179,17 @@ export default function MyJobsPage() {
   };
 
   const handleDelete = async (jobId: string) => {
+    setDeleteLoading(true);
     try {
-      await supabase.from('jobs').delete().eq('id', jobId);
+      await jobsService.permanentlyDeleteJob(jobId);
       setShowDeleteConfirm(null);
-      loadEmployerData();
+      await loadEmployerData();
+      showToast('success', t('admin.jobs.deleteSuccess') || 'Job deleted successfully');
     } catch (error) {
       console.error('Failed to delete job:', error);
+      showToast('error', t('admin.jobs.deleteError') || 'Failed to delete job');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -442,7 +451,7 @@ export default function MyJobsPage() {
                         <td className="px-6 py-4 text-right text-sm font-medium">
                            <div className="flex items-center justify-end gap-2">
                              <button onClick={() => navigate(`/jobs/${job.id}`)} className="text-blue-600 hover:text-blue-900"><Eye className="w-4 h-4" /></button>
-                             <button onClick={() => alert('Edit functionality coming soon')} className="text-gray-400 cursor-not-allowed"><Edit className="w-4 h-4" /></button>
+                             <button onClick={() => navigate(`/jobs/${job.id}/edit`)} className="text-blue-600 hover:text-blue-900"><Edit className="w-4 h-4" /></button>
                              <button onClick={() => setShowDeleteConfirm(job.id)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4" /></button>
                            </div>
                         </td>
@@ -526,19 +535,21 @@ export default function MyJobsPage() {
           </div>
         )}
 
-        {/* Delete Confirmation Modal (Existing) */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('myJobs.deleteConfirm.title')}</h3>
-              <p className="text-gray-600 mb-6">{t('myJobs.deleteConfirm.message')}</p>
-              <div className="flex gap-3">
-                <Button variant="secondary" onClick={() => setShowDeleteConfirm(null)} className="flex-1">{t('myJobs.deleteConfirm.cancel')}</Button>
-                <Button onClick={() => handleDelete(showDeleteConfirm)} className="flex-1 bg-red-600 hover:bg-red-700">{t('myJobs.deleteConfirm.confirm')}</Button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ConfirmDialog
+          isOpen={Boolean(showDeleteConfirm)}
+          onClose={() => setShowDeleteConfirm(null)}
+          onConfirm={() => {
+            if (showDeleteConfirm) {
+              void handleDelete(showDeleteConfirm);
+            }
+          }}
+          title={t('myJobs.deleteConfirm.title')}
+          message={t('myJobs.deleteConfirm.message')}
+          confirmText={t('myJobs.deleteConfirm.confirm')}
+          cancelText={t('myJobs.deleteConfirm.cancel')}
+          variant="danger"
+          loading={deleteLoading}
+        />
       </div>
     </div>
   );

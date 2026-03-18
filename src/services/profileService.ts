@@ -33,6 +33,8 @@ export interface Profile {
   preferred_language: string;
   onboarding_completed: boolean;
   is_first_login: boolean;
+  is_banned?: boolean;
+  deleted_at?: string | null;
   last_login_at: string | null;
   created_at: string;
   updated_at: string;
@@ -73,6 +75,10 @@ export interface UpdateProfileData {
 }
 
 export const profileService = {
+  isRestricted(profile: Profile | null | undefined): boolean {
+    return Boolean(profile?.is_banned || profile?.deleted_at);
+  },
+
   async getProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await supabase
       .from('profiles')
@@ -93,12 +99,13 @@ export const profileService = {
   async createProfile(userId: string, email: string): Promise<Profile> {
     const { data, error } = await supabase
       .from('profiles')
-      .insert({
+      .upsert({
         id: userId,
         email,
         preferred_language: 'en',
         onboarding_completed: false,
-      })
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' })
       .select()
       .single();
 
@@ -124,7 +131,16 @@ export const profileService = {
   async ensureProfileExists(userId: string, email: string): Promise<Profile> {
     const existing = await this.getProfile(userId);
     if (existing) return existing;
-    return this.createProfile(userId, email);
+
+    try {
+      return await this.createProfile(userId, email);
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        const retry = await this.getProfile(userId);
+        if (retry) return retry;
+      }
+      throw error;
+    }
   },
 
   async completeModuleOnboarding(module: 'jobs' | 'education' | 'events' | 'marketplace' | 'community' | 'visa'): Promise<void> {

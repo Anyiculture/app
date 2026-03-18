@@ -216,6 +216,15 @@ export const router = createBrowserRouter([
         errorElement: <ErrorBoundary />,
       },
       {
+        path: 'jobs/:id/edit',
+        element: (
+          <JobsProtectedRoute requireRole="employer">
+            <PostJobPage />
+          </JobsProtectedRoute>
+        ),
+        errorElement: <ErrorBoundary />,
+      },
+      {
         path: 'jobs/my-jobs',
         element: (
           <JobsProtectedRoute requireProfileCompletion={false}>

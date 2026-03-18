@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { auPairService, AuPairProfile, HostFamilyProfile } from '../../services/auPairService';
-import { StartConversationButton } from './ui/StartConversationButton';
 import { Button, Modal } from '../ui';
 import { Search, Eye, MapPin, Trash2, Ban, CheckCircle } from 'lucide-react';
 import { adminService } from '../../services/adminService';
@@ -16,12 +15,10 @@ const SimpleCard = ({ children, className = "", noPadding = false }: { children:
 
 export function AuPairAdminPanel() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'au_pairs' | 'families' | 'deleted'>('au_pairs');
+  const [activeTab, setActiveTab] = useState<'au_pairs' | 'families'>('au_pairs');
   const [auPairs, setAuPairs] = useState<AuPairProfile[]>([]);
   const [families, setFamilies] = useState<HostFamilyProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAuPair, setSelectedAuPair] = useState<AuPairProfile | null>(null);
-  const [selectedFamily, setSelectedFamily] = useState<HostFamilyProfile | null>(null);
   
   // Onboarding modal states
   const [showAuPairOnboarding, setShowAuPairOnboarding] = useState(false);
@@ -37,71 +34,44 @@ export function AuPairAdminPanel() {
       if (activeTab === 'au_pairs') {
         const data = await auPairService.getAdminAuPairProfiles();
         setAuPairs(data);
-      } else if (activeTab === 'families') {
+      } else {
         const data = await auPairService.getAdminHostFamilyProfiles();
         setFamilies(data);
-      } else {
-        // Load both for deleted tab
-        const apData = await auPairService.getAdminAuPairProfiles();
-        const famData = await auPairService.getAdminHostFamilyProfiles();
-        setAuPairs(apData);
-        setFamilies(famData);
       }
     } catch (error) {
       console.error('Error loading data:', error);
     }
   };
 
-  const handleBanUser = async (userId: string, currentStatus: string, type: 'aupair' | 'family') => {
-      // Toggle ban status
-      // Note: We are setting profile_status to 'banned' for visibility in this specific list
-      // and checking if it's currently banned to toggle back to 'active'
-      const isBanning = currentStatus !== 'banned';
-      const newStatus = isBanning ? 'banned' : 'active';
-      
-      if (window.confirm(isBanning ? 'Are you sure you want to ban this user?' : 'Unban this user?')) {
-        try {
-            await adminService.updateUserStatus(userId, isBanning); // Updates auth/profiles is_banned
-            
-            // Also update local profile status for visibility in this table
-            if (type === 'aupair') {
-                await auPairService.adminUpdateAuPairProfile(userId, { profile_status: newStatus });
-            } else {
-                await auPairService.adminUpdateHostFamilyProfile(userId, { profile_status: newStatus });
-            }
-            loadData();
-        } catch (error) {
-            console.error('Error updating ban status:', error);
-            alert('Failed to update status');
-        }
-      }
-  };
+  const handleBanUser = async (profile: AuPairProfile | HostFamilyProfile) => {
+    if (!profile.user_id) {
+      alert(t('admin.auPair.cannotBanAdminOwned') || 'Admin-owned listings do not have a user account to ban.');
+      return;
+    }
 
-  const handleDeleteUser = async (userId: string, type: 'aupair' | 'family') => {
-      if (window.confirm('Are you sure you want to delete this user? This will mark them as deleted but keep the record.')) {
-          try {
-              // Soft delete by setting status to 'deleted'
-              if (type === 'aupair') {
-                  await auPairService.adminUpdateAuPairProfile(userId, { profile_status: 'deleted' });
-              } else {
-                  await auPairService.adminUpdateHostFamilyProfile(userId, { profile_status: 'deleted' });
-              }
-              loadData();
-          } catch (error) {
-              console.error('Error deleting user:', error);
-              alert('Failed to delete user');
-          }
-      }
+    const isBanning = profile.profile_status !== 'banned';
+    const message = isBanning
+      ? t('admin.auPair.confirmBanUser') || 'Are you sure you want to ban this user?'
+      : t('admin.auPair.confirmUnbanUser') || 'Are you sure you want to unban this user?';
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    try {
+      await adminService.banUser(profile.user_id, isBanning);
+      await loadData();
+    } catch (error) {
+      console.error(`Error ${isBanning ? 'banning' : 'unbanning'} user:`, error);
+      alert(t('admin.auPair.updateUserError') || 'Failed to update user status');
+    }
   };
 
   // Filtered data
   const filteredAuPairs = auPairs.filter(p => {
     const matchesSearch = p.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.nationality?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (activeTab === 'deleted') {
-      return matchesSearch && p.profile_status === 'deleted';
-    }
+
     return matchesSearch && p.profile_status !== 'deleted';
   });
 
@@ -109,19 +79,8 @@ export function AuPairAdminPanel() {
     const matchesSearch = f.family_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       f.city?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (activeTab === 'deleted') {
-      return matchesSearch && f.profile_status === 'deleted';
-    }
     return matchesSearch && f.profile_status !== 'deleted';
   });
-
-  const handleViewProfile = (profile: AuPairProfile | HostFamilyProfile, type: 'aupair' | 'family') => {
-    // Navigate to the public profile view for this user
-    // Au Pair profiles use /au-pair/profile/:id
-    // Host Family profiles use /host-family/profile/:id
-    const route = type === 'aupair' ? `/au-pair/profile/${profile.id}` : `/host-family/profile/${profile.id}`;
-    window.open(route, '_blank');
-  };
 
   const handleCreateAuPairListing = () => {
     setEditingProfileId(null);
@@ -133,44 +92,33 @@ export function AuPairAdminPanel() {
     setShowFamilyOnboarding(true);
   };
 
+  const handlePermanentDelete = async (profile: AuPairProfile | HostFamilyProfile, type: 'aupair' | 'family') => {
+    const hasUserAccount = Boolean(profile.user_id);
+    const message = hasUserAccount
+      ? t('admin.auPair.confirmPermanentDeleteUser') || 'Permanently delete this user account? This cannot be undone.'
+      : t('admin.auPair.confirmPermanentDeleteListing') || 'Permanently delete this admin-owned listing? This cannot be undone.';
 
-
-  const handleDeleteListing = async (profileId: string, type: 'aupair' | 'family', createdBy: string) => {
-    // For admin listings, confirm deletion
-    if (createdBy === 'admin' && !window.confirm(t('admin.auPair.confirmDelete'))) {
+    if (!window.confirm(message)) {
       return;
-    }
-    // For regular users, verify intent
-    if (createdBy !== 'admin' && !window.confirm('Are you sure you want to delete this listing?')) {
-        return;
     }
 
     try {
-        if (type === 'aupair') {
-            await auPairService.deleteAdminAuPairProfile(profileId);
-        } else {
-            await auPairService.deleteAdminHostFamilyProfile(profileId);
-        }
-        loadData();
-    } catch (error) {
-        console.error('Error deleting listing:', error);
-        alert('Failed to delete listing');
-    }
-  };
-
-  const handleRestoreListing = async (profileId: string, type: 'aupair' | 'family') => {
-      if (!window.confirm('Restore this listing?')) return;
-      try {
-          if (type === 'aupair') {
-              await auPairService.adminUpdateAuPairProfile(profileId, { profile_status: 'active' });
-          } else {
-              await auPairService.adminUpdateHostFamilyProfile(profileId, { profile_status: 'active' });
-          }
-          loadData();
-      } catch (error) {
-          console.error('Error restoring listing:', error);
-          alert('Failed to restore listing');
+      if (hasUserAccount && profile.user_id) {
+        await adminService.deleteUser(profile.user_id);
+      } else if (type === 'aupair') {
+        await auPairService.permanentlyDeleteAdminAuPairProfile(profile.id);
+      } else {
+        await auPairService.permanentlyDeleteAdminHostFamilyProfile(profile.id);
       }
+      await loadData();
+      alert(t('admin.auPair.deleteSuccess') || 'Profile deleted successfully.');
+    } catch (error: any) {
+      console.error('Error permanently deleting profile:', error);
+      alert(
+        (t('admin.auPair.permanentDeleteError') || 'Failed to permanently delete this record') +
+        (error?.message ? `\n\nDetails: ${error.message}` : '')
+      );
+    }
   };
   
 
@@ -215,13 +163,6 @@ export function AuPairAdminPanel() {
                     className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === 'families' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}
                 >
                     {t('common.families') || 'Families'}
-                </button>
-                <div className="w-px h-6 bg-gray-200 mx-1"></div>
-                <button
-                    onClick={() => setActiveTab('deleted')}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === 'deleted' ? 'bg-white shadow-sm text-red-600' : 'text-gray-500 hover:text-red-900'}`}
-                >
-                    {t('common.deleted') || 'Deleted'}
                 </button>
             </div>
         </div>
@@ -277,30 +218,13 @@ export function AuPairAdminPanel() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                            {profile.created_by === 'admin' ? (
-                                <span className="px-2 py-1 text-xs font-bold text-blue-600 bg-blue-50 rounded border border-blue-100 cursor-default">
-                                    {t('admin.adminListing') || 'Admin Listing'}
-                                </span>
-                            ) : (
-                                <StartConversationButton 
-                                    userId={profile.user_id} 
-                                    userName={profile.display_name} 
-                                    contextType="aupair" 
-                                    sourceContext={`Au Pair Profile: ${profile.display_name}`}
-                                    size="sm"
-                                    variant="ghost"
-                                    className="text-gray-500 hover:text-blue-600"
-                                />
-                            )}
-                            <Button size="sm" variant="outline" onClick={() => handleViewProfile(profile, 'aupair')} title="View Profile">
-                                <Eye size={14} />
-                            </Button>
                             <Button 
                                 size="sm" 
                                 variant="outline" 
                                 className={profile.profile_status === 'banned' ? "text-green-600 hover:text-green-700" : "text-orange-600 hover:text-orange-700"}
-                                onClick={() => handleBanUser(profile.user_id, profile.profile_status, 'aupair')}
-                                title={profile.profile_status === 'banned' ? "Unban User" : "Ban User"}
+                                onClick={() => handleBanUser(profile)}
+                                title={profile.profile_status === 'banned' ? (t('admin.actions.unban') || 'Unban User') : (t('admin.actions.ban') || 'Ban User')}
+                                disabled={!profile.user_id}
                             >
                                 {profile.profile_status === 'banned' ? <CheckCircle size={14} /> : <Ban size={14} />}
                             </Button>
@@ -308,18 +232,8 @@ export function AuPairAdminPanel() {
                                 size="sm" 
                                 variant="outline" 
                                 className="text-red-600 hover:text-red-700" 
-                                onClick={() => handleDeleteUser(profile.user_id, 'aupair')}
-                                title="Soft Delete User"
-                                disabled={profile.profile_status === 'deleted'}
-                            >
-                                <Ban size={14} />
-                            </Button>
-                            <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="text-red-600 hover:text-red-700" 
-                                onClick={() => handleDeleteListing(profile.id, 'aupair', profile.created_by)}
-                                title="Delete Listing"
+                                onClick={() => handlePermanentDelete(profile, 'aupair')}
+                                title={t('admin.auPair.permanentDelete') || 'Permanent Delete'}
                             >
                                 <Trash2 size={14} />
                             </Button>
@@ -331,57 +245,6 @@ export function AuPairAdminPanel() {
               </tbody>
             </table>
           </SimpleCard>
-      ) : activeTab === 'deleted' ? (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-red-800">{t('admin.deletedAuPairs') || 'Deleted Au Pairs'}</h3>
-             <SimpleCard noPadding className="overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    {/* Reuse table structure or create shared component */}
-                     <thead className="bg-gray-50 border-b border-gray-200 text-gray-500">
-                        <tr>
-                        <th className="px-6 py-3 font-medium">{t('admin.auPair.columns.user')}</th>
-                        <th className="px-6 py-3 font-medium">Status</th>
-                        <th className="px-6 py-3 font-medium text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {filteredAuPairs.map(profile => (
-                            <tr key={profile.id}>
-                                <td className="px-6 py-4">{profile.display_name}</td>
-                                <td className="px-6 py-4">{profile.profile_status}</td>
-                                <td className="px-6 py-4 text-right">
-                                    <Button size="sm" onClick={() => handleRestoreListing(profile.id, 'aupair')}>{t('common.restore') || 'Restore'}</Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-             </SimpleCard>
-
-             <h3 className="text-lg font-semibold text-red-800 mt-8">{t('admin.deletedHostFamilies') || 'Deleted Host Families'}</h3>
-             <SimpleCard noPadding className="overflow-hidden">
-                <table className="w-full text-sm text-left">
-                     <thead className="bg-gray-50 border-b border-gray-200 text-gray-500">
-                        <tr>
-                        <th className="px-6 py-3 font-medium">{t('hostFamily.familyName') || 'Family Name'}</th>
-                        <th className="px-6 py-3 font-medium">{t('admin.auPair.columns.status')}</th>
-                        <th className="px-6 py-3 font-medium text-right">{t('admin.auPair.columns.actions')}</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {filteredFamilies.map(profile => (
-                            <tr key={profile.id}>
-                                <td className="px-6 py-4">{profile.family_name}</td>
-                                <td className="px-6 py-4">{profile.profile_status}</td>
-                                <td className="px-6 py-4 text-right">
-                                    <Button size="sm" onClick={() => handleRestoreListing(profile.id, 'family')}>{t('common.restore') || 'Restore'}</Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-             </SimpleCard>
-        </div>
       ) : activeTab === 'families' ? (
         <SimpleCard noPadding className="overflow-hidden">
             <table className="w-full text-sm text-left">
@@ -438,15 +301,13 @@ export function AuPairAdminPanel() {
                             </td>
                             <td className="px-6 py-4 text-right">
                                 <div className="flex justify-end gap-2">
-                                <Button size="sm" variant="outline" onClick={() => handleViewProfile(profile, 'family')} title="View Profile">
-                                    <Eye size={14} />
-                                </Button>
                                 <Button 
                                     size="sm" 
                                     variant="outline" 
                                     className={profile.profile_status === 'banned' ? "text-green-600 hover:text-green-700" : "text-orange-600 hover:text-orange-700"}
-                                    onClick={() => handleBanUser(profile.user_id, profile.profile_status, 'family')}
-                                    title={profile.profile_status === 'banned' ? "Unban User" : "Ban User"}
+                                    onClick={() => handleBanUser(profile)}
+                                    title={profile.profile_status === 'banned' ? (t('admin.actions.unban') || 'Unban User') : (t('admin.actions.ban') || 'Ban User')}
+                                    disabled={!profile.user_id}
                                 >
                                     {profile.profile_status === 'banned' ? <CheckCircle size={14} /> : <Ban size={14} />}
                                 </Button>
@@ -454,18 +315,8 @@ export function AuPairAdminPanel() {
                                     size="sm" 
                                     variant="outline" 
                                     className="text-red-600 hover:text-red-700" 
-                                    onClick={() => handleDeleteUser(profile.user_id, 'family')}
-                                    title="Soft Delete User"
-                                    disabled={profile.profile_status === 'deleted'}
-                                >
-                                    <Ban size={14} />
-                                </Button>
-                                <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    className="text-red-600 hover:text-red-700" 
-                                    onClick={() => handleDeleteListing(profile.id, 'family', profile.created_by)}
-                                    title="Delete Listing"
+                                    onClick={() => handlePermanentDelete(profile, 'family')}
+                                    title={t('admin.auPair.permanentDelete') || 'Permanent Delete'}
                                 >
                                     <Trash2 size={14} />
                                 </Button>
@@ -478,56 +329,6 @@ export function AuPairAdminPanel() {
             </table>
         </SimpleCard>
       ) : null}
-
-      {/* Detail Modals (Simplified) */}
-      {selectedAuPair && (
-        <Modal isOpen={!!selectedAuPair} onClose={() => setSelectedAuPair(null)} title="Au Pair Profile">
-            <div className="p-6">
-                <h3 className="text-lg font-bold">{selectedAuPair.display_name}</h3>
-                <p className="text-gray-600 mb-4">{selectedAuPair.bio || "No bio available"}</p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div><strong>Nationality:</strong> {selectedAuPair.nationality}</div>
-                    <div><strong>Age:</strong> {selectedAuPair.age}</div>
-                    <div><strong>Experience:</strong> {selectedAuPair.childcare_experience_years} years</div>
-                    <div><strong>Status:</strong> {selectedAuPair.profile_status}</div>
-                </div>
-            </div>
-        </Modal>
-      )}
-
-      {selectedFamily && (
-        <Modal isOpen={!!selectedFamily} onClose={() => setSelectedFamily(null)} title="Host Family Profile">
-            <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                    <div>
-                        <h3 className="text-lg font-bold">{selectedFamily.family_name}</h3>
-                        <p className="text-sm text-gray-500">User ID: {selectedFamily.user_id}</p>
-                    </div>
-                    {selectedFamily.created_by === 'admin' ? (
-                        <span className="px-3 py-1 text-xs font-bold text-blue-600 bg-blue-50 rounded border border-blue-100">
-                            Admin Created Listing
-                        </span>
-                    ) : (
-                        <StartConversationButton 
-                            userId={selectedFamily.user_id} 
-                            userName={selectedFamily.family_name} 
-                            contextType="aupair" 
-                            sourceContext={`Host Family: ${selectedFamily.family_name}`}
-                            size="sm"
-                            variant="outline"
-                            label="Message"
-                        />
-                    )}
-                </div>
-                <p className="text-gray-600 mb-4">{selectedFamily.expectations || "No expectations listed"}</p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div><strong>Location:</strong> {selectedFamily.city}, {selectedFamily.country}</div>
-                    <div><strong>Children:</strong> {selectedFamily.children_count}</div>
-                    <div><strong>Status:</strong> {selectedFamily.profile_status}</div>
-                </div>
-            </div>
-        </Modal>
-      )}
 
       {/* Onboarding Modals for Admin-Owned Listings */}
       {showAuPairOnboarding && (

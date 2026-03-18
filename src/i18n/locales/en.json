@@ -360,6 +360,14 @@
         "admin": "Admin-Owned"
       },
       "confirmDelete": "Are you sure you want to delete this admin-owned listing? This action cannot be undone.",
+      "confirmBanUser": "Are you sure you want to ban this user?",
+      "confirmUnbanUser": "Are you sure you want to unban this user?",
+      "confirmPermanentDeleteUser": "Permanently delete this user account? This cannot be undone.",
+      "confirmPermanentDeleteListing": "Permanently delete this admin-owned listing? This cannot be undone.",
+      "permanentDelete": "Permanent Delete",
+      "permanentDeleteError": "Failed to permanently delete this record",
+      "cannotBanAdminOwned": "Admin-owned listings do not have a user account to ban.",
+      "updateUserError": "Failed to update user status",
       "cannotDeleteSelfOwned": "Cannot delete self-owned listings. Only admin-owned listings can be deleted.",
       "adminMode": "Admin Mode: Creating Listing"
     },
@@ -2252,7 +2260,13 @@
     "posted": "Posted",
     "expiresOn": "Expires on",
     "salary": {
-      "label": "Salary"
+      "label": "Salary",
+      "currency": {
+        "CNY": "CNY (¥)"
+      },
+      "period": {
+        "monthly": "Monthly"
+      }
     },
     "experience": "Experience",
     "perMonth": "per month",
@@ -3106,6 +3120,23 @@
         },
         "tutoring": {
           "name": "Tutoring / Training"
+        }
+      }
+    },
+    "childcare_caregiving": {
+      "name": "Childcare, Caregiving & Teaching",
+      "subcategories": {
+        "nanny": {
+          "name": "Nanny / Babysitter"
+        },
+        "au_pair": {
+          "name": "Au Pair"
+        },
+        "caregiver": {
+          "name": "Caregiver / Companion"
+        },
+        "private_teacher": {
+          "name": "Private Teacher / Tutor"
         }
       }
     },

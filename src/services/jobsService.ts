@@ -1,11 +1,14 @@
 import { supabase } from '../lib/supabase';
 import { notificationService } from './notificationService';
+import { profileService } from './profileService';
 
 export interface Job {
   id: string;
   poster_id: string;
   title: string;
   company_name?: string;
+  category?: string;
+  subcategory?: string;
   description: string;
   image_urls?: string[];
   job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'freelance';
@@ -18,6 +21,7 @@ export interface Job {
   salary_currency: string;
   salary_period?: string;
   category_id?: string;
+  subcategory_id?: string;
   status: 'draft' | 'published' | 'closed' | 'archived' | 'active' | 'inactive';
   application_email?: string;
   application_url?: string;
@@ -72,6 +76,98 @@ export interface JobPreferences {
   created_at: string;
   updated_at: string;
 }
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const getFallbackCompanyName = (
+  jobCompanyName?: string,
+  profile?: { display_name?: string | null; full_name?: string | null; email?: string | null },
+  email?: string | null
+) => {
+  const candidates = [
+    jobCompanyName,
+    profile?.display_name,
+    profile?.full_name,
+    profile?.email,
+    email,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return 'Employer';
+};
+
+const normalizeJobPayload = <T extends Partial<Job>>(payload: T): T => {
+  const next = { ...payload } as T & {
+    category?: string;
+    subcategory?: string;
+    category_id?: string | null;
+    subcategory_id?: string | null;
+  };
+
+  if (typeof next.category_id === 'string' && next.category_id && !UUID_PATTERN.test(next.category_id)) {
+    next.category = next.category || next.category_id;
+    next.category_id = null;
+  }
+
+  if (typeof next.subcategory_id === 'string' && next.subcategory_id && !UUID_PATTERN.test(next.subcategory_id)) {
+    next.subcategory = next.subcategory || next.subcategory_id;
+    next.subcategory_id = null;
+  }
+
+  return next as T;
+};
+
+const ensurePublicUserExists = async (userId: string, email?: string | null) => {
+  const payload: Record<string, string> = {
+    id: userId,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (email) {
+    payload.email = email;
+  }
+
+  const { error } = await supabase
+    .from('users')
+    .upsert(payload, { onConflict: 'id' });
+
+  if (error && error.code !== '42P01' && error.code !== '42501') {
+    throw error;
+  }
+};
+
+const ensureEmployerProfileExists = async (
+  userId: string,
+  email?: string | null,
+  options?: { company_name?: string; profile?: { display_name?: string | null; full_name?: string | null; email?: string | null } | null }
+) => {
+  const { data: employerProfile, error: employerProfileError } = await supabase
+    .from('profiles_employer')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (employerProfileError) throw employerProfileError;
+  if (employerProfile) return employerProfile;
+
+  const { error: upsertError } = await supabase
+    .from('profiles_employer')
+    .upsert(
+      {
+        user_id: userId,
+        company_name: getFallbackCompanyName(options?.company_name, options?.profile ?? undefined, email),
+        industry: 'technology',
+      },
+      { onConflict: 'user_id' }
+    );
+
+  if (upsertError) throw upsertError;
+};
 
 // Jobs Service
 export const jobsService = {
@@ -206,9 +302,43 @@ export const jobsService = {
 
   // Create new job
   async createJob(job: Omit<Job, 'id' | 'created_at' | 'updated_at' | 'views_count' | 'applications_count'>) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const posterId = job.poster_id || user?.id;
+    const normalizedJob = normalizeJobPayload(job);
+
+    if (!posterId) {
+      throw new Error('Not authenticated');
+    }
+
+    let profileData: { id?: string; display_name?: string | null; full_name?: string | null; email?: string | null } | null = null;
+
+    if (posterId && user?.id === posterId && user.email) {
+      profileData = await profileService.ensureProfileExists(user.id, user.email);
+      await ensurePublicUserExists(user.id, user.email);
+      await ensureEmployerProfileExists(user.id, user.email, {
+        company_name: normalizedJob.company_name,
+        profile: profileData,
+      });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, display_name, full_name, email')
+      .eq('id', posterId)
+      .maybeSingle();
+
+    if (profileError) throw profileError;
+    if (!profile) {
+      throw new Error('Your account profile is missing. Please sign out and sign in again, then try posting the job again.');
+    }
+
+    if (!profileData) {
+      profileData = profile;
+    }
+
     const { data, error } = await supabase
       .from('jobs')
-      .insert([job])
+      .insert([{ ...normalizedJob, poster_id: posterId }])
       .select()
       .single();
 
@@ -218,9 +348,10 @@ export const jobsService = {
 
   // Update job
   async updateJob(id: string, updates: Partial<Job>) {
+    const normalizedUpdates = normalizeJobPayload(updates);
     const { data, error } = await supabase
       .from('jobs')
-      .update(updates)
+      .update(normalizedUpdates)
       .eq('id', id)
       .select()
       .single();
@@ -240,6 +371,16 @@ export const jobsService = {
   // Delete job (soft delete)
   async deleteJob(id: string) {
     return this.updateJob(id, { status: 'archived' });
+  },
+
+  // Permanently delete job
+  async permanentlyDeleteJob(id: string) {
+    const { error } = await supabase
+      .from('jobs')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   },
 
   // Get user's jobs

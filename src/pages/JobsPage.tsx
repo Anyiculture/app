@@ -32,6 +32,7 @@ export function JobsPage() {
   const [activeRole, setActiveRole] = useState<string | null>(null);
   const [checkingRole, setCheckingRole] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
 
   // Filter State
   const [filters, setFilters] = useState({
@@ -54,6 +55,7 @@ export function JobsPage() {
       checkAdminStatus();
     } else {
       setCheckingRole(false);
+      setCheckingAdmin(false);
     }
   }, [user]);
 
@@ -63,6 +65,8 @@ export function JobsPage() {
       setIsAdmin(admin);
     } catch (err) {
       console.error('Failed to check admin status:', err);
+    } finally {
+      setCheckingAdmin(false);
     }
   };
 
@@ -174,6 +178,9 @@ export function JobsPage() {
     navigate('/jobs/post');
   };
 
+  const needsJobsSetup = user && !checkingRole && !checkingAdmin && !activeRole && !isAdmin;
+  const canManageJobs = user && (activeRole === 'employer' || isAdmin);
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans relative overflow-hidden">
       <BackgroundBlobs />
@@ -209,7 +216,7 @@ export function JobsPage() {
         
         {/* Onboarding Notice */}
         <AnimatePresence>
-          {user && !checkingRole && !activeRole && (
+          {needsJobsSetup && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -253,32 +260,34 @@ export function JobsPage() {
             <>
               {user && (
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={async () => {
-                      if (!user?.id || !activeRole) return;
-                      const newRole = activeRole === 'employer' ? 'job_seeker' : 'employer';
-                      try {
-                        await jobsRoleService.setUserRole(user.id, newRole);
-                        setActiveRole(newRole);
-                      } catch (err) {
-                        console.error('Failed to update role:', err);
-                      }
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                    title={activeRole === 'employer' ? "Switch to Job Seeker View" : "Switch to Employer View"}
-                  >
-                     {activeRole === 'employer' ? (
-                       <>
-                         <Users size={14} />
-                         <span className="hidden lg:inline">{t('common.viewAsSeeker') || 'View as Seeker'}</span>
-                       </>
-                     ) : (
-                       <>
-                         <Briefcase size={14} />
-                         <span className="hidden lg:inline">{t('common.viewAsEmployer') || 'View as Employer'}</span>
-                       </>
-                     )}
-                  </button>
+                  {!isAdmin && activeRole && (
+                    <button
+                      onClick={async () => {
+                        if (!user?.id || !activeRole) return;
+                        const newRole = activeRole === 'employer' ? 'job_seeker' : 'employer';
+                        try {
+                          await jobsRoleService.setUserRole(user.id, newRole);
+                          setActiveRole(newRole);
+                        } catch (err) {
+                          console.error('Failed to update role:', err);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                      title={activeRole === 'employer' ? "Switch to Job Seeker View" : "Switch to Employer View"}
+                    >
+                       {activeRole === 'employer' ? (
+                         <>
+                           <Users size={14} />
+                           <span className="hidden lg:inline">{t('common.viewAsSeeker') || 'View as Seeker'}</span>
+                         </>
+                       ) : (
+                         <>
+                           <Briefcase size={14} />
+                           <span className="hidden lg:inline">{t('common.viewAsEmployer') || 'View as Employer'}</span>
+                         </>
+                       )}
+                    </button>
+                  )}
 
                   {activeRole === 'job_seeker' && (
                      <button
@@ -302,15 +311,17 @@ export function JobsPage() {
                 </button>
               )}
 
-              {user && activeRole === 'employer' && (
+              {canManageJobs && (
                 <>
-                  <button
-                    onClick={() => navigate('/employer/profile/edit')}
-                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all font-medium text-sm shadow-sm"
-                  >
-                    <Edit size={16} className="text-gray-400" />
-                    <span className="hidden md:inline">{t('common.editProfile')}</span>
-                  </button>
+                  {!isAdmin && (
+                    <button
+                      onClick={() => navigate('/employer/profile/edit')}
+                      className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all font-medium text-sm shadow-sm"
+                    >
+                      <Edit size={16} className="text-gray-400" />
+                      <span className="hidden md:inline">{t('common.editProfile')}</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => navigate('/jobs/my-jobs')}
                     className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all font-medium text-sm shadow-sm"
@@ -328,7 +339,7 @@ export function JobsPage() {
                 </>
               )}
 
-              {user && !checkingRole && !activeRole && (
+              {needsJobsSetup && (
                 <button
                   onClick={() => navigate('/jobs/role-selection')}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-all font-medium text-sm shadow-sm"
